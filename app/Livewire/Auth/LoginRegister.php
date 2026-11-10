@@ -10,7 +10,7 @@ use Livewire\Component;
 
 class LoginRegister extends Component
 {
-    public string $mode = 'landing'; // 'landing', 'register', 'login'
+    public string $mode = 'landing'; // 'landing', 'tuto', 'register', 'login'
 
     public string $team_name = '';
 
@@ -22,7 +22,7 @@ class LoginRegister extends Component
 
     public function setMode(string $mode): void
     {
-        if (in_array($mode, ['landing', 'register', 'login'], true)) {
+        if (in_array($mode, ['landing', 'tuto', 'register', 'login'], true)) {
             $this->mode = $mode;
             $this->resetErrorBag();
         }

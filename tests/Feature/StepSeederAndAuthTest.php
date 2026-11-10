@@ -68,7 +68,7 @@ class StepSeederAndAuthTest extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
         $response->assertSee('L\'Expédition Secrète', false);
-        $response->assertSee('Destination Lens Tourisme & Asmodee', false);
+        $response->assertSee('Lens Tourisme & Asmodee', false);
         $response->assertSee('Maître du Jeu', false);
         $response->assertSee('Connexion / Inscription Équipe');
     }
@@ -191,13 +191,14 @@ class StepSeederAndAuthTest extends TestCase
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
     }
 
-    public function test_game_router_persistent_bottom_navigation_is_present(): void
+    public function test_game_router_persistent_bottom_navigation_is_removed_in_favor_of_contextual_return(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
         Livewire::test(GameRouter::class)
-            ->assertSeeHtml('aria-label="Navigation persistante bas d\'écran"');
+            ->assertDontSeeHtml('aria-label="Navigation persistante bas d\'écran"')
+            ->assertDontSeeHtml('<footer');
     }
 
     public function test_inventory_victory_screen_retains_collected_fragments_list(): void

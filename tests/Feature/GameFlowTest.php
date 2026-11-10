@@ -122,16 +122,22 @@ class GameFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(GameRouter::class)
-            ->assertSee('[Boussole]')
-            ->assertSee('[Scanner]')
-            ->assertSee('[Inventaire]')
             ->assertSet('currentTab', 'hub')
+            ->assertDontSeeHtml('<footer')
             ->call('setTab', 'scanner')
             ->assertSet('currentTab', 'scanner')
+            ->assertDispatched('tab-switched', tab: 'scanner')
             ->call('setTab', 'inventory')
             ->assertSet('currentTab', 'inventory')
+            ->assertDispatched('tab-switched', tab: 'inventory')
             ->call('setTab', 'hub')
             ->assertSet('currentTab', 'hub');
+
+        Livewire::test(Scanner::class)
+            ->assertSee('← Retour à la boussole');
+
+        Livewire::test(Inventory::class)
+            ->assertSee('← Retour à la boussole');
     }
 
     public function test_hub_displays_riddle_when_guessing_location(): void
@@ -166,7 +172,7 @@ class GameFlowTest extends TestCase
 
         Livewire::test(Hub::class)
             ->assertSee('Distance : Recherche de position GPS en cours...')
-            ->assertSee('Direction la cible');
+            ->assertDontSee('Direction la cible');
     }
 
     public function test_scanner_verify_code_advances_phase_and_steps_correctly(): void
@@ -573,8 +579,8 @@ class GameFlowTest extends TestCase
         $this->actingAs($user);
 
         $test = Livewire::test(GameRouter::class);
-        $test->assertSeeHtml('wire:key="scanner-'.$user->id.'"');
-        $test->assertDontSeeHtml('wire:key="scanner-'.$user->id.'-1-GUESSING_LOCATION"');
+        $test->assertSeeHtml('wire:key="scanner-' . $user->id . '"');
+        $test->assertDontSeeHtml('wire:key="scanner-' . $user->id . '-1-GUESSING_LOCATION"');
     }
 
     public function test_scanner_handles_sequential_invalid_and_valid_scans_with_recovery(): void

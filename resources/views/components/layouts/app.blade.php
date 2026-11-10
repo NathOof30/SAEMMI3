@@ -18,6 +18,17 @@
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #FAF8F5;
+            background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+            background-attachment: fixed;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
         .btn-bounce {
             transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
@@ -25,10 +36,23 @@
             transform: translateY(3px) !important;
             box-shadow: 0 1px 0 #1A1A1A !important;
         }
+        @keyframes idle-sway {
+            0%, 100% {
+                transform: rotate(-10deg);
+            }
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+        .idle-sway {
+            animation: idle-sway 2.6s ease-in-out infinite;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
     </style>
     @livewireStyles
 </head>
-<body>
+<body style="margin: 0; min-height: 100vh; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed; overflow-x: hidden;">
     {{ $slot }}
 
     @livewireScripts

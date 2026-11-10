@@ -344,57 +344,90 @@
     } else if ($event.detail && $event.detail.tab !== 'scanner') {
         cleanup(false);
     }">
-    <h2>Scanner de QR Code</h2>
-
-    <p>
-        Phase actuelle :
-        <strong>
-            @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
-                Terminé (Toutes les étapes validées)
-            @elseif($user && $user->phase === 'GUESSING_LOCATION')
-                Recherche de l'emplacement (Scanner le QR Map)
-            @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                Marche vers la cible (Scanner le QR MJ)
-            @else
-                Terminé
-            @endif
-        </strong>
-    </p>
-
-    @if($message)
-        <p><strong>Succès :</strong> {{ $message }}</p>
-    @endif
-
-    @if($error)
-        <p><strong>Erreur :</strong> {{ $error }}</p>
-    @endif
-
-    <div x-show="cameraErrorMessage" style="display: none;">
-        <p><strong>Erreur Caméra :</strong> <span x-text="cameraErrorMessage"></span></p>
-    </div>
-
-    <div>
-        <p>
-            <button type="button" id="btn-reactivate-scanner" x-on:click="reactivateScanner()">Réactiver le
-                scanner</button>
-            <span x-show="isLocked" style="display: none;"><small>(Scanner en pause : patientez 2 s ou cliquez pour
-                    réactiver)</small></span>
-        </p>
-    </div>
-
-    <div>
-        <h3>Caméra</h3>
-        <div id="qr-reader" wire:ignore></div>
-    </div>
-
-    <div>
-        <h3>Simulation manuelle (Debug)</h3>
-        <form wire:submit="verifyManualCode">
-            <label for="manualCode">Code QR :</label>
-            <input type="text" id="manualCode" wire:model="manualCode" placeholder="Exemple: MAP_LOC_1 ou MJ_STEP_1">
-            <button type="submit">
-                Simuler le scan
+    <div style="max-width: 480px; margin: 0 auto; padding: 10px 16px;">
+        <div style="margin-bottom: 12px;">
+            <button type="button" id="scanner-back-to-hub-btn" x-on:click="tab = 'hub'"
+                wire:click="$dispatch('set-tab', { tab: 'hub' })" class="btn-bounce"
+                style="background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                ← Retour à la boussole
             </button>
-        </form>
+        </div>
+
+        <div
+            style="background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 20px; box-shadow: 0 6px 0 #1A1A1A; padding: 20px;">
+            <h2
+                style="font-size: 20px; font-weight: 900; color: #841818; margin: 0 0 10px 0; text-transform: uppercase;">
+                Scanner de QR Code</h2>
+
+            <p style="font-size: 13px; margin: 0 0 12px 0; color: #4B5563;">
+                Phase actuelle :
+                <strong style="color: #1A1A1A;">
+                    @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
+                        Terminé (Toutes les étapes validées)
+                    @elseif($user && $user->phase === 'GUESSING_LOCATION')
+                        Recherche de l'emplacement (Scanner le QR Map)
+                    @elseif($user && $user->phase === 'WALKING_TO_TARGET')
+                        Marche vers la cible (Scanner le QR MJ)
+                    @else
+                        Terminé
+                    @endif
+                </strong>
+            </p>
+
+            @if($message)
+                <p
+                    style="background: #DCFCE7; border: 2px solid #16A34A; border-radius: 8px; padding: 8px 12px; color: #166534; font-size: 13px; font-weight: 700; margin-bottom: 12px;">
+                    <strong>Succès :</strong> {{ $message }}
+                </p>
+            @endif
+
+            @if($error)
+                <p
+                    style="background: #FEE2E2; border: 2px solid #DC2626; border-radius: 8px; padding: 8px 12px; color: #991B1B; font-size: 13px; font-weight: 700; margin-bottom: 12px;">
+                    <strong>Erreur :</strong> {{ $error }}
+                </p>
+            @endif
+
+            <div x-show="cameraErrorMessage"
+                style="display: none; background: #FEE2E2; border: 2px solid #DC2626; border-radius: 8px; padding: 8px 12px; color: #991B1B; font-size: 13px; margin-bottom: 12px;">
+                <p style="margin: 0;"><strong>Erreur Caméra :</strong> <span x-text="cameraErrorMessage"></span></p>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <button type="button" id="btn-reactivate-scanner" x-on:click="reactivateScanner()" class="btn-bounce"
+                    style="padding: 8px 14px; background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                    Réactiver le scanner
+                </button>
+                <span x-show="isLocked" style="display: none; margin-left: 8px; font-size: 11px; color: #6B7280;">
+                    (Scanner en pause : patientez 2 s ou cliquez pour réactiver)
+                </span>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 15px; font-weight: 800; color: #1A1A1A; margin: 0 0 8px 0;">Caméra</h3>
+                <div id="qr-reader" wire:ignore
+                    style="border-radius: 12px; overflow: hidden; border: 2px solid #1A1A1A; background: #000000;">
+                </div>
+            </div>
+
+            <div style="border-top: 1px dashed #D1D5DB; padding-top: 14px; margin-top: 14px;">
+                <h3 style="font-size: 13px; font-weight: 800; color: #6B7280; margin: 0 0 8px 0;">Simulation manuelle
+                    (Debug)</h3>
+                <form wire:submit="verifyManualCode" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                        <label for="manualCode"
+                            style="display: block; font-size: 12px; font-weight: 700; color: #4B5563; margin-bottom: 4px;">Code
+                            QR :</label>
+                        <input type="text" id="manualCode" wire:model="manualCode"
+                            placeholder="Exemple: MAP_LOC_1 ou MJ_STEP_1"
+                            style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 13px;">
+                    </div>
+                    <button type="submit" class="btn-bounce"
+                        style="padding: 8px 12px; background: #F4B316; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
+                        Simuler le scan
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>

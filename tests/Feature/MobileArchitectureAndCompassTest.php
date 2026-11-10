@@ -60,10 +60,9 @@ class MobileArchitectureAndCompassTest extends TestCase
             // Verify initial display style: hub is active, others display: none
             ->assertSeeHtml('id="tab-pane-scanner" style="display: none;"')
             ->assertSeeHtml('id="tab-pane-inventory" style="display: none;"')
-            // Verify navigation buttons have both Alpine click and Livewire click
-            ->assertSeeHtml('x-on:click="tab = \'hub\'" wire:click="setTab(\'hub\')"')
-            ->assertSeeHtml('x-on:click="tab = \'scanner\'" wire:click="setTab(\'scanner\')"')
-            ->assertSeeHtml('x-on:click="tab = \'inventory\'" wire:click="setTab(\'inventory\')"')
+            // Verify bottom navbar is removed and header backpack button is present
+            ->assertDontSeeHtml('<footer')
+            ->assertSeeHtml('title="Ouvrir l\'inventaire"')
             // Verify setTab changes tab and dispatches tab-switched event
             ->call('setTab', 'scanner')
             ->assertSet('currentTab', 'scanner')
@@ -145,7 +144,12 @@ class MobileArchitectureAndCompassTest extends TestCase
             ->assertSeeHtml(':transform="\'rotate(\' + needleAngle + \' 100 100)\'"')
             ->assertSeeHtml('id="compass-needle-target"')
             ->assertSeeHtml('id="compass-needle-opposite"')
-            ->assertSeeHtml('DEVANT')
+            ->assertDontSeeHtml('DEVANT')
+            ->assertSeeHtml('id="compass-dial"')
+            ->assertSeeHtml('N')
+            ->assertSeeHtml('S')
+            ->assertSeeHtml('O')
+            ->assertSeeHtml('E')
             // Textual displays
             ->assertSeeHtml('id="distance-display"')
             ->assertSeeHtml('id="bearing-display"')
@@ -162,7 +166,7 @@ class MobileArchitectureAndCompassTest extends TestCase
             ->assertSeeHtml('2.8093333');
     }
 
-    public function test_hub_guessing_phase_does_not_display_compass(): void
+    public function test_hub_guessing_phase_displays_mystery_compass_with_question_mark_and_no_target_needle(): void
     {
         $user = User::factory()->create([
             'current_step' => 1,
@@ -174,8 +178,9 @@ class MobileArchitectureAndCompassTest extends TestCase
 
         Livewire::test(Hub::class)
             ->assertSee($step1->riddle_text)
-            ->assertDontSeeHtml('<svg')
-            ->assertDontSeeHtml('calculateBearing')
+            ->assertSeeHtml('<svg')
+            ->assertSeeHtml('id="phase-a-question-mark"')
+            ->assertSeeHtml('idle-sway')
             ->assertDontSeeHtml('id="compass-needle-target"');
     }
 

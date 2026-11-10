@@ -2,12 +2,12 @@
     tab: $wire.entangle('currentTab', true),
     profileModalOpen: false
 }"
-    style="max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: #fdfdfd; font-family: system-ui, -apple-system, sans-serif;">
+    style="max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif;">
     @if(!Auth::check())
         <livewire:auth.login-register />
     @else
         <!-- Header compact fidèle à la maquette -->
-        <header style="padding: 12px 14px 6px 14px; position: sticky; top: 0; z-index: 40; background: #ffffff;">
+        <header style="padding: 12px 14px 6px 14px; position: sticky; top: 0; z-index: 40; background: transparent;">
             <div
                 style="background: #E5E7EB; border: 2.5px solid #1A1A1A; border-radius: 18px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 0 #1A1A1A;">
                 <!-- Bulle Avatar ronde à gauche (Gali le mineur, cliquable pour voir profil / déconnexion) -->
@@ -96,7 +96,7 @@
         </header>
 
         <!-- Contenu des onglets -->
-        <main style="flex: 1; padding-bottom: 80px;">
+        <main style="flex: 1; display: flex; flex-direction: column;">
             <div x-show="tab === 'hub'" id="tab-pane-hub" style="{{ $currentTab === 'hub' ? '' : 'display: none;' }}">
                 <livewire:game.hub :wire:key="'hub-'.Auth::id().'-'.Auth::user()->current_step.'-'.Auth::user()->phase" />
             </div>
@@ -107,28 +107,5 @@
                 <livewire:game.inventory :wire:key="'inventory-'.Auth::id().'-'.Auth::user()->fragments()->count()" />
             </div>
         </main>
-
-        <!-- Navigation persistante bas d'écran -->
-        <footer
-            style="position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background: #FFFFFF; border-top: 3px solid #1A1A1A; z-index: 40; padding: 8px 16px 12px 16px; box-shadow: 0 -3px 10px rgba(0,0,0,0.06);">
-            <nav aria-label="Navigation persistante bas d'écran"
-                style="display: flex; justify-content: space-around; align-items: center; gap: 8px;">
-                <button type="button" x-on:click="tab = 'hub'" wire:click="setTab('hub')"
-                    :style="tab === 'hub' ? 'background: #F4B316; color: #1A1A1A; font-weight: 900; border: 2.5px solid #1A1A1A; box-shadow: 0 3px 0 #1A1A1A;' : 'background: #F3F4F6; color: #4B5563; font-weight: 700; border: 2px solid #D1D5DB;'"
-                    style="flex: 1; padding: 10px 4px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: all 0.15s ease;">
-                    [Boussole]
-                </button>
-                <button type="button" x-on:click="tab = 'scanner'" wire:click="setTab('scanner')"
-                    :style="tab === 'scanner' ? 'background: #F4B316; color: #1A1A1A; font-weight: 900; border: 2.5px solid #1A1A1A; box-shadow: 0 3px 0 #1A1A1A;' : 'background: #F3F4F6; color: #4B5563; font-weight: 700; border: 2px solid #D1D5DB;'"
-                    style="flex: 1; padding: 10px 4px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: all 0.15s ease;">
-                    [Scanner]
-                </button>
-                <button type="button" x-on:click="tab = 'inventory'" wire:click="setTab('inventory')"
-                    :style="tab === 'inventory' ? 'background: #F4B316; color: #1A1A1A; font-weight: 900; border: 2.5px solid #1A1A1A; box-shadow: 0 3px 0 #1A1A1A;' : 'background: #F3F4F6; color: #4B5563; font-weight: 700; border: 2px solid #D1D5DB;'"
-                    style="flex: 1; padding: 10px 4px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: all 0.15s ease;">
-                    [Inventaire]
-                </button>
-            </nav>
-        </footer>
     @endif
 </div>
