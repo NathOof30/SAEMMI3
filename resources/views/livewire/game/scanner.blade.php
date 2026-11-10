@@ -1,150 +1,207 @@
-<div x-data="{
-    scannerInstance: null,
-    isInitialized: false,
-    isLocked: false,
-    cameraErrorMessage: null,
+<div
+    wire:ignore.self
+    x-data="{
+        scannerInstance: null,
+        isInitialized: false,
+        isLocked: false,
+        lastScannedCode: null,
+        lastScanTime: 0,
+        cameraErrorMessage: null,
 
-    initScanner() {
-        if (this.isInitialized) {
-            return;
-        }
+        isScannerTabVisible() {
+            const pane = document.getElementById('tab-pane-scanner');
+            if (!pane) {
+                return true;
+            }
+            return pane.style.display !== 'none' && pane.offsetParent !== null;
+        },
 
-        const qrEl = document.getElementById('qr-reader');
-        if (!qrEl) {
-            return;
-        }
-
-        this.isInitialized = true;
-        this.cameraErrorMessage = null;
-
-        const start = () => {
-            if (this.scannerInstance) {
-                try {
-                    this.stopCameraTracks();
-                    this.scannerInstance.clear();
-                } catch (e) {}
-                this.scannerInstance = null;
+        initScanner() {
+            if (this.isInitialized || window._expeditionScannerRunning) {
+                return;
             }
 
-            if (typeof Html5QrcodeScanner !== 'undefined') {
-                try {
-                    const scanner = new Html5QrcodeScanner(
-                        'qr-reader',
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        false
-                    );
-                    this.scannerInstance = scanner;
-                    window._html5QrCodeInstance = scanner;
+            if (!this.isScannerTabVisible()) {
+                return;
+            }
 
-                    scanner.render(
-                        (scannedText) => {
-                            if (this.isLocked) {
-                                return;
-                            }
-                            this.isLocked = true;
+            const qrEl = document.getElementById('qr-reader');
+            if (!qrEl) {
+                return;
+            }
 
-                            const unlock = () => {
-                                setTimeout(() => {
-                                    this.isLocked = false;
-                                }, 2500);
-                            };
+            const existingVideo = qrEl.querySelector('video');
+            if (existingVideo && existingVideo.srcObject && existingVideo.srcObject.active) {
+                this.isInitialized = true;
+                window._expeditionScannerRunning = true;
+                return;
+            }
 
-                            if (typeof @this !== 'undefined' && @this.verifyCode) {
-                                try {
-                                    const promise = @this.verifyCode(scannedText);
-                                    if (promise && typeof promise.then === 'function') {
-                                        promise.then(() => unlock()).catch(() => unlock());
-                                    } else {
+            this.isInitialized = true;
+            window._expeditionScannerRunning = true;
+            this.cameraErrorMessage = null;
+
+            const start = async () => {
+                if (this.scannerInstance || window._html5QrCodeInstance) {
+                    await this.cleanup(false);
+                }
+
+                if (typeof Html5QrcodeScanner !== 'undefined') {
+                    try {
+                        const scanner = new Html5QrcodeScanner(
+                            'qr-reader',
+                            {
+                                fps: 10,
+                                qrbox: { width: 250, height: 250 },
+                                videoConstraints: {
+                                    facingMode: { ideal: 'environment' }
+                                }
+                            },
+                            false
+                        );
+                        this.scannerInstance = scanner;
+                        window._html5QrCodeInstance = scanner;
+
+                        scanner.render(
+                            (scannedText) => {
+                                if (this.isLocked) {
+                                    return;
+                                }
+
+                                const now = Date.now();
+                                if (this.lastScannedCode === scannedText && (now - this.lastScanTime < 4000)) {
+                                    return;
+                                }
+
+                                this.isLocked = true;
+                                this.lastScannedCode = scannedText;
+                                this.lastScanTime = now;
+
+                                const unlock = () => {
+                                    setTimeout(() => {
+                                        this.isLocked = false;
+                                    }, 2000);
+                                };
+
+                                if (typeof @this !== 'undefined' && @this.verifyCode) {
+                                    try {
+                                        const promise = @this.verifyCode(scannedText);
+                                        if (promise && typeof promise.then === 'function') {
+                                            promise.then(() => unlock()).catch(() => unlock());
+                                        } else {
+                                            unlock();
+                                        }
+                                    } catch (err) {
+                                        console.error('Erreur verifyCode:', err);
                                         unlock();
                                     }
-                                } catch (err) {
-                                    console.error('Erreur verifyCode:', err);
+                                } else {
                                     unlock();
                                 }
-                            } else {
-                                unlock();
+                            },
+                            (error) => {
+                                // Frame ordinaire en attente de code
                             }
-                        },
-                        (error) => {
-                            // En attente ou erreur mineure de frame ordinaire
-                        }
-                    );
-                } catch (err) {
-                    console.error('Erreur initialisation scanner:', err);
-                    this.cameraErrorMessage = (err && err.name ? err.name + ': ' : '') + (err && err.message ? err.message : 'Impossible de démarrer la caméra.');
-                    this.isInitialized = false;
-                }
-            }
-        };
-
-        if (typeof this.$cleanup === 'function') {
-            this.$cleanup(() => this.cleanup());
-        }
-
-        if (typeof Html5QrcodeScanner === 'undefined') {
-            const s = document.createElement('script');
-            s.src = 'https://unpkg.com/html5-qrcode';
-            s.onload = start;
-            document.head.appendChild(s);
-        } else {
-            start();
-        }
-    },
-
-    stopCameraTracks() {
-        try {
-            const qrEl = document.getElementById('qr-reader');
-            if (qrEl) {
-                const videos = qrEl.querySelectorAll('video');
-                videos.forEach(video => {
-                    if (video.srcObject && typeof video.srcObject.getTracks === 'function') {
-                        video.srcObject.getTracks().forEach(track => {
-                            try {
-                                track.stop();
-                            } catch (e) {}
-                        });
-                        video.srcObject = null;
+                        );
+                    } catch (err) {
+                        console.error('Erreur initialisation scanner:', err);
+                        window._expeditionScannerRunning = false;
+                        this.isInitialized = false;
+                        this.cameraErrorMessage = (err && err.name ? err.name + ': ' : '') + (err && err.message ? err.message : 'Impossible de démarrer la caméra.');
                     }
-                });
+                }
+            };
+
+            if (typeof this.$cleanup === 'function') {
+                this.$cleanup(() => this.cleanup(true));
             }
-        } catch (e) {
-            console.warn('Erreur arrêt pistes vidéo:', e);
-        }
-    },
 
-    cleanup() {
-        this.stopCameraTracks();
-        if (this.scannerInstance) {
+            if (typeof Html5QrcodeScanner === 'undefined') {
+                const s = document.createElement('script');
+                s.src = 'https://unpkg.com/html5-qrcode';
+                s.onload = () => start();
+                document.head.appendChild(s);
+            } else {
+                start();
+            }
+        },
+
+        stopCameraTracks() {
             try {
-                this.scannerInstance.clear();
-            } catch (e) {}
-            this.scannerInstance = null;
-        }
-        this.isInitialized = false;
-        this.isLocked = false;
-    },
+                const qrEl = document.getElementById('qr-reader');
+                if (qrEl) {
+                    const videos = qrEl.querySelectorAll('video');
+                    videos.forEach(video => {
+                        if (video.srcObject && typeof video.srcObject.getTracks === 'function') {
+                            video.srcObject.getTracks().forEach(track => {
+                                try {
+                                    track.stop();
+                                } catch (e) {}
+                            });
+                            video.srcObject = null;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Erreur arrêt pistes vidéo:', e);
+            }
+        },
 
-    reactivateScanner() {
-        this.isLocked = false;
-        this.cameraErrorMessage = null;
-        if (typeof @this !== 'undefined' && @this.resetScanState) {
-            @this.resetScanState();
-        }
+        async cleanup(fullReset = true) {
+            window._expeditionScannerRunning = false;
+            const inst = this.scannerInstance || window._html5QrCodeInstance;
+            if (inst) {
+                try {
+                    if (typeof inst.clear === 'function') {
+                        await inst.clear();
+                    }
+                } catch (e) {
+                    console.warn('Erreur clear scanner:', e);
+                }
+                this.scannerInstance = null;
+                window._html5QrCodeInstance = null;
+            }
+            this.stopCameraTracks();
 
-        const qrEl = document.getElementById('qr-reader');
-        const video = qrEl ? qrEl.querySelector('video') : null;
-        const isVideoActive = video && video.srcObject && !video.paused && !video.ended;
+            if (fullReset) {
+                this.isInitialized = false;
+                this.isLocked = false;
+            }
+        },
 
-        if (!isVideoActive || !this.scannerInstance) {
-            this.cleanup();
+        async reactivateScanner() {
+            this.isLocked = false;
+            this.lastScannedCode = null;
+            this.lastScanTime = 0;
+            this.cameraErrorMessage = null;
+
+            if (typeof @this !== 'undefined' && @this.resetScanState) {
+                @this.resetScanState();
+            }
+
+            const qrEl = document.getElementById('qr-reader');
+            const video = qrEl ? qrEl.querySelector('video') : null;
+            const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
+
+            if (isVideoActive && window._expeditionScannerRunning) {
+                return;
+            }
+
+            await this.cleanup(true);
             setTimeout(() => {
                 this.initScanner();
-            }, 150);
+            }, 100);
         }
-    }
-}"
-x-init="initScanner()"
-@tab-switched.window="if ($event.detail.tab === 'scanner' && !isInitialized) { initScanner(); }"
+    }"
+    x-init="initScanner()"
+    @tab-switched.window="if ($event.detail.tab === 'scanner') {
+        const qrEl = document.getElementById('qr-reader');
+        const video = qrEl ? qrEl.querySelector('video') : null;
+        const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
+        if (!isVideoActive) {
+            reactivateScanner();
+        }
+    }"
 >
     <h2>Scanner de QR Code</h2>
 

@@ -480,12 +480,34 @@ class GameFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(Scanner::class)
+            ->assertSeeHtml('wire:ignore.self')
             ->assertSeeHtml('id="btn-reactivate-scanner"')
             ->assertSeeHtml('Réactiver le scanner')
             ->assertSeeHtml('reactivateScanner()')
             ->assertSeeHtml('isInitialized')
             ->assertSeeHtml('isLocked')
-            ->assertSeeHtml('stopCameraTracks()');
+            ->assertSeeHtml('lastScannedCode')
+            ->assertSeeHtml('stopCameraTracks()')
+            ->assertSeeHtml('wire:ignore');
+    }
+
+    public function test_game_router_set_tab_dispatches_tab_switched(): void
+    {
+        $user = User::create([
+            'name' => 'Nav Team',
+            'team_name' => 'Nav Team',
+            'email' => 'nav-team@lens.fr',
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(GameRouter::class)
+            ->call('setTab', 'scanner')
+            ->assertDispatched('tab-switched', tab: 'scanner')
+            ->call('setTab', 'hub')
+            ->assertDispatched('tab-switched', tab: 'hub');
     }
 
     public function test_scanner_reset_scan_state_clears_error_and_message(): void
