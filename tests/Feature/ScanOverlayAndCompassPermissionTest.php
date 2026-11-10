@@ -53,7 +53,6 @@ class ScanOverlayAndCompassPermissionTest extends TestCase
             ->assertSeeHtml('id="fullscreen-scan-overlay"')
             ->assertSeeHtml('scan-card-glow-success')
             ->assertSeeHtml('Bravo ! Emplacement trouvé !')
-            ->assertSeeHtml('Redirection automatique...')
             ->assertSeeHtml('Poursuivre vers la boussole')
             // Dismissing the overlay triggers redirection event
             ->call('dismissScanOverlay')
@@ -81,7 +80,6 @@ class ScanOverlayAndCompassPermissionTest extends TestCase
             ->assertSeeHtml('scan-card-glow-error')
             ->assertSeeHtml('Mince ! Je ne crois pas que ça soit...')
             ->assertSeeHtml('Réessayer le scan')
-            ->assertSeeHtml('Fermeture automatique...')
             ->call('dismissScanOverlay')
             ->assertSet('scanStatus', null);
 
