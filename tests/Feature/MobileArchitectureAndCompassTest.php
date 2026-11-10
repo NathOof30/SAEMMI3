@@ -156,7 +156,10 @@ class MobileArchitectureAndCompassTest extends TestCase
             ->assertSeeHtml('id="mock-lat"')
             ->assertSeeHtml('id="mock-lng"')
             ->assertSeeHtml('id="mock-heading"')
-            ->assertSeeHtml('id="mock-gps-btn"');
+            ->assertSeeHtml('id="mock-gps-btn"')
+            ->assertSeeHtml('id="debug-target-btn"')
+            ->assertSeeHtml('50.4376667')
+            ->assertSeeHtml('2.8093333');
     }
 
     public function test_hub_guessing_phase_does_not_display_compass(): void

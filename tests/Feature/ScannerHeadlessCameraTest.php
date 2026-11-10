@@ -99,4 +99,21 @@ class ScannerHeadlessCameraTest extends TestCase
             ->assertSeeHtml("else if (\$event.detail && \$event.detail.tab !== 'scanner')")
             ->assertSeeHtml('cleanup(false)');
     }
+
+    public function test_scanner_view_has_valid_alpine_root_attributes_and_debounce(): void
+    {
+        $user = User::factory()->create([
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Scanner::class)
+            ->assertSeeHtml('wire:ignore.self')
+            ->assertSeeHtml('x-init="initScanner()"')
+            ->assertSeeHtml('Réactiver le scanner')
+            ->assertSeeHtml('lastScannedCode === scannedText')
+            ->assertSeeHtml('now - this.lastScanTime < 4000')
+            ->assertSeeHtml('s.onerror = () =>');
+    }
 }

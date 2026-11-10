@@ -241,6 +241,12 @@
                 const s = document.createElement('script');
                 s.src = 'https://unpkg.com/html5-qrcode';
                 s.onload = () => start();
+                s.onerror = () => {
+                    this.isStarting = false;
+                    this.isInitialized = false;
+                    window._expeditionScannerRunning = false;
+                    this.cameraErrorMessage = 'Impossible de charger le module de scan QR.';
+                };
                 document.head.appendChild(s);
             } else {
                 start();
@@ -328,11 +334,16 @@
                 this.initScanner();
             }, 100);
         }
-    @tab-switched.window=" if ($event.detail && $event.detail.tab==='scanner' ) { const
-    qrEl=document.getElementById('qr-reader'); const video=qrEl ? qrEl.querySelector('video') : null; const
-    isVideoActive=video && video.srcObject && video.srcObject.active && !video.paused && !video.ended; if
-    (!isVideoActive) { reactivateScanner(); } } else if ($event.detail && $event.detail.tab !=='scanner' ) {
-    cleanup(false); }">
+    }" x-init="initScanner()" @tab-switched.window="if ($event.detail && $event.detail.tab === 'scanner') {
+        const qrEl = document.getElementById('qr-reader');
+        const video = qrEl ? qrEl.querySelector('video') : null;
+        const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
+        if (!isVideoActive) {
+            reactivateScanner();
+        }
+    } else if ($event.detail && $event.detail.tab !== 'scanner') {
+        cleanup(false);
+    }">
     <h2>Scanner de QR Code</h2>
 
     <p>

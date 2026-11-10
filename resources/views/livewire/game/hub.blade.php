@@ -22,6 +22,9 @@
             <div x-data="{
                 targetLat: {{ $step->lat }},
                 targetLng: {{ $step->lng }},
+                targetLabel: 'Monument de l’étape',
+                debugTargetLat: 50.4376667,
+                debugTargetLng: 2.8093333,
                 userLat: null,
                 userLng: null,
                 distanceText: 'Recherche de position GPS en cours...',
@@ -245,6 +248,28 @@
 
                     this.recalculate(true);
                 },
+                setDebugTarget() {
+                    this.targetLat = this.debugTargetLat;
+                    this.targetLng = this.debugTargetLng;
+                    this.targetLabel = 'Cible debug';
+
+                    if (this.userLat !== null && this.userLng !== null) {
+                        this.updateDistance(this.userLat, this.userLng);
+                    }
+
+                    this.recalculate(true);
+                },
+                resetStepTarget() {
+                    this.targetLat = {{ $step->lat }};
+                    this.targetLng = {{ $step->lng }};
+                    this.targetLabel = 'Monument de l’étape';
+
+                    if (this.userLat !== null && this.userLng !== null) {
+                        this.updateDistance(this.userLat, this.userLng);
+                    }
+
+                    this.recalculate(true);
+                },
                 resetLiveSensors() {
                     this.isMocking = false;
                     this.headingSource = 'aucun';
@@ -307,10 +332,13 @@
                 </div>
 
                 <div wire:ignore>
-                    <p><small>(Cible : Lat {{ $step->lat }}, Lng {{ $step->lng }})</small></p>
+                    <p><small>Cible active : <strong x-text="targetLabel">Monument de l’étape</strong> (Lat <span x-text="targetLat">{{ $step->lat }}</span>, Lng <span x-text="targetLng">{{ $step->lng }}</span>)</small></p>
 
                     <div>
                         <h5>Test manuel GPS & Boussole (Debug)</h5>
+                        <p><small>Cible alternative : 50°26'15.6"N 2°48'33.6"E (50.4376667, 2.8093333)</small></p>
+                        <button type="button" id="debug-target-btn" x-on:click="setDebugTarget()">Utiliser la cible debug</button>
+                        <button type="button" id="reset-step-target-btn" x-on:click="resetStepTarget()">Revenir à la cible de l’étape</button>
                         <label for="mock-lat">Lat :</label>
                         <input type="text" id="mock-lat" x-model="mockLat" value="{{ $step->lat }}">
                         <label for="mock-lng">Lng :</label>
