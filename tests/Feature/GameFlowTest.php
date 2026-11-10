@@ -579,8 +579,8 @@ class GameFlowTest extends TestCase
         $this->actingAs($user);
 
         $test = Livewire::test(GameRouter::class);
-        $test->assertSeeHtml('wire:key="scanner-' . $user->id . '"');
-        $test->assertDontSeeHtml('wire:key="scanner-' . $user->id . '-1-GUESSING_LOCATION"');
+        $test->assertSeeHtml('wire:key="scanner-'.$user->id.'"');
+        $test->assertDontSeeHtml('wire:key="scanner-'.$user->id.'-1-GUESSING_LOCATION"');
     }
 
     public function test_scanner_handles_sequential_invalid_and_valid_scans_with_recovery(): void

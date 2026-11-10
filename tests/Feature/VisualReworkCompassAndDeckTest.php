@@ -29,10 +29,13 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
 
-        // Seamless dotted background pattern
+        // Seamless dotted background pattern & full viewport containment
         $response->assertSee('radial-gradient(#D1D5DB 1.5px, transparent 1.5px)', false);
         $response->assertSee('background-size: 20px 20px', false);
         $response->assertSee('#FAF8F5');
+        $response->assertSee('height: 100dvh;', false);
+        $response->assertSee('overflow: hidden;', false);
+        $response->assertSee('overscroll-behavior: none;', false);
 
         // Absolute absence of emojis in the rendered page
         $content = $response->getContent();
@@ -76,6 +79,30 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');
     }
 
+    public function test_auth_forms_share_uniform_card_styling_and_vertical_responsiveness(): void
+    {
+        $test = Livewire::test(LoginRegister::class);
+
+        // Landing uniform card
+        $test->assertSeeHtml('border: 3.5px solid #1a1a1a')
+            ->assertSeeHtml('border-radius: 20px')
+            ->assertSeeHtml('box-shadow: 0 6px 0 #1a1a1a');
+
+        // Register uniform card
+        $test->call('setMode', 'register')
+            ->assertSeeHtml('margin: 12px 0; overflow-y: auto')
+            ->assertSeeHtml('border: 3.5px solid #1a1a1a')
+            ->assertSeeHtml('border-radius: 20px')
+            ->assertSeeHtml('box-shadow: 0 6px 0 #1a1a1a');
+
+        // Login uniform card
+        $test->call('setMode', 'login')
+            ->assertSeeHtml('margin: 12px 0; overflow-y: auto')
+            ->assertSeeHtml('border: 3.5px solid #1a1a1a')
+            ->assertSeeHtml('border-radius: 20px')
+            ->assertSeeHtml('box-shadow: 0 6px 0 #1a1a1a');
+    }
+
     public function test_phase_a_mystery_compass_with_swaying_question_mark_and_dial(): void
     {
         $user = User::factory()->create([
@@ -103,9 +130,10 @@ class VisualReworkCompassAndDeckTest extends TestCase
             // Discreet debug button available in Phase A
             ->assertSeeHtml('[•] debug')
             ->assertSeeHtml('x-on:click="debugModalOpen = !debugModalOpen"')
-            // Deck of cards fan shape (-6deg / +6deg) and bottom cut-off
-            ->assertSeeHtml('rotate(-6deg)')
-            ->assertSeeHtml('rotate(6deg)')
+            // Deck of cards fan shape (-5deg / +5deg) with top: 14px offset and bottom cut-off
+            ->assertSeeHtml('rotate(-5deg)')
+            ->assertSeeHtml('rotate(5deg)')
+            ->assertSeeHtml('top: 14px')
             ->assertSeeHtml('border-bottom: none')
             ->assertSeeHtml('id="phase-a-scanner-btn"')
             ->assertSee('Scanner la carte');
@@ -114,7 +142,7 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');
     }
 
-    public function test_phase_b_compass_needle_differentiation_red_target_and_gold_opposite(): void
+    public function test_phase_b_compass_needle_differentiation_gold_target_and_red_opposite(): void
     {
         $user = User::factory()->create([
             'current_step' => 2,
@@ -124,11 +152,11 @@ class VisualReworkCompassAndDeckTest extends TestCase
 
         $test = Livewire::test(Hub::class);
 
-        // Bicolore needle
+        // Bicolore needle: gold pointer pointing to target, red opposite tail
         $test->assertSeeHtml('id="compass-needle-target"')
-            ->assertSeeHtml('fill="#B91C1C"') // Red Sang target tip
+            ->assertSeeHtml('fill="#F4B316"') // Gold target tip pointing towards destination
             ->assertSeeHtml('id="compass-needle-opposite"')
-            ->assertSeeHtml('fill="#F4B316"') // Gold opposite tail
+            ->assertSeeHtml('fill="#B91C1C"') // Red Sang opposite tail
             // Refined strokes
             ->assertSeeHtml('stroke-width="3.5"')
             ->assertSeeHtml('stroke-width="4"')
@@ -138,10 +166,33 @@ class VisualReworkCompassAndDeckTest extends TestCase
             // Discreet debug button
             ->assertSeeHtml('[•] debug')
             ->assertSeeHtml('x-on:click="debugModalOpen = !debugModalOpen"')
-            // Deck of cards
-            ->assertSeeHtml('rotate(-6deg)')
-            ->assertSeeHtml('rotate(6deg)')
+            // Deck of cards (-5deg / +5deg with top: 14px)
+            ->assertSeeHtml('rotate(-5deg)')
+            ->assertSeeHtml('rotate(5deg)')
+            ->assertSeeHtml('top: 14px')
             ->assertSeeHtml('id="hub-distance-metric-btn"');
+
+        $html = $test->html();
+        $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');
+    }
+
+    public function test_debug_modal_provides_teleportation_buttons_without_emojis(): void
+    {
+        $user = User::factory()->create([
+            'current_step' => 2,
+            'phase' => 'WALKING_TO_TARGET',
+        ]);
+        $this->actingAs($user);
+
+        $test = Livewire::test(Hub::class);
+
+        // Direct TP actions
+        $test->assertSeeHtml('id="teleport-target-btn"')
+            ->assertSee('TP sur le spot (0m)')
+            ->assertSeeHtml('teleportToTarget(0)')
+            ->assertSeeHtml('id="teleport-approach-btn"')
+            ->assertSee('TP approche (100m)')
+            ->assertSeeHtml('teleportToTarget(100)');
 
         $html = $test->html();
         $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');

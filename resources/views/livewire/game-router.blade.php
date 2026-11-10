@@ -2,12 +2,13 @@
     tab: $wire.entangle('currentTab', true),
     profileModalOpen: false
 }"
-    style="max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif;">
+    style="max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; position: relative;">
     @if(!Auth::check())
         <livewire:auth.login-register />
     @else
         <!-- Header compact fidèle à la maquette -->
-        <header style="padding: 12px 14px 6px 14px; position: sticky; top: 0; z-index: 40; background: transparent;">
+        <header
+            style="padding: 10px 14px 4px 14px; position: relative; z-index: 40; flex-shrink: 0; background: transparent;">
             <div
                 style="background: #E5E7EB; border: 2.5px solid #1A1A1A; border-radius: 18px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 0 #1A1A1A;">
                 <!-- Bulle Avatar ronde à gauche (Gali le mineur, cliquable pour voir profil / déconnexion) -->
@@ -96,14 +97,17 @@
         </header>
 
         <!-- Contenu des onglets -->
-        <main style="flex: 1; display: flex; flex-direction: column;">
-            <div x-show="tab === 'hub'" id="tab-pane-hub" style="{{ $currentTab === 'hub' ? '' : 'display: none;' }}">
+        <main style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; position: relative;">
+            <div x-show="tab === 'hub'" id="tab-pane-hub" style="{{ $currentTab === 'hub' ? '' : 'display: none;' }}"
+                class="tab-pane-wrapper">
                 <livewire:game.hub :wire:key="'hub-'.Auth::id().'-'.Auth::user()->current_step.'-'.Auth::user()->phase" />
             </div>
-            <div x-show="tab === 'scanner'" id="tab-pane-scanner" style="{{ $currentTab === 'scanner' ? '' : 'display: none;' }}">
+            <div x-show="tab === 'scanner'" id="tab-pane-scanner"
+                style="{{ $currentTab === 'scanner' ? '' : 'display: none;' }}" class="tab-pane-wrapper">
                 <livewire:game.scanner :wire:key="'scanner-'.Auth::id()" />
             </div>
-            <div x-show="tab === 'inventory'" id="tab-pane-inventory" style="{{ $currentTab === 'inventory' ? '' : 'display: none;' }}">
+            <div x-show="tab === 'inventory'" id="tab-pane-inventory"
+                style="{{ $currentTab === 'inventory' ? '' : 'display: none;' }}" class="tab-pane-wrapper">
                 <livewire:game.inventory :wire:key="'inventory-'.Auth::id().'-'.Auth::user()->fragments()->count()" />
             </div>
         </main>
