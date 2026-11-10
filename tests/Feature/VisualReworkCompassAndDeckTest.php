@@ -7,6 +7,7 @@ use App\Livewire\Game\Hub;
 use App\Livewire\Game\Inventory;
 use App\Livewire\Game\Scanner;
 use App\Livewire\GameRouter;
+use App\Models\Fragment;
 use App\Models\Step;
 use App\Models\User;
 use Database\Seeders\StepSeeder;
@@ -70,6 +71,11 @@ class VisualReworkCompassAndDeckTest extends TestCase
             ->assertSeeHtml('goToSlide(0)')
             ->assertSeeHtml('goToSlide(1)')
             ->assertSeeHtml('goToSlide(2)')
+            // Perfect round pagination dots
+            ->assertSeeHtml('min-width: 14px')
+            ->assertSeeHtml('min-height: 14px')
+            ->assertSeeHtml('flex-shrink: 0')
+            ->assertSeeHtml('border-radius: 50%')
             // Final action buttons
             ->assertSee('Créer une équipe')
             ->assertSee('Connexion équipe')
@@ -130,6 +136,13 @@ class VisualReworkCompassAndDeckTest extends TestCase
             // Discreet debug button available in Phase A
             ->assertSeeHtml('[•] debug')
             ->assertSeeHtml('x-on:click="debugModalOpen = !debugModalOpen"')
+            // Compass responsiveness
+            ->assertSeeHtml('max-width: min(70vw, 260px)')
+            // Clean destination title without 'Étape X :'
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Place Jean Jaurès</span>')
+            ->assertDontSee('Destination : <span style="color: #F4B316;">Étape 1 :')
+            // Responsive card deck with 22px side margins (width: calc(100% - 44px); max-width: 295px)
+            ->assertSeeHtml('width: calc(100% - 44px); max-width: 295px')
             // Deck of cards fan shape (-5deg / +5deg) with top: 14px offset and bottom cut-off
             ->assertSeeHtml('rotate(-5deg)')
             ->assertSeeHtml('rotate(5deg)')
@@ -166,6 +179,13 @@ class VisualReworkCompassAndDeckTest extends TestCase
             // Discreet debug button
             ->assertSeeHtml('[•] debug')
             ->assertSeeHtml('x-on:click="debugModalOpen = !debugModalOpen"')
+            // Compass responsiveness
+            ->assertSeeHtml('max-width: min(70vw, 260px)')
+            // Clean destination title without 'Étape X :'
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Gare de Lens</span>')
+            ->assertDontSee('Destination : <span style="color: #F4B316;">Étape 2 :')
+            // Responsive card deck with 22px side margins
+            ->assertSeeHtml('width: calc(100% - 44px); max-width: 295px')
             // Deck of cards (-5deg / +5deg with top: 14px)
             ->assertSeeHtml('rotate(-5deg)')
             ->assertSeeHtml('rotate(5deg)')
@@ -174,6 +194,17 @@ class VisualReworkCompassAndDeckTest extends TestCase
 
         $html = $test->html();
         $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');
+    }
+
+    public function test_test_qr_route_enables_vertical_scrolling(): void
+    {
+        $response = $this->get('/test-qr');
+        $response->assertStatus(200);
+        $response->assertSee('overflow-y: auto !important', false);
+        $response->assertSee('height: auto !important', false);
+        $response->assertSee('max-height: none !important', false);
+        $response->assertSee('overscroll-behavior: auto !important', false);
+        $response->assertSee('background-color: #0b1120 !important', false);
     }
 
     public function test_debug_modal_provides_teleportation_buttons_without_emojis(): void
@@ -222,6 +253,20 @@ class VisualReworkCompassAndDeckTest extends TestCase
 
         $invHtml = $invTest->html();
         $this->assertDoesNotMatch($invHtml, '/[\x{1F300}-\x{1F9FF}]/u');
+    }
+
+    public function test_inventory_cleans_step_name_without_duplicated_step_prefix(): void
+    {
+        $user = User::factory()->create();
+        Fragment::create([
+            'user_id' => $user->id,
+            'step_id' => 1,
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Inventory::class)
+            ->assertSeeHtml('Étape 1 : Place Jean Jaurès — Fragment :')
+            ->assertDontSee('Étape 1 : Étape 1 :');
     }
 
     protected function assertDoesNotMatch(string $content, string $pattern): void

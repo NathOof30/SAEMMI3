@@ -181,6 +181,7 @@ class HubUxAndAuthRedesignTest extends TestCase
         $this->actingAs($user);
 
         $step5 = Step::find(5);
+        $cleanName = preg_replace('/^Étape\s*\d+\s*:\s*/iu', '', $step5->name);
 
         Livewire::test(Hub::class)
             // Giant compass styling from media_1794327054753_4b510fd0.png
@@ -190,7 +191,7 @@ class HubUxAndAuthRedesignTest extends TestCase
             ->assertSeeHtml('id="compass-needle-opposite"')
             ->assertSeeHtml('#B91C1C') // Red central pivot
             // Lower card with black outline
-            ->assertSeeHtml('Destination : <span style="color: #F4B316;">'.$step5->name.'</span>')
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">'.$cleanName.'</span>')
             ->assertSee('Suivez la boussole, observez autour de vous et trouvez le spot')
             // Dynamic action button: metric display (> 30m) vs Scanner button (<= 30m)
             ->assertSeeHtml('id="hub-distance-metric-btn"')

@@ -67,6 +67,18 @@
             transform-box: fill-box;
         }
     </style>
+    @if(request()->is('test-qr*'))
+        <style>
+            html, body {
+                overflow-y: auto !important;
+                height: auto !important;
+                max-height: none !important;
+                overscroll-behavior: auto !important;
+                background-color: #0b1120 !important;
+                background-image: none !important;
+            }
+        </style>
+    @endif
     @livewireStyles
 </head>
 <body style="margin: 0; padding: 0; height: 100%; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed;">

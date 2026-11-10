@@ -90,7 +90,7 @@
                 <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #374151;">
                     @foreach($fragments as $fragment)
                         <li style="margin-bottom: 4px;">
-                            Étape {{ $fragment->step->id }} : {{ $fragment->step->name }} — Fragment :
+                            Étape {{ $fragment->step->id }} : {{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $fragment->step->name) }} — Fragment :
                             <strong>{{ $fragment->step->code_part }}</strong>
                         </li>
                     @endforeach
@@ -124,7 +124,7 @@
                 <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #374151;">
                     @foreach($fragments as $fragment)
                         <li style="margin-bottom: 6px;">
-                            Étape {{ $fragment->step->id }} : {{ $fragment->step->name }} — Fragment :
+                            Étape {{ $fragment->step->id }} : {{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $fragment->step->name) }} — Fragment :
                             <strong>{{ $fragment->step->code_part }}</strong>
                         </li>
                     @endforeach

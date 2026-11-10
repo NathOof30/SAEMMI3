@@ -375,9 +375,7 @@
                 </div>
 
                 <div style="font-size: 12px; color: #4B5563;">
-                    <p id="distance-display" style="margin: 4px 0;">Distance :
-                        {{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}
-                    </p>
+                    <p id="distance-display" style="margin: 4px 0;">Distance : {{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}</p>
                     <p id="bearing-display" style="margin: 4px 0;">Cap vers la cible : <strong
                             x-text="bearing !== null ? Math.round(bearing) + '°' : 'En attente GPS...'">En attente
                             GPS...</strong></p>
@@ -461,7 +459,7 @@
                 <div
                     style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; margin: auto 0;">
                     <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole mystère de recherche"
-                        style="width: min(76vw, 290px); height: min(76vw, 290px); display: block; max-width: 290px; max-height: 290px;">
+                        style="width: min(70vw, 260px); height: min(70vw, 260px); display: block; max-width: min(70vw, 260px); max-height: min(70vw, 260px);">
                         <!-- Cadran extérieur vert sauge cerclé de noir -->
                         <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="4" />
 
@@ -478,8 +476,7 @@
                             <line x1="100" y1="177" x2="100" y2="172" stroke="#1A1A1A" stroke-width="2.5" />
                             <line x1="23" y1="100" x2="28" y2="100" stroke="#1A1A1A" stroke-width="2.5" />
                             <!-- Points cardinaux -->
-                            <text x="100" y="38" text-anchor="middle" dominant-baseline="central" font-size="16"
-                                font-weight="900" fill="#B91C1C">N</text>
+                            <text x="100" y="38" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="900" fill="#B91C1C">N</text>
                             <text x="162" y="100" text-anchor="middle" dominant-baseline="central" font-size="14"
                                 font-weight="900" fill="#1A1A1A">E</text>
                             <text x="100" y="162" text-anchor="middle" dominant-baseline="central" font-size="14"
@@ -501,7 +498,7 @@
                 </div>
 
                 <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
-                <div style="position: relative; width: 100%; max-width: 360px; margin: 0 auto; margin-top: auto; z-index: 10;">
+                <div style="position: relative; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
@@ -516,7 +513,7 @@
                     <div
                         style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 20px 20px 36px 20px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
                         <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 10px 0; color: #1A1A1A;">
-                            Destination : <span style="color: #F4B316;">{{ $step->name }}</span>
+                            Destination : <span style="color: #F4B316;">{{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $step->name) }}</span>
                         </h3>
 
                         <div style="margin-bottom: 16px;">
@@ -545,7 +542,7 @@
                 <div
                     style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; margin: auto 0;">
                     <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole d'orientation vers la cible"
-                        style="width: min(76vw, 290px); height: min(76vw, 290px); display: block; max-width: 290px; max-height: 290px;">
+                        style="width: min(70vw, 260px); height: min(70vw, 260px); display: block; max-width: min(70vw, 260px); max-height: min(70vw, 260px);">
                         <!-- Cadran extérieur vert sauge cerclé de noir -->
                         <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="4" />
 
@@ -562,8 +559,7 @@
                             <line x1="100" y1="177" x2="100" y2="172" stroke="#1A1A1A" stroke-width="2.5" />
                             <line x1="23" y1="100" x2="28" y2="100" stroke="#1A1A1A" stroke-width="2.5" />
                             <!-- Points cardinaux -->
-                            <text x="100" y="38" text-anchor="middle" dominant-baseline="central" font-size="16"
-                                font-weight="900" fill="#B91C1C">N</text>
+                            <text x="100" y="38" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="900" fill="#B91C1C">N</text>
                             <text x="162" y="100" text-anchor="middle" dominant-baseline="central" font-size="14"
                                 font-weight="900" fill="#1A1A1A">E</text>
                             <text x="100" y="162" text-anchor="middle" dominant-baseline="central" font-size="14"
@@ -590,7 +586,7 @@
                 </div>
 
                 <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
-                <div style="position: relative; width: 100%; max-width: 360px; margin: 0 auto; margin-top: auto; z-index: 10;">
+                <div style="position: relative; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
@@ -605,7 +601,7 @@
                     <div
                         style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 20px 20px 36px 20px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
                         <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 8px 0; color: #1A1A1A;">
-                            Destination : <span style="color: #F4B316;">{{ $step->name }}</span>
+                            Destination : <span style="color: #F4B316;">{{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $step->name) }}</span>
                         </h3>
 
                         <p style="font-size: 13px; color: #4B5563; line-height: 1.4; margin: 0 0 16px 0;">
