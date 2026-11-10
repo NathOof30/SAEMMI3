@@ -2,7 +2,8 @@
     tab: $wire.entangle('currentTab', true),
     profileModalOpen: false
 }"
-    style="max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; position: relative;">
+@set-tab.window="tab = $event.detail.tab; if (window.Livewire) { window.Livewire.dispatch('set-tab', { tab: $event.detail.tab }); }"
+    style="max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; position: relative; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;">
     @if(!Auth::check())
         <livewire:auth.login-register />
     @else

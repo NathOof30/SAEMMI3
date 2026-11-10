@@ -110,7 +110,8 @@ class PwaAndTestQrTest extends TestCase
         $this->assertEquals('Expédition Lens', $json['short_name']);
         $this->assertEquals('standalone', $json['display']);
         $this->assertEquals('portrait', $json['orientation']);
-        $this->assertEquals('#d97706', $json['theme_color']);
+        $this->assertEquals('#000000', $json['theme_color']);
+        $this->assertEquals('#000000', $json['background_color']);
         $this->assertEquals('/', $json['start_url']);
         $this->assertNotEmpty($json['icons']);
         $this->assertEquals('/icon.svg', $json['icons'][0]['src']);
@@ -122,7 +123,7 @@ class PwaAndTestQrTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('<link rel="manifest" href="/manifest.webmanifest">', false);
-        $response->assertSee('<meta name="theme-color" content="#d97706">', false);
+        $response->assertSee('<meta name="theme-color" content="#000000">', false);
         $response->assertSee('<meta name="apple-mobile-web-app-capable" content="yes">', false);
         $response->assertSee('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', false);
         $response->assertSee('<meta name="apple-mobile-web-app-title" content="Expédition Lens">', false);

@@ -165,13 +165,22 @@
                     }
                 },
                 requestOrientationPermission() {
+                    const markGranted = () => {
+                        this.permissionState = 'granted';
+                        this.needsPermission = false;
+                        try {
+                            localStorage.setItem('compass_permission_granted', '1');
+                            window.__compass_permission_granted = true;
+                        } catch (e) {}
+                        this.startOrientationListener();
+                    };
+
                     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                         DeviceOrientationEvent.requestPermission()
                             .then(response => {
                                 this.permissionState = response;
                                 if (response === 'granted') {
-                                    this.needsPermission = false;
-                                    this.startOrientationListener();
+                                    markGranted();
                                 } else {
                                     this.needsPermission = true;
                                 }
@@ -181,9 +190,13 @@
                                 this.needsPermission = true;
                             });
                     } else {
-                        this.permissionState = 'granted';
-                        this.needsPermission = false;
-                        this.startOrientationListener();
+                        markGranted();
+                    }
+
+                    if (navigator.geolocation) {
+                        try {
+                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                        } catch (e) {}
                     }
                 },
                 startOrientationListener() {
@@ -262,7 +275,27 @@
                         this.$cleanup(() => this.cleanup());
                     }
 
-                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const hasStoredPermission = window.__compass_permission_granted || (function() {
+                        try {
+                            return localStorage.getItem('compass_permission_granted') === '1';
+                        } catch (e) {
+                            return false;
+                        }
+                    })();
+
+                    if (hasStoredPermission) {
+                        this.needsPermission = false;
+                        this.permissionState = 'granted';
+                        this.startOrientationListener();
+
+                        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function' && !window.__compass_permission_granted) {
+                            setTimeout(() => {
+                                if (this.deviceHeading === null && !this.isMocking) {
+                                    this.needsPermission = true;
+                                }
+                            }, 1800);
+                        }
+                    } else if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                         this.needsPermission = true;
                         this.permissionState = 'prompt';
                     } else {

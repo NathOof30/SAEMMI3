@@ -7,7 +7,7 @@
 
     <!-- PWA Web App Manifest -->
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#d97706">
+    <meta name="theme-color" content="#000000">
 
     <!-- iOS / Safari PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">

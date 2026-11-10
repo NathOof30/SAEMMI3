@@ -131,7 +131,7 @@
                         };
 
                         const onScanSuccess = (scannedText) => {
-                            if (this.isLocked) {
+                            if (this.isLocked || document.getElementById('fullscreen-scan-overlay')) {
                                 return;
                             }
 
@@ -144,26 +144,20 @@
                             this.lastScannedCode = scannedText;
                             this.lastScanTime = now;
 
-                            const unlock = () => {
-                                setTimeout(() => {
-                                    this.isLocked = false;
-                                }, 2000);
-                            };
-
                             if (typeof @this !== 'undefined' && @this.verifyCode) {
                                 try {
                                     const promise = @this.verifyCode(scannedText);
-                                    if (promise && typeof promise.then === 'function') {
-                                        promise.then(() => unlock()).catch(() => unlock());
-                                    } else {
-                                        unlock();
+                                    if (promise && typeof promise.catch === 'function') {
+                                        promise.catch(() => {
+                                            this.isLocked = false;
+                                        });
                                     }
                                 } catch (err) {
                                     console.error('Erreur verifyCode:', err);
-                                    unlock();
+                                    this.isLocked = false;
                                 }
                             } else {
-                                unlock();
+                                this.isLocked = false;
                             }
                         };
 
@@ -313,8 +307,7 @@
 
         async reactivateScanner() {
             this.isLocked = false;
-            this.lastScannedCode = null;
-            this.lastScanTime = 0;
+            this.lastScanTime = Date.now();
             this.cameraErrorMessage = null;
 
             if (typeof @this !== 'undefined' && @this.resetScanState) {
@@ -344,6 +337,115 @@
     } else if ($event.detail && $event.detail.tab !== 'scanner') {
         cleanup(false);
     }">
+    @if($scanStatus)
+        <div id="fullscreen-scan-overlay"
+            x-data="{
+                autoDismissTimer: null,
+                init() {
+                    const status = '{{ $scanStatus }}';
+                    const delay = (status === 'success') ? 1800 : 2800;
+
+                    this.autoDismissTimer = setTimeout(() => {
+                        this.dismiss();
+                    }, delay);
+                },
+                dismiss() {
+                    if (this.autoDismissTimer) {
+                        clearTimeout(this.autoDismissTimer);
+                        this.autoDismissTimer = null;
+                    }
+                    const status = '{{ $scanStatus }}';
+                    const target = '{{ $scanTargetTab }}';
+                    $wire.dismissScanOverlay();
+                    if (target) {
+                        if (typeof tab !== 'undefined') {
+                            tab = target;
+                        }
+                        this.$dispatch('set-tab', { tab: target });
+                        if (window.Livewire) {
+                            window.Livewire.dispatch('set-tab', { tab: target });
+                        }
+                    }
+                    if (status === 'error') {
+                        reactivateScanner();
+                    }
+                }
+            }"
+            x-on:click.self="dismiss()"
+            style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; {{ $scanStatus === 'success' ? 'background: rgba(0, 0, 0, 0.88);' : 'background: rgba(28, 4, 4, 0.92);' }} backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 0.2s ease-out;">
+
+            <style>
+                @keyframes fadeInOverlay {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleInCard {
+                    from { transform: scale(0.85); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                .scan-card-glow-success {
+                    box-shadow: 0 10px 0 #1A1A1A, 0 0 0 8px rgba(34, 197, 94, 0.35), 0 0 50px rgba(34, 197, 94, 0.6) !important;
+                }
+                .scan-card-glow-error {
+                    box-shadow: 0 10px 0 #1A1A1A, 0 0 0 8px rgba(239, 68, 68, 0.35), 0 0 50px rgba(239, 68, 68, 0.6) !important;
+                }
+            </style>
+
+            <div class="{{ $scanStatus === 'success' ? 'scan-card-glow-success' : 'scan-card-glow-error' }}"
+                style="background: #FFFFFF; border: 4px solid #1A1A1A; border-radius: 24px; padding: 28px 22px; width: 100%; max-width: 350px; text-align: center; position: relative; animation: scaleInCard 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
+
+                <!-- Badge Icône Néobrutaliste avec Halo lumineux & Outline noir -->
+                @if($scanStatus === 'success')
+                    <div style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #DCFCE7; border: 3.5px solid #1A1A1A; box-shadow: 0 4px 0 #1A1A1A, 0 0 25px rgba(34, 197, 94, 0.5); display: flex; align-items: center; justify-content: center;">
+                        <svg viewBox="0 0 48 48" width="46" height="46" fill="none">
+                            <path d="M10 25 L20 35 L38 13" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 25 L20 35 L38 13" stroke="#22C55E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                @else
+                    <div style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #FEE2E2; border: 3.5px solid #1A1A1A; box-shadow: 0 4px 0 #1A1A1A, 0 0 25px rgba(239, 68, 68, 0.5); display: flex; align-items: center; justify-content: center;">
+                        <svg viewBox="0 0 48 48" width="46" height="46" fill="none">
+                            <path d="M14 14 L34 34 M34 14 L14 34" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M14 14 L34 34 M34 14 L14 34" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                @endif
+
+                <!-- Titre -->
+                <h3 id="scan-overlay-title"
+                    style="font-size: 21px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: -0.5px; {{ $scanStatus === 'success' ? 'color: #15803D;' : 'color: #B91C1C;' }}">
+                    {{ $scanTitle }}
+                </h3>
+
+                <!-- Sous-titre explicatif -->
+                <p id="scan-overlay-subtitle"
+                    style="font-size: 14px; font-weight: 600; color: #374151; line-height: 1.45; margin: 0 0 20px 0;">
+                    {{ $scanSubtitle }}
+                </p>
+
+                <!-- Bouton d'action / indicateur néobrutaliste -->
+                @if($scanStatus === 'success')
+                    <button type="button" x-on:click="dismiss()" id="scan-overlay-action-btn"
+                        class="btn-bounce"
+                        style="width: 100%; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-weight: 900; font-size: 14px; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
+                        {{ $scanTargetTab === 'inventory' ? 'Ouvrir mon inventaire →' : 'Poursuivre vers la boussole →' }}
+                    </button>
+                    <div style="margin-top: 10px; font-size: 11px; font-weight: 700; color: #6B7280;">
+                        Redirection automatique...
+                    </div>
+                @else
+                    <button type="button" x-on:click="dismiss()" id="scan-overlay-dismiss-btn"
+                        class="btn-bounce"
+                        style="width: 100%; padding: 12px 16px; background: #F3F4F6; color: #1A1A1A; font-weight: 900; font-size: 14px; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
+                        Réessayer le scan ✕
+                    </button>
+                    <div style="margin-top: 10px; font-size: 11px; font-weight: 700; color: #6B7280;">
+                        Fermeture automatique...
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
     <div style="max-width: 480px; margin: 0 auto; padding: 10px 16px;">
         <div style="margin-bottom: 12px;">
             <button type="button" id="scanner-back-to-hub-btn" x-on:click="tab = 'hub'"
