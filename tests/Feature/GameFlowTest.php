@@ -466,4 +466,113 @@ class GameFlowTest extends TestCase
             ->assertSeeHtml('id="qr-reader"')
             ->assertSeeHtml('wire:submit="verifyManualCode"');
     }
+
+    public function test_scanner_view_contains_cooldown_lock_cleanup_and_reactivate_button(): void
+    {
+        $user = User::create([
+            'name' => 'Scanner Team',
+            'team_name' => 'Scanner Team',
+            'email' => 'scanner-ui@lens.fr',
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Scanner::class)
+            ->assertSeeHtml('id="btn-reactivate-scanner"')
+            ->assertSeeHtml('Réactiver le scanner')
+            ->assertSeeHtml('reactivateScanner()')
+            ->assertSeeHtml('isInitialized')
+            ->assertSeeHtml('isLocked')
+            ->assertSeeHtml('stopCameraTracks()');
+    }
+
+    public function test_scanner_reset_scan_state_clears_error_and_message(): void
+    {
+        $user = User::create([
+            'name' => 'Reset State Team',
+            'team_name' => 'Reset State Team',
+            'email' => 'reset-state@lens.fr',
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Scanner::class)
+            // Trigger an error first
+            ->call('verifyCode', 'INVALID-CODE')
+            ->assertSee('Code invalide')
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_1).")
+            // Call resetScanState
+            ->call('resetScanState')
+            ->assertSet('error', null)
+            ->assertSet('message', null)
+            ->assertSet('manualCode', '');
+    }
+
+    public function test_game_router_uses_persistent_wire_key_for_scanner(): void
+    {
+        $user = User::create([
+            'name' => 'Persistent Key Team',
+            'team_name' => 'Persistent Key Team',
+            'email' => 'key@lens.fr',
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+
+        $this->actingAs($user);
+
+        $test = Livewire::test(GameRouter::class);
+        $test->assertSeeHtml('wire:key="scanner-'.$user->id.'"');
+        $test->assertDontSeeHtml('wire:key="scanner-'.$user->id.'-1-GUESSING_LOCATION"');
+    }
+
+    public function test_scanner_handles_sequential_invalid_and_valid_scans_with_recovery(): void
+    {
+        $user = User::create([
+            'name' => 'Recovery Team',
+            'team_name' => 'Recovery Team',
+            'email' => 'recovery@lens.fr',
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+
+        $this->actingAs($user);
+
+        $component = Livewire::test(Scanner::class);
+
+        // 1. First scan is invalid
+        $component->call('verifyCode', 'NOT_VALID')
+            ->assertSee('Code invalide')
+            ->assertSet('message', null);
+
+        // 2. User recovers / resets
+        $component->call('resetScanState')
+            ->assertSet('error', null);
+
+        // 3. User scans valid Map QR
+        $component->call('verifyCode', 'MAP_LOC_1')
+            ->assertSee('QR Map validé')
+            ->assertSet('error', null);
+
+        $user->refresh();
+        $this->assertEquals('WALKING_TO_TARGET', $user->phase);
+
+        // 4. In walking phase, user scans wrong MJ code
+        $component->call('verifyCode', 'MJ_STEP_999')
+            ->assertSee('Code invalide')
+            ->assertSet('message', null);
+
+        // 5. User resets and scans valid MJ code
+        $component->call('resetScanState')
+            ->call('verifyCode', 'MJ_STEP_1')
+            ->assertSee('QR MJ validé')
+            ->assertSet('error', null);
+
+        $user->refresh();
+        $this->assertEquals(2, $user->current_step);
+        $this->assertEquals('GUESSING_LOCATION', $user->phase);
+    }
 }

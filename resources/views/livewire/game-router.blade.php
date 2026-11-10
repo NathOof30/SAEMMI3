@@ -30,7 +30,7 @@
                 <livewire:game.hub :wire:key="'hub-'.Auth::id().'-'.Auth::user()->current_step.'-'.Auth::user()->phase" />
             </div>
             <div x-show="tab === 'scanner'" id="tab-pane-scanner" style="{{ $currentTab === 'scanner' ? '' : 'display: none;' }}">
-                <livewire:game.scanner :wire:key="'scanner-'.Auth::id().'-'.Auth::user()->current_step.'-'.Auth::user()->phase" />
+                <livewire:game.scanner :wire:key="'scanner-'.Auth::id()" />
             </div>
             <div x-show="tab === 'inventory'" id="tab-pane-inventory" style="{{ $currentTab === 'inventory' ? '' : 'display: none;' }}">
                 <livewire:game.inventory :wire:key="'inventory-'.Auth::id().'-'.Auth::user()->fragments()->count()" />

@@ -16,6 +16,13 @@ class Scanner extends Component
 
     public ?string $error = null;
 
+    public function resetScanState(): void
+    {
+        $this->error = null;
+        $this->message = null;
+        $this->manualCode = '';
+    }
+
     public function verifyManualCode(): void
     {
         $this->verifyCode($this->manualCode);
