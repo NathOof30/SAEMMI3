@@ -13,6 +13,7 @@ use App\Models\User;
 use Database\Seeders\StepSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -52,15 +53,24 @@ class GameFlowTest extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
         $response->assertSee('Connexion / Inscription Équipe');
-        $response->assertSee('Nom de l\'équipe :', false);
+        $response->assertSee('Démarrer l\'aventure', false);
+        $response->assertSee('Créer une équipe');
+        $response->assertSee('Connexion équipe');
+
+        Livewire::test(LoginRegister::class)
+            ->call('setMode', 'register')
+            ->assertSee('Nom de l\'équipe :', false);
     }
 
     public function test_auth_login_register_creates_new_user_and_logs_in(): void
     {
         Livewire::test(LoginRegister::class)
+            ->set('mode', 'register')
             ->set('team_name', 'Les Explorateurs')
             ->set('email', 'explorateurs@lens.fr')
-            ->call('login')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->call('register')
             ->assertHasNoErrors()
             ->assertRedirect('/');
 
@@ -70,6 +80,10 @@ class GameFlowTest extends TestCase
         $this->assertEquals('explorateurs@lens.fr', $user->email);
         $this->assertEquals(1, $user->current_step);
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
+        $this->assertEquals('gali', $user->avatar);
+        $this->assertFalse($user->reward_picked);
+        $this->assertNotNull($user->reward_token);
+        $this->assertTrue(Hash::check('password123', $user->password));
     }
 
     public function test_auth_login_register_logs_in_existing_user(): void
@@ -78,13 +92,15 @@ class GameFlowTest extends TestCase
             'name' => 'Ancienne Équipe',
             'team_name' => 'Ancienne Équipe',
             'email' => 'deja@lens.fr',
+            'password' => Hash::make('secretpass'),
             'current_step' => 3,
             'phase' => 'WALKING_TO_TARGET',
         ]);
 
         Livewire::test(LoginRegister::class)
-            ->set('team_name', 'Ancienne Équipe')
+            ->set('mode', 'login')
             ->set('email', 'deja@lens.fr')
+            ->set('password', 'secretpass')
             ->call('login')
             ->assertHasNoErrors();
 
@@ -279,10 +295,20 @@ class GameFlowTest extends TestCase
     public function test_auth_validation_fails_on_empty_or_invalid_inputs(): void
     {
         Livewire::test(LoginRegister::class)
+            ->set('mode', 'register')
             ->set('team_name', '')
             ->set('email', 'not-an-email')
+            ->set('password', 'short')
+            ->set('password_confirmation', 'mismatch')
+            ->call('register')
+            ->assertHasErrors(['team_name', 'email', 'password']);
+
+        Livewire::test(LoginRegister::class)
+            ->set('mode', 'login')
+            ->set('email', 'not-an-email')
+            ->set('password', '')
             ->call('login')
-            ->assertHasErrors(['team_name', 'email']);
+            ->assertHasErrors(['email', 'password']);
     }
 
     public function test_scanner_rejects_out_of_sequence_or_unknown_codes(): void

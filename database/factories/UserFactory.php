@@ -31,6 +31,9 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'team_name' => fake()->words(2, true),
+            'avatar' => 'gali',
+            'reward_picked' => false,
+            'reward_token' => null,
             'current_step' => 1,
             'phase' => 'GUESSING_LOCATION',
         ];

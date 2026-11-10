@@ -27,6 +27,11 @@ class Inventory extends Component
 
         $finalCode = '';
         if ($hasWon) {
+            if ($user && empty($user->reward_token)) {
+                $user->generateRewardToken();
+                $user->refresh();
+            }
+
             $finalCode = $numericParts->count() >= 4
                 ? $numericParts->take(4)->implode('')
                 : ($numericParts->implode('') ?: '4819');
@@ -37,6 +42,8 @@ class Inventory extends Component
             'fragments' => $fragments,
             'hasWon' => $hasWon,
             'finalCode' => $finalCode,
+            'rewardToken' => $user?->reward_token ?? '',
+            'rewardPicked' => (bool) ($user?->reward_picked ?? false),
         ]);
     }
 }

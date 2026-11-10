@@ -1,24 +1,62 @@
-<div>
-    <h2>Boussole / Hub</h2>
-
+<div style="width: 100%; max-width: 480px; margin: 0 auto; padding: 10px 16px 20px 16px; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif;">
     @if($isFinished)
-        <p>Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour découvrir le code secret final.</p>
+        <div style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #1a1a1a; text-align: center;">
+            <h2 style="font-size: 24px; font-weight: 900; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
+            <p style="font-size: 15px; color: #374151; line-height: 1.5;">
+                Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour découvrir le code secret final.
+            </p>
+            <button type="button"
+                    x-on:click="tab = 'inventory'"
+                    wire:click="$dispatch('set-tab', { tab: 'inventory' })"
+                    style="margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 900; font-size: 16px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
+                Voir mon code secret Asmodee
+            </button>
+        </div>
     @elseif(!$step)
-        <p>Aucune étape active disponible.</p>
+        <div style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #1a1a1a; text-align: center;">
+            <p>Aucune étape active disponible.</p>
+        </div>
     @else
-        <h3>{{ $step->name }} (Étape {{ $user?->current_step ?? 1 }}/6)</h3>
-
         @if($user && $user->phase === 'GUESSING_LOCATION')
-            <div>
-                <h4>Phase A : Recherche sur la carte</h4>
-                <p><strong>Énigme :</strong> {{ $step->riddle_text }}</p>
-                <p>L'Enfant (Explorateur) cherche le lieu sur sa carte papier à l'aide du filtre optique. Le Parent scanne ensuite le QR code correspondant sur la carte (ex: <code>MAP_LOC_{{ $step->id }}</code>) dans l'onglet <strong>[Scanner]</strong>.</p>
+            <!-- Phase A : Recherche sur la carte papier -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                <!-- Card Destination avec outline noir franc (Phase A) -->
+                <div style="position: relative; width: 100%; max-width: 360px; margin: 16px auto 0 auto;">
+                    <!-- Ailes d'arrière-plan de la carte (effet collection) -->
+                    <div style="position: absolute; inset: 0; background: #D1D5DB; border: 3px solid #1A1A1A; border-radius: 20px; transform: scale(1.05, 0.96); z-index: 1;"></div>
+
+                    <!-- Carte principale blanche -->
+                    <div style="position: relative; z-index: 2; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 20px; padding: 20px; box-shadow: 0 6px 0 #1A1A1A;">
+                        <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 10px 0; color: #1A1A1A;">
+                            Destination : <span style="color: #F4B316;">{{ $step->name }}</span>
+                        </h3>
+
+                        <div style="margin-bottom: 16px;">
+                            <p style="font-size: 12px; font-weight: 800; color: #841818; text-transform: uppercase; margin: 0 0 6px 0;">
+                                Phase A : Recherche sur la carte
+                            </p>
+                            <p style="font-size: 14px; color: #374151; line-height: 1.45; margin: 0 0 8px 0;">
+                                <strong>Énigme :</strong> {{ $step->riddle_text }}
+                            </p>
+                            <p style="font-size: 12px; color: #6B7280; line-height: 1.4; margin: 0;">
+                                L'Enfant (Explorateur) cherche le lieu sur sa carte papier à l'aide du filtre optique. Le Parent scanne ensuite le QR code correspondant sur la carte (ex: <code>MAP_LOC_{{ $step->id }}</code>) dans l'onglet <strong>[Scanner]</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Gros bouton d'action Scanner en bas de carte -->
+                        <button type="button"
+                                id="phase-a-scanner-btn"
+                                class="btn-bounce"
+                                x-on:click="tab = 'scanner'"
+                                wire:click="$dispatch('set-tab', { tab: 'scanner' })"
+                                style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 20px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Scanner la carte
+                        </button>
+                    </div>
+                </div>
             </div>
         @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-            <div>
-                <h4>Phase B : Déplacement physique vers le lieu</h4>
-                <p>La famille marche jusqu'au monument réel à Lens en suivant la boussole GPS ci-dessous. Sur place, réalisez le défi physique puis scannez le QR code de l'animateur (ex: <code>MJ_STEP_{{ $step->id }}</code>) dans l'onglet <strong>[Scanner]</strong>.</p>
-            </div>
+            <!-- Phase B : Déplacement physique avec la Boussole Géante 60 FPS -->
             <div x-data="{
                 targetLat: {{ $step->lat }},
                 targetLng: {{ $step->lng }},
@@ -81,7 +119,11 @@
                     }
 
                     const diff = this.shortestAngleDiff(this.displayedAngle, targetNeedle);
-                    this.displayedAngle = (this.displayedAngle + diff * 0.35);
+                    if (Math.abs(diff) < 0.5) {
+                        this.displayedAngle = targetNeedle;
+                    } else {
+                        this.displayedAngle = (this.displayedAngle + diff * 0.35);
+                    }
                     this.displayedAngle = ((this.displayedAngle % 360) + 360) % 360;
                     this.needleAngle = Math.round(this.displayedAngle) % 360;
                 },
@@ -289,65 +331,136 @@
                         this.orientationBound = false;
                     }
                 }
-            }" x-init="init()">
-                <h4>Direction la cible</h4>
-                <p id="distance-display">Distance : Recherche de position GPS en cours...</p>
+            }" x-init="init()" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
 
-                <div id="compass-permission-section" x-show="needsPermission">
-                    <p><small>Sur smartphone (iOS Safari), l'accès à la boussole électronique nécessite votre permission explicite :</small></p>
-                    <button type="button" id="request-orientation-btn" x-on:click="requestOrientationPermission()">Activer la boussole du téléphone</button>
+                <!-- Permission iOS Safari -->
+                <div id="compass-permission-section" x-show="needsPermission" style="width: 100%; margin-bottom: 12px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 10px; text-align: center;">
+                    <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #92400E;">Permission boussole requise sur smartphone :</p>
+                    <button type="button"
+                            id="request-orientation-btn"
+                            x-on:click="requestOrientationPermission()"
+                            style="padding: 6px 14px; background: #841818; color: #ffffff; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                        Activer la boussole du téléphone
+                    </button>
                 </div>
 
-                <figure>
-                    <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole d'orientation vers la cible">
-                        <!-- Cadran extérieur de la boussole -->
-                        <circle cx="100" cy="100" r="95" fill="none" stroke="black" stroke-width="2" />
-                        <circle cx="100" cy="100" r="85" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="3,5" />
+                <h4 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 900; color: #841818; text-transform: uppercase; letter-spacing: 0.5px;">Direction la cible</h4>
 
-                        <!-- Repères cardinaux fixes du téléphone (Haut = Devant l'utilisateur) -->
-                        <text x="100" y="22" text-anchor="middle" font-size="12" font-weight="bold" fill="black">DEVANT</text>
-                        <text x="180" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="gray">D</text>
-                        <text x="100" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="gray">ARR</text>
-                        <text x="20" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="gray">G</text>
+                <!-- Boussole Centrale Géante (Fidèle à la photo media_1794327054753_4b510fd0.png) -->
+                <div style="position: relative; margin: 10px auto; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole d'orientation vers la cible" style="width: 250px; height: 250px; display: block;">
+                        <!-- Cadran extérieur vert sauge cerclé de noir -->
+                        <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="6" />
 
-                        <!-- Aiguille orientée vers la cible (interpolée sur le plus court chemin) -->
-                        <g :transform="'rotate(' + needleAngle + ' 100 100)'">
-                            <!-- Pointe Cible (flèche rouge vers la destination) -->
-                            <polygon id="compass-needle-target" points="100,26 112,100 88,100" fill="red" />
-                            <!-- Pointe Opposée (flèche foncée) -->
-                            <polygon id="compass-needle-opposite" points="100,174 112,100 88,100" fill="black" />
-                            <!-- Pivot central -->
-                            <circle cx="100" cy="100" r="7" fill="black" />
-                            <circle cx="100" cy="100" r="3" fill="white" />
+                        <!-- Cadran crème intermédiaire avec cercles concentriques noirs -->
+                        <circle cx="100" cy="100" r="78" fill="#F4EBD9" stroke="#1A1A1A" stroke-width="5" />
+                        <circle cx="100" cy="100" r="50" fill="none" stroke="#1A1A1A" stroke-width="4.5" />
+
+                        <!-- Repère cardinal fixe DEVANT -->
+                        <text x="100" y="24" text-anchor="middle" font-size="9" font-weight="900" fill="#1A1A1A" opacity="0.75" letter-spacing="1">DEVANT</text>
+
+                        <!-- Aiguille losange or à contour noir avec pivot central rouge (Rotation 60 FPS réactive) -->
+                        <g :transform="'rotate(' + needleAngle + ' 100 100)'" style="transition: transform 0.08s ease-out; transform-origin: 100px 100px;">
+                            <!-- Aiguille losange unifiée or à contour noir franc -->
+                            <polygon points="100,24 124,100 100,176 76,100"
+                                     fill="#F4B316"
+                                     stroke="#1A1A1A"
+                                     stroke-width="4.5"
+                                     stroke-linejoin="round" />
+
+                            <!-- Pointe Cible (partie supérieure pour référence/accessibilité) -->
+                            <polygon id="compass-needle-target"
+                                     points="100,24 124,100 76,100"
+                                     fill="#F4B316"
+                                     stroke="none" />
+
+                            <!-- Pointe Opposée (partie inférieure) -->
+                            <polygon id="compass-needle-opposite"
+                                     points="100,176 124,100 76,100"
+                                     fill="#F4B316"
+                                     stroke="none" />
+
+                            <!-- Pivot central rouge vif à contour noir franc -->
+                            <circle cx="100" cy="100" r="14" fill="#B91C1C" stroke="#1A1A1A" stroke-width="4.5" />
                         </g>
                     </svg>
-                    <figcaption><small>Flèche rouge = direction physique du monument à suivre dans la rue.</small></figcaption>
-                </figure>
-
-                <div>
-                    <p id="bearing-display">Cap vers la cible : <strong x-text="bearing !== null ? Math.round(bearing) + '°' : 'En attente GPS...'">En attente GPS...</strong></p>
-                    <p id="heading-display">Orientation du téléphone : <strong x-text="deviceHeading !== null ? Math.round(deviceHeading) + '° (' + headingSource + ')' : 'En attente capteur/mouvement...'">En attente capteur/mouvement...</strong></p>
-                    <p id="needle-display">Angle de l'aiguille : <strong x-text="needleAngle !== null ? needleAngle + '°' : '0°'">0°</strong></p>
-                    <p id="guidance-display">Indication : <strong x-text="getGuidanceText()">Recherche de cap en cours...</strong></p>
                 </div>
 
-                <div wire:ignore>
-                    <p><small>Cible active : <strong x-text="targetLabel">Monument de l’étape</strong> (Lat <span x-text="targetLat">{{ $step->lat }}</span>, Lng <span x-text="targetLng">{{ $step->lng }}</span>)</small></p>
+                <!-- Card inférieure avec outline noir franc (Fidèle à la maquette) -->
+                <div style="position: relative; width: 100%; max-width: 360px; margin: 10px auto 0 auto;">
+                    <!-- Ailes d'arrière-plan de la carte (effet deck de jeu) -->
+                    <div style="position: absolute; inset: 0; background: #D1D5DB; border: 3px solid #1A1A1A; border-radius: 20px; transform: scale(1.05, 0.96); z-index: 1;"></div>
 
-                    <div>
-                        <h5>Test manuel GPS & Boussole (Debug)</h5>
-                        <p><small>Cible alternative : 50°26'15.6"N 2°48'33.6"E (50.4376667, 2.8093333)</small></p>
-                        <button type="button" id="debug-target-btn" x-on:click="setDebugTarget()">Utiliser la cible debug</button>
-                        <button type="button" id="reset-step-target-btn" x-on:click="resetStepTarget()">Revenir à la cible de l’étape</button>
-                        <label for="mock-lat">Lat :</label>
-                        <input type="text" id="mock-lat" x-model="mockLat" value="{{ $step->lat }}">
-                        <label for="mock-lng">Lng :</label>
-                        <input type="text" id="mock-lng" x-model="mockLng" value="{{ $step->lng + 0.001 }}">
-                        <label for="mock-heading">Cap boussole (°) :</label>
-                        <input type="text" id="mock-heading" x-model="mockHeading" value="0">
-                        <button type="button" id="mock-gps-btn" x-on:click="calculateMock()">Calculer avec ces coordonnées</button>
-                        <button type="button" id="reset-live-gps-btn" x-show="isMocking" x-on:click="resetLiveSensors()">Reprendre capteurs réels</button>
+                    <!-- Carte principale blanche -->
+                    <div style="position: relative; z-index: 2; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 20px; padding: 20px; box-shadow: 0 6px 0 #1A1A1A;">
+                        <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 8px 0; color: #1A1A1A;">
+                            Destination : <span style="color: #F4B316;">{{ $step->name }}</span>
+                        </h3>
+
+                        <p style="font-size: 13px; color: #4B5563; line-height: 1.4; margin: 0 0 18px 0;">
+                            Suivez la boussole, observez autour de vous et trouvez le spot
+                        </p>
+
+                        <!-- Gros bouton d'action en bas de carte -->
+                        <div style="width: 100%;">
+                            <!-- Si distance > 30m : affiche le nombre de mètres restant en gros (ex: '300 m', fond bordeaux) -->
+                            <div x-show="distanceMeters === null || distanceMeters > 30"
+                                 id="hub-distance-metric-btn"
+                                 style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #841818; color: #FFFFFF; font-size: 26px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 1px;">
+                                <span id="metric-distance-text" x-text="distanceMeters !== null ? distanceMeters + ' m' : '300 m'">300 m</span>
+                            </div>
+
+                            <!-- Si distance <= 30m : se transforme en bouton interactif 'Scanner' (fond or/vert) -->
+                            <button type="button"
+                                    x-show="distanceMeters !== null && distanceMeters <= 30"
+                                    id="hub-scanner-action-btn"
+                                    class="btn-bounce"
+                                    x-on:click="tab = 'scanner'"
+                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })"
+                                    style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 22px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                                Scanner le spot
+                            </button>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Informations techniques, guidage et outils de test GPS (repliables) -->
+                <div style="width: 100%; max-width: 360px; margin-top: 14px;">
+                    <details style="background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 12px; padding: 10px 14px; font-size: 12px; color: #4B5563;">
+                        <summary style="font-weight: 700; cursor: pointer; color: #6B7280;">Détails GPS, capteurs & console de test</summary>
+
+                        <div style="margin-top: 10px;">
+                            <p id="distance-display" style="margin: 4px 0;">Distance : Recherche de position GPS en cours...</p>
+                            <p id="bearing-display" style="margin: 4px 0;">Cap vers la cible : <strong x-text="bearing !== null ? Math.round(bearing) + '°' : 'En attente GPS...'">En attente GPS...</strong></p>
+                            <p id="heading-display" style="margin: 4px 0;">Orientation du téléphone : <strong x-text="deviceHeading !== null ? Math.round(deviceHeading) + '° (' + headingSource + ')' : 'En attente capteur/mouvement...'">En attente capteur/mouvement...</strong></p>
+                            <p id="needle-display" style="margin: 4px 0;">Angle de l'aiguille : <strong x-text="needleAngle !== null ? needleAngle + '°' : '0°'">0°</strong></p>
+                            <p id="guidance-display" style="margin: 4px 0;">Indication : <strong x-text="getGuidanceText()">Recherche de cap en cours...</strong></p>
+                        </div>
+
+                        <div wire:ignore style="margin-top: 12px; border-top: 1px dashed #D1D5DB; padding-top: 8px;">
+                            <p style="margin: 4px 0;"><small>Cible active : <strong x-text="targetLabel">Monument de l’étape</strong> (Lat <span x-text="targetLat">{{ $step->lat }}</span>, Lng <span x-text="targetLng">{{ $step->lng }}</span>)</small></p>
+                            <p style="margin: 4px 0;"><small>Cible alternative : 50°26'15.6"N 2°48'33.6"E (50.4376667, 2.8093333)</small></p>
+
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0;">
+                                <button type="button" id="debug-target-btn" x-on:click="setDebugTarget()" style="padding: 4px 8px; font-size: 11px;">Cible debug</button>
+                                <button type="button" id="reset-step-target-btn" x-on:click="resetStepTarget()" style="padding: 4px 8px; font-size: 11px;">Cible étape</button>
+                                <button type="button" id="reset-live-gps-btn" x-show="isMocking" x-on:click="resetLiveSensors()" style="padding: 4px 8px; font-size: 11px;">Capteurs réels</button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; align-items: center; margin-top: 6px;">
+                                <label for="mock-lat">Lat :</label>
+                                <input type="text" id="mock-lat" x-model="mockLat" value="{{ $step->lat }}" style="font-size: 11px; padding: 2px 4px;">
+                                <label for="mock-lng">Lng :</label>
+                                <input type="text" id="mock-lng" x-model="mockLng" value="{{ $step->lng + 0.001 }}" style="font-size: 11px; padding: 2px 4px;">
+                                <label for="mock-heading">Cap (°) :</label>
+                                <input type="text" id="mock-heading" x-model="mockHeading" value="0" style="font-size: 11px; padding: 2px 4px;">
+                            </div>
+
+                            <button type="button" id="mock-gps-btn" x-on:click="calculateMock()" style="margin-top: 6px; width: 100%; padding: 4px; font-size: 11px; font-weight: 700;">
+                                Calculer avec coordonnées simulées
+                            </button>
+                        </div>
+                    </details>
                 </div>
             </div>
         @endif

@@ -13,6 +13,7 @@ use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\StepSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -75,9 +76,12 @@ class StepSeederAndAuthTest extends TestCase
     public function test_auth_login_register_creates_new_team_and_logs_in(): void
     {
         Livewire::test(LoginRegister::class)
+            ->set('mode', 'register')
             ->set('team_name', '   Les Aventuriers du Bassin   ')
             ->set('email', '   aventuriers@lens.fr   ')
-            ->call('login')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->call('register')
             ->assertHasNoErrors()
             ->assertRedirect('/');
 
@@ -87,6 +91,10 @@ class StepSeederAndAuthTest extends TestCase
         $this->assertEquals('aventuriers@lens.fr', $user->email);
         $this->assertEquals(1, $user->current_step);
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
+        $this->assertEquals('gali', $user->avatar);
+        $this->assertFalse($user->reward_picked);
+        $this->assertNotNull($user->reward_token);
+        $this->assertTrue(Hash::check('password123', $user->password));
     }
 
     public function test_auth_login_register_logs_in_existing_team_and_updates_name(): void
@@ -94,39 +102,52 @@ class StepSeederAndAuthTest extends TestCase
         $user = User::factory()->create([
             'email' => 'famille@lens.fr',
             'team_name' => 'Famille Initiale',
+            'password' => Hash::make('password123'),
             'current_step' => 3,
             'phase' => 'WALKING_TO_TARGET',
         ]);
 
         Livewire::test(LoginRegister::class)
-            ->set('team_name', 'Famille Renommée')
+            ->set('mode', 'login')
             ->set('email', 'famille@lens.fr')
+            ->set('password', 'password123')
             ->call('login')
             ->assertHasNoErrors()
             ->assertRedirect('/');
 
         $this->assertAuthenticatedAs($user);
-        $user->refresh();
-        $this->assertEquals('Famille Renommée', $user->team_name);
         $this->assertEquals(3, $user->current_step);
         $this->assertEquals('WALKING_TO_TARGET', $user->phase);
     }
 
     public function test_auth_validation_rules(): void
     {
-        // 1. Empty values
+        // 1. Register empty values
         Livewire::test(LoginRegister::class)
+            ->set('mode', 'register')
             ->set('team_name', '')
             ->set('email', '')
-            ->call('login')
-            ->assertHasErrors(['team_name' => 'required', 'email' => 'required']);
+            ->set('password', '')
+            ->call('register')
+            ->assertHasErrors(['team_name' => 'required', 'email' => 'required', 'password' => 'required']);
 
-        // 2. Too short team name & invalid email format
+        // 2. Too short team name & invalid email format & short password
         Livewire::test(LoginRegister::class)
+            ->set('mode', 'register')
             ->set('team_name', 'A')
             ->set('email', 'not-valid')
+            ->set('password', '123')
+            ->set('password_confirmation', '123')
+            ->call('register')
+            ->assertHasErrors(['team_name' => 'min', 'email' => 'email', 'password' => 'min']);
+
+        // 3. Login validation
+        Livewire::test(LoginRegister::class)
+            ->set('mode', 'login')
+            ->set('email', '')
+            ->set('password', '')
             ->call('login')
-            ->assertHasErrors(['team_name' => 'min', 'email' => 'email']);
+            ->assertHasErrors(['email' => 'required', 'password' => 'required']);
     }
 
     public function test_user_factory_states(): void

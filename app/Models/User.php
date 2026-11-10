@@ -12,8 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'team_name', 'current_step', 'phase'])]
+#[Fillable(['name', 'email', 'password', 'team_name', 'current_step', 'phase', 'avatar', 'reward_picked', 'reward_token'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -32,6 +33,9 @@ class User extends Authenticatable
         'team_name',
         'current_step',
         'phase',
+        'avatar',
+        'reward_picked',
+        'reward_token',
     ];
 
     /**
@@ -45,7 +49,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'current_step' => 'integer',
+            'reward_picked' => 'boolean',
         ];
+    }
+
+    public function generateRewardToken(): string
+    {
+        if (empty($this->reward_token)) {
+            $this->reward_token = Str::random(32);
+            $this->save();
+        }
+
+        return $this->reward_token;
+    }
+
+    public function markRewardPicked(): void
+    {
+        $this->reward_picked = true;
+        $this->save();
     }
 
     public function fragments(): HasMany

@@ -17,6 +17,15 @@
     <link rel="apple-touch-icon" href="/icon.svg">
 
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: translateY(3px) !important;
+            box-shadow: 0 1px 0 #1A1A1A !important;
+        }
+    </style>
     @livewireStyles
 </head>
 <body>

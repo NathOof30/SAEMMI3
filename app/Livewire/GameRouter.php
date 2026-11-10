@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -52,8 +53,15 @@ class GameRouter extends Component
 
     public function render()
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
         return view('livewire.game-router', [
-            'user' => Auth::user(),
+            'user' => $user,
+            'fragmentCount' => $user ? $user->fragments()->count() : 0,
         ]);
     }
 }
