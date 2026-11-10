@@ -41,15 +41,19 @@ Le jeu est composé de 6 étapes. Chaque étape (`current_step`) est divisée en
 
 Quand l'équipe a collecté les 6 fragments, la boucle s'arrête. L'application affiche un écran de victoire contenant un code final à 4 chiffres (constitué des indices récoltés sur chaque fragment). Ce code permet d'ouvrir un véritable cadenas à l'Office de Tourisme pour gagner une récompense physique (édition spéciale Asmodee).
 
-## 5. Architecture de l'Application (SPA Livewire)
+## 5. Architecture & Direction Artistique
 
-L'application est une Single Page Application (SPA) codée en Laravel / Livewire. L'interface ne doit jamais recharger.
-Une barre de navigation persistante en bas d'écran permet de basculer entre 3 onglets (composants) :
+L'application est une Single Page Application (SPA) codée en Laravel 11, Livewire 3 et Alpine.js. L'interface ne recharge jamais.
 
-1. **Hub / Boussole :** Affiche soit l'énigme textuelle (Phase A), soit la distance GPS dynamique (Phase B).
-
-2. **Scanner :** Utilise la caméra du téléphone (`html5-qrcode`) pour scanner les QR Codes et interagir avec le back-end Livewire. *Doit inclure un input manuel pour le debug sur PC.*
-
-3. **Inventaire :** Affiche les fragments gagnés et l'écran de victoire final.
-
-*(Note pour le développeur AI : Le design et le CSS sont totalement exclus du périmètre actuel. L'objectif est un MVP 100% fonctionnel en HTML brut).*
+* **Direction Artistique Néo-brutaliste « Sang et Or » :**
+  - Palette officielle : Rouge Sang (`#841818`), Jaune Or (`#F4B316`), contours noirs francs (2.5px à 4px), ombres déportées 3D marquées (`0 4px 0 #1A1A1A`), effet tactile de rebond (`btn-bounce`).
+  - Fond en pointillés réguliers (`radial-gradient`), interface 100% contenue dans l'écran (`100dvh`, aucun scroll sur la structure principale).
+* **Composants Principaux :**
+  1. **Hub / Boussole :** 
+     - Boussole vectorielle géante au centre : cadran rotatif avec les 4 points cardinaux (N, E, S, O) calé sur le vrai Nord, aiguille bicolore dont la pointe **JAUNE** pointe vers la cible et la queue **ROUGE** vers l'opposé. En Phase A, un `?` doré animé oscille au centre.
+     - Deck de cartes façon jeu Asmodee en bas d'écran avec cartes inclinées (-5° / +5°) et coupure nette par le bas de l'écran.
+     - Console de debug discrète `[•] debug` avec téléportation instantanée `TP sur le spot (0m)`.
+  2. **Scanner :** Caméra plein écran via `Html5-QRCode` headless avec filtre intelligent de caméra arrière. Overlay plein écran néo-brutaliste vert (succès) ou rouge (erreur) avec redirection vers le Hub.
+  3. **Inventaire / Sac à Dos :** Affiche les fragments collectés, le code à 4 chiffres du cadenas et le QR code de retrait du lot.
+  4. **Accueil & Authentification :** Création d'équipe ou connexion, slider tutoriel 3D épuré sans doublon de boutons.
+  5. **Mire de test `/test-qr` :** Tableau de bord affichant les 12 QR codes de test pour validation sur écran d'ordinateur.
