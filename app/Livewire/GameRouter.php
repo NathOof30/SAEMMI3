@@ -56,9 +56,6 @@ class GameRouter extends Component
         /** @var User|null $user */
         $user = Auth::user();
 
-        /** @var \App\Models\User|null $user */
-        $user = Auth::user();
-
         return view('livewire.game-router', [
             'user' => $user,
             'fragmentCount' => $user ? $user->fragments()->count() : 0,
