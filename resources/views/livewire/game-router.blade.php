@@ -45,6 +45,7 @@
                 <button type="button" x-on:click="tab = 'scanner'" wire:click="setTab('scanner')">[Scanner]</button> |
                 <button type="button" x-on:click="tab = 'inventory'" wire:click="setTab('inventory')">[Inventaire]</button>
             </nav>
+            <p><small><a href="{{ route('test-qr') }}" target="_blank">[Mire de test QR codes sur PC]</a></small></p>
         </footer>
     @endif
 </div>

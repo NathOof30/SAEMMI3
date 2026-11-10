@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="url(#goldGrad)" stroke-width="12"/>
+  <circle cx="256" cy="256" r="195" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- Compass Cardinal Markers -->
+  <text x="256" y="80" font-family="system-ui, sans-serif" font-weight="900" font-size="28" fill="#fbbf24" text-anchor="middle">N</text>
+  <text x="256" y="445" font-family="system-ui, sans-serif" font-weight="900" font-size="28" fill="#fbbf24" text-anchor="middle">S</text>
+  <text x="440" y="266" font-family="system-ui, sans-serif" font-weight="900" font-size="28" fill="#fbbf24" text-anchor="middle">E</text>
+  <text x="72" y="266" font-family="system-ui, sans-serif" font-weight="900" font-size="28" fill="#fbbf24" text-anchor="middle">O</text>
+
+  <!-- Compass Star / Needle -->
+  <!-- North needle (Red) -->
+  <polygon points="256,105 280,240 256,256 232,240" fill="url(#redGrad)"/>
+  <!-- South needle (Light Gold) -->
+  <polygon points="256,407 280,272 256,256 232,272" fill="#cbd5e1"/>
+  <!-- East needle (Dark Slate) -->
+  <polygon points="407,256 272,232 256,256 272,280" fill="#94a3b8"/>
+  <!-- West needle (Dark Slate) -->
+  <polygon points="105,256 240,232 256,256 240,280" fill="#64748b"/>
+
+  <!-- Center Pivot -->
+  <circle cx="256" cy="256" r="28" fill="url(#goldGrad)" stroke="#0f172a" stroke-width="4"/>
+  <circle cx="256" cy="256" r="12" fill="#0f172a"/>
+
+  <!-- Lens & Fleur de lys / Secret Symbol overlay -->
+  <path d="M 240 200 L 256 160 L 272 200 Z" fill="#fbbf24"/>
+</svg>

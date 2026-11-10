@@ -26,6 +26,10 @@
 
             <button type="submit">Rejoindre l'aventure</button>
         </form>
+
+        <p style="margin-top: 24px; font-size: 13px;">
+            <a href="{{ route('test-qr') }}" target="_blank">Tester les QR Codes sur écran PC (/test-qr)</a>
+        </p>
     </main>
 </div>
 
