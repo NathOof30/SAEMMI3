@@ -60,7 +60,9 @@ class VisualReworkCompassAndDeckTest extends TestCase
             ->assertDontSee('Application réservée au Parent', false)
             // 3-step interactive tutorial slider
             ->assertSee('L\'Explorateur', false)
-            ->assertSee('L\'enfant résout les énigmes sur la carte papier physique avec son filtre optique.', false)
+            ->assertSee('L\'enfant résout les énigmes de Gali sur la carte papier physique avec sa loupe.', false)
+            ->assertDontSee('filtre optique', false)
+            ->assertDontSee('Galibrio', false)
             ->assertSee('Le Maître du Jeu', false)
             ->assertSee('Le parent s\'oriente en ville grâce à la boussole et valide les étapes.', false)
             ->assertSee('Le Trésor')
@@ -138,8 +140,9 @@ class VisualReworkCompassAndDeckTest extends TestCase
             ->assertSeeHtml('x-on:click="debugModalOpen = !debugModalOpen"')
             // Compass responsiveness
             ->assertSeeHtml('max-width: min(70vw, 260px)')
-            // Clean destination title without 'Étape X :'
-            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Place Jean Jaurès</span>')
+            // Anti-spoil Phase A title without revealing step destination name
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Mystère (Étape 1/6)</span>')
+            ->assertDontSee('Gare de Lens')
             ->assertDontSee('Destination : <span style="color: #F4B316;">Étape 1 :')
             // Responsive card deck with 22px side margins (width: calc(100% - 44px); max-width: 295px)
             ->assertSeeHtml('width: calc(100% - 44px); max-width: 295px')
@@ -182,7 +185,7 @@ class VisualReworkCompassAndDeckTest extends TestCase
             // Compass responsiveness
             ->assertSeeHtml('max-width: min(70vw, 260px)')
             // Clean destination title without 'Étape X :'
-            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Gare de Lens</span>')
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">Centre-Ville</span>')
             ->assertDontSee('Destination : <span style="color: #F4B316;">Étape 2 :')
             // Responsive card deck with 22px side margins
             ->assertSeeHtml('width: calc(100% - 44px); max-width: 295px')
@@ -265,7 +268,7 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(Inventory::class)
-            ->assertSeeHtml('Étape 1 : Place Jean Jaurès — Fragment :')
+            ->assertSeeHtml('Étape 1 : Gare de Lens — Fragment :')
             ->assertDontSee('Étape 1 : Étape 1 :');
     }
 

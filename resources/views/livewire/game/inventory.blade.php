@@ -25,7 +25,7 @@
                 Félicitations à l'équipe <strong>{{ $user?->team_name ?? $user?->name ?? 'Équipe' }}</strong> !
             </p>
             <p style="font-size: 14px; margin: 0 0 20px 0; color: #4b5563; line-height: 1.4;">
-                Vous avez triomphé de toutes les étapes et reconstitué le trésor de Lens.
+                Vous avez triomphé de toutes les étapes, aidé Gali à reconstituer sa carte et fait briller à nouveau la Lampe Cœur !
             </p>
 
             <div
@@ -117,8 +117,7 @@
             @if($fragments->isEmpty())
                 <div
                     style="background: #fdfaf2; border: 2.5px dashed #d97706; border-radius: 12px; padding: 16px; text-align: center; color: #78350f; font-size: 13px; line-height: 1.5;">
-                    <p style="margin: 0;">Aucun fragment débloqué pour le moment. Résolvez la première énigme et trouvez le
-                        Maître du Jeu !</p>
+                    <p style="margin: 0;">Aucun fragment débloqué pour le moment. Résolvez la première énigme de Gali avec la loupe et trouvez le Maître du Jeu !</p>
                 </div>
             @else
                 <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #374151;">

@@ -23,46 +23,46 @@ class PwaAndTestQrTest extends TestCase
 
         $expectedSteps = [
             1 => [
-                'name' => 'Étape 1 : Place Jean Jaurès',
+                'name' => 'Étape 1 : Gare de Lens',
                 'qr_map' => 'MAP_LOC_1',
                 'qr_mj' => 'MJ_STEP_1',
                 'code_part' => '4',
-                'riddle' => 'Cherchez l\'homme de bronze qui veille sur la grande place.',
+                'riddle' => 'Sur le papier jauni du grenier, Gali lit : « Cherche l\'endroit où les trains se reposent… » Repère cette grande locomotive immobile figée dans la pierre !',
             ],
             2 => [
-                'name' => 'Étape 2 : Gare de Lens',
+                'name' => 'Étape 2 : Centre-Ville',
                 'qr_map' => 'MAP_LOC_2',
                 'qr_mj' => 'MJ_STEP_2',
                 'code_part' => '8',
-                'riddle' => 'Je suis une locomotive immobile, figée dans la pierre et l\'architecture.',
+                'riddle' => 'Sur les traces de la vie dans les corons, plonge au cœur de la cité. Utilise la loupe du carnet pour repérer le détail caché sur une façade !',
             ],
             3 => [
-                'name' => 'Étape 3 : Musée Louvre-Lens',
+                'name' => 'Étape 3 : Stade Bollaert-Delelis',
                 'qr_map' => 'MAP_LOC_3',
                 'qr_mj' => 'MJ_STEP_3',
                 'code_part' => '1',
-                'riddle' => 'Aux reflets de verre et d\'aluminium se cachent les trésors de l\'histoire.',
+                'riddle' => 'Là où vibre la passion Sang et Or ! Résous l\'énigme autour des couleurs de la ville pour retrouver ce temple légendaire.',
             ],
             4 => [
-                'name' => 'Étape 4 : Stade Bollaert-Delelis',
+                'name' => 'Étape 4 : Musée Louvre-Lens',
                 'qr_map' => 'MAP_LOC_4',
                 'qr_mj' => 'MJ_STEP_4',
                 'code_part' => '9',
-                'riddle' => 'Là où résonnent les chants Sang et Or au cœur du bassin minier.',
+                'riddle' => 'Quand l\'ancienne mine laisse place aux reflets de verre et d\'aluminium… Un grand trésor culturel veille au milieu d\'un vaste parc.',
             ],
             5 => [
-                'name' => 'Étape 5 : Les Terrils Jumeaux',
+                'name' => 'Étape 5 : Les Terrils de Loos-en-Gohelle',
                 'qr_map' => 'MAP_LOC_5',
                 'qr_mj' => 'MJ_STEP_5',
                 'code_part' => 'Office de Tourisme',
-                'riddle' => 'Au pied des géants noirs qui dominent le paysage d\'autrefois.',
+                'riddle' => 'Grimpe vers les deux géants noirs jumeaux qui dominent l\'horizon minier pour récupérer le dernier morceau vers le trésor !',
             ],
             6 => [
-                'name' => 'Étape 6 : Église Saint-Léger',
+                'name' => 'Étape 6 : Office de Tourisme',
                 'qr_map' => 'MAP_LOC_6',
                 'qr_mj' => 'MJ_STEP_6',
                 'code_part' => 'Coffre Asmodee',
-                'riddle' => 'Devant le grand portail gravé se trouve la clé du mystère final.',
+                'riddle' => 'Tous tes morceaux enfin réunis mènent au point d\'accueil des voyageurs : c\'est là que t\'attend le vrai coffre de la Lampe Cœur et son code à 4 chiffres !',
             ],
         ];
 
@@ -93,7 +93,7 @@ class PwaAndTestQrTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertEquals(6, Step::count());
-        $response->assertSee('Étape 1 : Place Jean Jaurès');
+        $response->assertSee('Étape 1 : Gare de Lens');
         $response->assertSee('MAP_LOC_1');
         $response->assertSee('MJ_STEP_1');
     }

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name',
     'lat',
     'lng',
+    'target_radius',
     'riddle_text',
     'qr_map_code',
     'qr_mj_code',
@@ -30,6 +31,7 @@ class Step extends Model
         'name',
         'lat',
         'lng',
+        'target_radius',
         'riddle_text',
         'qr_map_code',
         'qr_mj_code',
@@ -41,6 +43,7 @@ class Step extends Model
         return [
             'lat' => 'float',
             'lng' => 'float',
+            'target_radius' => 'integer',
         ];
     }
 

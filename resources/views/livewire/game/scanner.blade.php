@@ -342,16 +342,10 @@
                     dismiss() {
                         const status = '{{ $scanStatus }}';
                         const target = '{{ $scanTargetTab }}';
-                        $wire.dismissScanOverlay();
-                        if (target) {
-                            if (typeof tab !== 'undefined') {
-                                tab = target;
-                            }
-                            this.$dispatch('set-tab', { tab: target });
-                            if (window.Livewire) {
-                                window.Livewire.dispatch('set-tab', { tab: target });
-                            }
+                        if (target && typeof tab !== 'undefined') {
+                            tab = target;
                         }
+                        $wire.dismissScanOverlay();
                         if (status === 'error') {
                             reactivateScanner();
                         }

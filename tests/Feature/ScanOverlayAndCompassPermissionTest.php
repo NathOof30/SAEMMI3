@@ -79,6 +79,7 @@ class ScanOverlayAndCompassPermissionTest extends TestCase
             ->assertSeeHtml('id="fullscreen-scan-overlay"')
             ->assertSeeHtml('scan-card-glow-error')
             ->assertSeeHtml('Mince ! Je ne crois pas que ça soit...')
+            ->assertDontSee('Gare de Lens')
             ->assertSeeHtml('Réessayer le scan')
             ->call('dismissScanOverlay')
             ->assertSet('scanStatus', null);

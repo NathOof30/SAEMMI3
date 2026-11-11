@@ -33,19 +33,21 @@ class GameFlowTest extends TestCase
 
         $firstStep = Step::find(1);
         $this->assertNotNull($firstStep);
-        $this->assertEquals('Étape 1 : Place Jean Jaurès', $firstStep->name);
+        $this->assertEquals('Étape 1 : Gare de Lens', $firstStep->name);
         $this->assertEquals('MAP_LOC_1', $firstStep->qr_map_code);
         $this->assertEquals('MJ_STEP_1', $firstStep->qr_mj_code);
         $this->assertEquals('4', $firstStep->code_part);
-        $this->assertNotEmpty($firstStep->riddle_text);
+        $this->assertEquals(30, $firstStep->target_radius);
+        $this->assertStringContainsString('locomotive immobile', $firstStep->riddle_text);
         $this->assertIsFloat($firstStep->lat);
         $this->assertIsFloat($firstStep->lng);
 
         $secondStep = Step::find(2);
         $this->assertNotNull($secondStep);
+        $this->assertEquals('Étape 2 : Centre-Ville', $secondStep->name);
         $this->assertEquals('MAP_LOC_2', $secondStep->qr_map_code);
         $this->assertEquals('MJ_STEP_2', $secondStep->qr_mj_code);
-        $this->assertStringContainsString('locomotive immobile', $secondStep->riddle_text);
+        $this->assertStringContainsString('loupe', $secondStep->riddle_text);
     }
 
     public function test_unauthenticated_user_sees_login_register_component(): void

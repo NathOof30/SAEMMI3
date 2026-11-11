@@ -43,6 +43,9 @@
             transform: translateY(3px) !important;
             box-shadow: 0 1px 0 #1A1A1A !important;
         }
+        [x-cloak] {
+            display: none !important;
+        }
         .tab-pane-wrapper {
             flex: 1;
             min-height: 0;

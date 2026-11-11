@@ -109,10 +109,12 @@ class Scanner extends Component
                 $user->phase = 'WALKING_TO_TARGET';
                 $user->save();
 
+                $cleanStepName = preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $currentStep->name);
+
                 $this->message = "QR Map validé ! Direction la cible pour l'étape {$user->current_step} : {$currentStep->name}.";
                 $this->scanStatus = 'success';
                 $this->scanTitle = 'Bravo ! Emplacement trouvé !';
-                $this->scanSubtitle = "Cap activé vers {$currentStep->name} ! Suivez l'aiguille de la boussole.";
+                $this->scanSubtitle = "Cap activé vers {$cleanStepName} ! Suivez l'aiguille de la boussole.";
                 $this->scanTargetTab = 'hub';
                 $this->dispatch('step-updated');
 
@@ -121,13 +123,13 @@ class Scanner extends Component
 
             if (preg_match('/^MAP[-_]/i', $upperCode)) {
                 $this->scanTitle = 'Mince ! Je ne crois pas que ça soit...';
-                $this->scanSubtitle = "Ce repère ne correspond pas à votre étape actuelle ({$currentStep->name}). Cherchez un autre symbole sur la carte !";
+                $this->scanSubtitle = "Ce repère ne correspond pas à l'énigme de l'étape {$currentStep->id}. Observez bien l'indice de Gali avec la loupe et cherchez un autre symbole sur la carte !";
             } elseif (preg_match('/^MJ[-_]/i', $upperCode)) {
                 $this->scanTitle = 'Pas si vite, explorateur !';
-                $this->scanSubtitle = "Vous devez d'abord localiser le lieu sur la carte avant de rencontrer le Maître du Jeu.";
+                $this->scanSubtitle = "Vous devez d'abord localiser le lieu sur la carte avec la loupe avant de rencontrer le Maître du Jeu.";
             } else {
                 $this->scanTitle = 'Mince ! Mauvais QR Code...';
-                $this->scanSubtitle = "Vous devez scanner le repère de carte de l'étape {$currentStep->id}.";
+                $this->scanSubtitle = "Vous devez scanner le repère de la carte papier pour l'étape {$currentStep->id}.";
             }
 
             $this->error = "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_{$currentStep->id}).";
@@ -157,7 +159,7 @@ class Scanner extends Component
                 if ($user->current_step > 6 || $user->fragments()->count() >= 6) {
                     $this->message = "QR MJ validé ! Fragment obtenu pour l'étape {$currentStep->id}. Vous avez réuni les 6 fragments ! Rendez-vous dans l'Inventaire pour voir la victoire !";
                     $this->scanTitle = 'Victoire Absolue !';
-                    $this->scanSubtitle = 'Les 6 fragments sont réunis ! Rendez-vous dans votre inventaire pour ouvrir le coffre Asmodee.';
+                    $this->scanSubtitle = 'Les 6 fragments sont réunis ! Rendez-vous dans votre inventaire pour ouvrir le coffre de la Lampe Cœur et récupérer votre lot Asmodee.';
                     $this->scanTargetTab = 'inventory';
                 } else {
                     $this->message = "QR MJ validé ! Fragment obtenu pour l'étape {$currentStep->id}.";

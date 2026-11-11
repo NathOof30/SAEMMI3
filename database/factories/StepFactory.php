@@ -23,6 +23,7 @@ class StepFactory extends Factory
             'name' => fake()->sentence(3),
             'lat' => fake()->latitude(50.40, 50.46),
             'lng' => fake()->longitude(2.78, 2.85),
+            'target_radius' => 30,
             'riddle_text' => fake()->paragraph(),
             'qr_map_code' => "MAP_LOC_{$id}",
             'qr_mj_code' => "MJ_STEP_{$id}",

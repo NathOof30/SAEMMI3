@@ -24,6 +24,8 @@
                 debugModalOpen: false,
                 targetLat: {{ $step->lat }},
                 targetLng: {{ $step->lng }},
+                targetRadius: {{ (int) ($step->target_radius ?? 30) }},
+                approachRadius: {{ (int) max(120, ($step->target_radius ?? 30) + 80) }},
                 targetLabel: 'Monument de l’étape',
                 debugTargetLat: 50.4376667,
                 debugTargetLng: 2.8093333,
@@ -31,6 +33,12 @@
                 userLng: null,
                 distanceText: '{{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : '' }}',
                 distanceMeters: null,
+                gpsAccuracy: null,
+                gpsStatus: 'searching',
+                gpsErrorMessage: null,
+                gpsWaitTooLong: false,
+                gpsTimeoutId: null,
+                gpsHelpOpen: false,
                 bearing: null,
                 deviceHeading: null,
                 headingSource: 'aucun',
@@ -64,6 +72,7 @@
                         this.mockLng = this.userLng.toFixed(7);
                     }
                     this.isMocking = true;
+                    this.gpsAccuracy = null;
                     this.updateDistance(this.userLat, this.userLng);
                     this.recalculate(true);
                 },
@@ -158,11 +167,44 @@
                 updateDistance(userLat, userLng) {
                     const distance = this.haversineDistance(parseFloat(userLat), parseFloat(userLng), this.targetLat, this.targetLng);
                     this.distanceMeters = distance;
+                    this.gpsStatus = 'ok';
+                    this.gpsErrorMessage = null;
+                    this.gpsWaitTooLong = false;
+                    if (this.gpsTimeoutId) {
+                        clearTimeout(this.gpsTimeoutId);
+                        this.gpsTimeoutId = null;
+                    }
+                    if (distance <= this.targetRadius) {
+                        this.gpsHelpOpen = false;
+                    }
                     this.distanceText = distance + ' mètres';
                     const el = document.getElementById('distance-display');
                     if (el) {
                         el.innerText = 'Distance : ' + this.distanceText;
                     }
+                },
+                isWithinTarget() {
+                    return this.distanceMeters !== null && this.distanceMeters <= this.targetRadius;
+                },
+                isInApproachZone() {
+                    if (this.distanceMeters === null || this.distanceMeters <= this.targetRadius) {
+                        return false;
+                    }
+                    if (this.distanceMeters <= this.approachRadius) {
+                        return true;
+                    }
+                    return this.gpsAccuracy !== null
+                        && this.gpsAccuracy > this.targetRadius
+                        && (this.distanceMeters - this.gpsAccuracy) <= this.targetRadius;
+                },
+                hasGpsIssue() {
+                    return this.gpsStatus === 'denied'
+                        || this.gpsStatus === 'unavailable'
+                        || this.gpsStatus === 'unsupported'
+                        || (this.distanceMeters === null && this.gpsWaitTooLong);
+                },
+                showGpsHelpButton() {
+                    return !this.isWithinTarget() && (this.isInApproachZone() || this.hasGpsIssue());
                 },
                 requestOrientationPermission() {
                     const markGranted = () => {
@@ -195,7 +237,15 @@
 
                     if (navigator.geolocation) {
                         try {
-                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                            const isWalking = '{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET';
+                            navigator.geolocation.getCurrentPosition(
+                                (pos) => {
+                                    if (isWalking) {
+                                        this.onGpsPosition(pos);
+                                    }
+                                },
+                                () => {}
+                            );
                         } catch (e) {}
                     }
                 },
@@ -232,6 +282,9 @@
 
                     this.userLat = pos.coords.latitude;
                     this.userLng = pos.coords.longitude;
+                    this.gpsAccuracy = (pos.coords && typeof pos.coords.accuracy === 'number' && !isNaN(pos.coords.accuracy))
+                        ? pos.coords.accuracy
+                        : null;
                     this.updateDistance(this.userLat, this.userLng);
 
                     if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
@@ -248,8 +301,55 @@
 
                     this.recalculate(false);
                 },
+                startGpsWatch() {
+                    const el = document.getElementById('distance-display');
+                    if (!navigator.geolocation) {
+                        this.gpsStatus = 'unsupported';
+                        this.gpsErrorMessage = 'Géolocalisation non supportée par votre navigateur.';
+                        this.distanceText = 'Géolocalisation non supportée par votre navigateur.';
+                        if (el) el.innerText = 'Distance : ' + this.distanceText;
+                        return;
+                    }
+
+                    if (this.watchId) {
+                        navigator.geolocation.clearWatch(this.watchId);
+                        this.watchId = null;
+                    }
+                    if (this.gpsTimeoutId) {
+                        clearTimeout(this.gpsTimeoutId);
+                        this.gpsTimeoutId = null;
+                    }
+
+                    this.gpsTimeoutId = setTimeout(() => {
+                        if (this.distanceMeters === null && !this.isMocking) {
+                            this.gpsWaitTooLong = true;
+                        }
+                    }, 8000);
+
+                    this.watchId = navigator.geolocation.watchPosition(
+                        (pos) => this.onGpsPosition(pos),
+                        (err) => {
+                            if (this.isMocking) return;
+                            if (this.gpsTimeoutId) {
+                                clearTimeout(this.gpsTimeoutId);
+                                this.gpsTimeoutId = null;
+                            }
+                            if (err && err.code === 1) {
+                                this.gpsStatus = 'denied';
+                                this.gpsErrorMessage = 'Permission GPS refusée. Activez la localisation ou touchez ? si vous êtes sur place.';
+                                this.distanceText = 'Permission GPS refusée';
+                            } else {
+                                this.gpsStatus = 'unavailable';
+                                this.gpsErrorMessage = 'Signal GPS indisponible ou imprécis. Touchez ? si vous êtes déjà arrivé.';
+                                this.distanceText = 'Signal GPS indisponible (' + (err && err.message ? err.message : 'signal faible') + ')';
+                            }
+                            if (el) el.innerText = 'Distance : ' + this.distanceText;
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                },
                 getGuidanceText() {
-                    if (this.distanceMeters !== null && this.distanceMeters <= 15) {
+                    if (this.distanceMeters !== null && this.distanceMeters <= this.targetRadius) {
                         return 'Vous êtes arrivé sur les lieux ! Cherchez l\'indice ou le Maître du Jeu.';
                     }
                     if (this.needleAngle === null || this.bearing === null) {
@@ -307,20 +407,15 @@
                     const el = document.getElementById('distance-display');
 
                     if (!navigator.geolocation) {
+                        this.gpsStatus = 'unsupported';
+                        this.gpsErrorMessage = 'Géolocalisation non supportée par votre navigateur.';
                         this.distanceText = 'Géolocalisation non supportée par votre navigateur.';
                         if (el) el.innerText = 'Distance : ' + this.distanceText;
                         return;
                     }
 
                     if (isWalking) {
-                        this.watchId = navigator.geolocation.watchPosition(
-                            (pos) => this.onGpsPosition(pos),
-                            (err) => {
-                                this.distanceText = 'Signal GPS indisponible (' + err.message + ')';
-                                if (el) el.innerText = 'Distance : ' + this.distanceText;
-                            },
-                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                        );
+                        this.startGpsWatch();
                     }
                 },
                 calculateMock() {
@@ -329,6 +424,7 @@
                     const heading = parseFloat(this.mockHeading);
 
                     this.isMocking = true;
+                    this.gpsAccuracy = null;
 
                     if (!isNaN(lat) && !isNaN(lng)) {
                         this.userLat = lat;
@@ -367,12 +463,44 @@
                 },
                 resetLiveSensors() {
                     this.isMocking = false;
+                    this.userLat = null;
+                    this.userLng = null;
+                    this.bearing = null;
                     this.headingSource = 'aucun';
                     this.deviceHeading = null;
                     this.lastCompassTimestamp = null;
+                    this.distanceMeters = null;
+                    this.gpsAccuracy = null;
+                    this.gpsWaitTooLong = false;
+                    this.gpsHelpOpen = false;
+                    if (this.gpsTimeoutId) {
+                        clearTimeout(this.gpsTimeoutId);
+                        this.gpsTimeoutId = null;
+                    }
+                    const el = document.getElementById('distance-display');
+                    const isWalking = '{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET';
+                    if (!navigator.geolocation) {
+                        this.gpsStatus = 'unsupported';
+                        this.gpsErrorMessage = 'Géolocalisation non supportée par votre navigateur.';
+                        this.distanceText = 'Géolocalisation non supportée par votre navigateur.';
+                        if (el) el.innerText = 'Distance : ' + this.distanceText;
+                    } else {
+                        this.gpsStatus = 'searching';
+                        this.gpsErrorMessage = null;
+                        const idleLabel = '{{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}';
+                        this.distanceText = isWalking ? idleLabel : '';
+                        if (el) el.innerText = 'Distance : ' + idleLabel;
+                        if (isWalking) {
+                            this.startGpsWatch();
+                        }
+                    }
                     this.recalculate(false);
                 },
                 cleanup() {
+                    if (this.gpsTimeoutId) {
+                        clearTimeout(this.gpsTimeoutId);
+                        this.gpsTimeoutId = null;
+                    }
                     if (this.watchId) {
                         navigator.geolocation.clearWatch(this.watchId);
                         this.watchId = null;
@@ -438,7 +566,7 @@
                     <p style="margin: 4px 0; font-size: 12px;"><small>Cible active : <strong x-text="targetLabel">Monument
                                 de
                                 l’étape</strong> (Lat <span x-text="targetLat">{{ $step->lat }}</span>, Lng <span
-                                x-text="targetLng">{{ $step->lng }}</span>)</small></p>
+                                x-text="targetLng">{{ $step->lng }}</span>, rayon <span x-text="targetRadius">{{ (int) ($step->target_radius ?? 30) }}</span> m)</small></p>
                     <p style="margin: 4px 0; font-size: 12px;"><small>Cible alternative : 50°26'15.6"N 2°48'33.6"E
                             (50.4376667,
                             2.8093333)</small></p>
@@ -476,8 +604,8 @@
             </div>
 
             <!-- Permission iOS Safari -->
-            <div id="compass-permission-section" x-show="needsPermission"
-                style="width: 100%; margin-bottom: 12px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 10px; text-align: center;">
+            <div id="compass-permission-section" x-show="needsPermission" x-cloak
+                style="flex-shrink: 0; width: 100%; box-sizing: border-box; margin-top: 26px; margin-bottom: 4px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 8px 10px; text-align: center;">
                 <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #92400E;">Permission boussole requise
                     sur smartphone :</p>
                 <button type="button" id="request-orientation-btn" x-on:click="requestOrientationPermission()"
@@ -490,9 +618,9 @@
             @if($user && $user->phase === 'GUESSING_LOCATION')
                 <!-- Phase A : Boussole Mystère avec Cadran rotatif et '?' doré animé -->
                 <div
-                    style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; margin: auto 0;">
+                    style="flex: 1 1 0%; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; padding: 4px 0; box-sizing: border-box; overflow: hidden;">
                     <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole mystère de recherche"
-                        style="width: min(70vw, 260px); height: min(70vw, 260px); display: block; max-width: min(70vw, 260px); max-height: min(70vw, 260px);">
+                        style="width: auto; height: 100%; max-width: min(70vw, 260px); max-height: min(70vw, 260px); aspect-ratio: 1 / 1; display: block;">
                         <!-- Cadran extérieur vert sauge cerclé de noir -->
                         <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="4" />
 
@@ -531,7 +659,7 @@
                 </div>
 
                 <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
-                <div style="position: relative; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
+                <div style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
@@ -546,7 +674,7 @@
                     <div
                         style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 20px 20px 36px 20px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
                         <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 10px 0; color: #1A1A1A;">
-                            Destination : <span style="color: #F4B316;">{{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $step->name) }}</span>
+                            Destination : <span style="color: #F4B316;">Mystère (Étape {{ $step->id }}/6)</span>
                         </h3>
 
                         <div style="margin-bottom: 16px;">
@@ -555,10 +683,10 @@
                                 Phase A : Recherche sur la carte
                             </p>
                             <p style="font-size: 14px; color: #374151; line-height: 1.45; margin: 0 0 8px 0;">
-                                <strong>Énigme :</strong> {{ $step->riddle_text }}
+                                <strong>Énigme de Gali :</strong> {{ $step->riddle_text }}
                             </p>
                             <p style="font-size: 12px; color: #6B7280; line-height: 1.4; margin: 0;">
-                                Trouvez le lieu sur la carte papier, puis scannez son QR code.
+                                Observez la carte papier avec la loupe pour trouver le lieu, puis scannez son QR code.
                             </p>
                         </div>
 
@@ -573,9 +701,9 @@
             @elseif($user && $user->phase === 'WALKING_TO_TARGET')
                 <!-- Phase B : Déplacement physique avec la Boussole Géante & Aiguille bicolore -->
                 <div
-                    style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; margin: auto 0;">
+                    style="flex: 1 1 0%; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; padding: 4px 0; box-sizing: border-box; overflow: hidden;">
                     <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole d'orientation vers la cible"
-                        style="width: min(70vw, 260px); height: min(70vw, 260px); display: block; max-width: min(70vw, 260px); max-height: min(70vw, 260px);">
+                        style="width: auto; height: 100%; max-width: min(70vw, 260px); max-height: min(70vw, 260px); aspect-ratio: 1 / 1; display: block;">
                         <!-- Cadran extérieur vert sauge cerclé de noir -->
                         <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="4" />
 
@@ -619,7 +747,7 @@
                 </div>
 
                 <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
-                <div style="position: relative; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
+                <div style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
@@ -632,26 +760,77 @@
 
                     <!-- Carte principale au premier plan (descend au-delà du bas) -->
                     <div
-                        style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 20px 20px 36px 20px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
+                        style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 18px 18px 34px 18px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
                         <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 8px 0; color: #1A1A1A;">
                             Destination : <span style="color: #F4B316;">{{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $step->name) }}</span>
                         </h3>
 
-                        <p style="font-size: 13px; color: #4B5563; line-height: 1.4; margin: 0 0 16px 0;">
+                        <p style="font-size: 13px; color: #4B5563; line-height: 1.4; margin: 0 0 12px 0;">
                             Suivez la boussole, observez autour de vous et trouvez le spot
                         </p>
 
-                        <!-- Gros bouton d'action en bas de carte -->
-                        <div style="width: 100%;">
-                            <!-- Si distance > 30m : affiche le nombre de mètres restant en gros (ex: '300 m', fond bordeaux) -->
-                            <div x-show="distanceMeters === null || distanceMeters > 30" id="hub-distance-metric-btn"
-                                style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #841818; color: #FFFFFF; font-size: 26px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 1px;">
-                                <span id="metric-distance-text"
-                                    x-text="distanceMeters !== null ? distanceMeters + ' m' : '300 m'">300 m</span>
+                        <!-- Message d'erreur permission/signal GPS si le signal réel est dégradé ou indisponible -->
+                        <p x-show="!isMocking && gpsErrorMessage" x-cloak id="hub-gps-error-msg"
+                            style="font-size: 11px; font-weight: 700; color: #B91C1C; background: #FEE2E2; border: 1.5px solid #EF4444; border-radius: 8px; padding: 6px 8px; margin: 0 0 10px 0; line-height: 1.35;"
+                            x-text="gpsErrorMessage"></p>
+
+                        <!-- Gros bouton d'action en bas de carte + encart d'aide contextuel -->
+                        <div style="position: relative; width: 100%;">
+                            <!-- Encart d'aide contextuel GPS imprécis (ouvert au clic sur ?) -->
+                            <div x-show="gpsHelpOpen && showGpsHelpButton()" x-cloak id="hub-gps-help-popover"
+                                x-on:click.outside="gpsHelpOpen = false"
+                                style="position: absolute; bottom: calc(100% + 10px); left: 0; right: 0; z-index: 25; background: #FFFBEB; border: 3px solid #1A1A1A; border-radius: 16px; padding: 14px; box-shadow: 0 6px 0 #1A1A1A;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+                                    <p style="margin: 0; font-size: 13px; font-weight: 800; color: #841818; line-height: 1.35;">
+                                        Vous êtes arrivé mais le point GPS n'est pas précis ?
+                                    </p>
+                                    <button type="button" x-on:click="gpsHelpOpen = false" aria-label="Fermer l'aide GPS"
+                                        style="background: none; border: none; font-size: 16px; font-weight: 900; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1;">
+                                        ✕
+                                    </button>
+                                </div>
+                                <button type="button" id="hub-gps-fallback-scanner-btn"
+                                    x-on:click="gpsHelpOpen = false; tab = 'scanner'"
+                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce"
+                                    style="width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 14px; font-weight: 900; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase;">
+                                    Ouvrir le scanner
+                                </button>
                             </div>
 
-                            <!-- Si distance <= 30m : se transforme en bouton interactif 'Scanner le spot' (fond or) -->
-                            <button type="button" x-show="distanceMeters !== null && distanceMeters <= 30"
+                            <!-- Si distance > targetRadius (ou GPS en attente) : affiche la distance réelle ou 'Signal GPS...' + bouton ? contextuel -->
+                            <div x-show="!isWithinTarget()" style="width: 100%;">
+                                <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
+                                    <div id="hub-distance-metric-btn"
+                                        style="flex: 1; min-width: 0; box-sizing: border-box; padding: 14px 12px; background: #841818; color: #FFFFFF; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center;"
+                                        :style="{ fontSize: distanceMeters !== null ? '26px' : '19px' }">
+                                        <span id="metric-distance-text"
+                                            x-text="distanceMeters !== null ? distanceMeters + ' m' : (gpsStatus === 'denied' ? 'GPS refusé' : (gpsStatus === 'unavailable' || gpsStatus === 'unsupported' ? 'GPS indisponible' : 'Signal GPS...'))">Signal GPS...</span>
+                                    </div>
+
+                                    <div x-show="showGpsHelpButton()" x-cloak style="flex-shrink: 0;">
+                                        <button type="button"
+                                            id="hub-gps-help-btn"
+                                            x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
+                                            title="Vous êtes arrivé mais le point GPS n'est pas précis ?"
+                                            aria-label="Vous êtes arrivé mais le point GPS n'est pas précis ? Ouvrir le scanner"
+                                            class="btn-bounce"
+                                            style="width: 54px; height: 100%; box-sizing: border-box; background: #FEF3C7; color: #841818; font-size: 24px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            ?
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div x-show="showGpsHelpButton()" x-cloak>
+                                    <button type="button"
+                                        x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
+                                        style="display: block; width: 100%; background: none; border: none; padding: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #841818; text-align: center; cursor: pointer; text-decoration: underline;">
+                                        Arrivé mais GPS imprécis ? Touchez ?
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Si distance <= targetRadius : se transforme en bouton interactif 'Scanner le spot' (fond or) -->
+                            <button type="button" x-show="isWithinTarget()" x-cloak
                                 id="hub-scanner-action-btn" x-on:click="tab = 'scanner'"
                                 wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce"
                                 style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 22px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">

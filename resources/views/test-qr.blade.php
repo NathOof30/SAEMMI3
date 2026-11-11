@@ -439,7 +439,7 @@
                             <h2 class="step-title">{{ $step->name }}</h2>
                         </div>
                         <div class="step-badges">
-                            <span class="badge-info">GPS: {{ $step->lat }}, {{ $step->lng }}</span>
+                            <span class="badge-info">GPS: {{ $step->lat }}, {{ $step->lng }} (rayon {{ $step->target_radius ?? 30 }} m)</span>
                             <span class="badge-fragment">Fragment attendu : {{ $step->code_part }}</span>
                         </div>
                     </header>
@@ -525,7 +525,7 @@
                 </div>
 
                 <div class="final-secret-box">
-                    Code Secret Final (coffre) : <strong>4819</strong> (issu des étapes 1 à 4) + Retrait du lot final à l'<strong>Office de Tourisme</strong> (Étape 5) / <strong>Coffre Asmodee</strong> (Étape 6).
+                    Code Secret Final (coffre) : <strong>4819</strong> (issu des étapes 1 à 4) + Cap vers l'<strong>Office de Tourisme</strong> (Étape 5) pour ouvrir le <strong>Coffre Asmodee</strong> (Étape 6).
                 </div>
             </section>
         </main>

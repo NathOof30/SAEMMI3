@@ -56,10 +56,10 @@
                     <div
                         style="background: #fdfaf2; border: 2.5px dashed #d97706; border-radius: 16px; padding: 22px 16px;">
                         <p style="margin: 0 0 10px 0; font-weight: 900; font-size: 17px; color: #841818;">
-                            Prêts à explorer Lens ?
+                            Aidez Gali à retrouver la Lampe Cœur !
                         </p>
                         <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.5;">
-                            Rejoignez la quête historique et découvrez les 6 fragments secrets disséminés dans la ville.
+                            Tout commence au grenier avec un premier bout de carte jauni… Partez explorer Lens en famille pour réunir les 6 fragments secrets.
                         </p>
                     </div>
                 </main>
@@ -124,7 +124,7 @@
                             L'Explorateur
                         </h3>
                         <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.5;">
-                            L'enfant résout les énigmes sur la carte papier physique avec son filtre optique.
+                            L'enfant résout les énigmes de Gali sur la carte papier physique avec sa loupe.
                         </p>
                     </div>
 

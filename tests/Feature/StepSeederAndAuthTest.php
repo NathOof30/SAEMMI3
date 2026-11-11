@@ -28,12 +28,12 @@ class StepSeederAndAuthTest extends TestCase
         $this->assertDatabaseCount('steps', 6);
 
         $expectedLocations = [
-            1 => ['name' => 'Étape 1 : Place Jean Jaurès', 'qr_map' => 'MAP_LOC_1', 'qr_mj' => 'MJ_STEP_1', 'lat' => 50.4293, 'lng' => 2.8315],
-            2 => ['name' => 'Étape 2 : Gare de Lens', 'qr_map' => 'MAP_LOC_2', 'qr_mj' => 'MJ_STEP_2', 'lat' => 50.4277, 'lng' => 2.8258],
-            3 => ['name' => 'Étape 3 : Musée Louvre-Lens', 'qr_map' => 'MAP_LOC_3', 'qr_mj' => 'MJ_STEP_3', 'lat' => 50.4312, 'lng' => 2.8043],
-            4 => ['name' => 'Étape 4 : Stade Bollaert-Delelis', 'qr_map' => 'MAP_LOC_4', 'qr_mj' => 'MJ_STEP_4', 'lat' => 50.4328, 'lng' => 2.8149],
-            5 => ['name' => 'Étape 5 : Les Terrils Jumeaux', 'qr_map' => 'MAP_LOC_5', 'qr_mj' => 'MJ_STEP_5', 'lat' => 50.4485, 'lng' => 2.7845],
-            6 => ['name' => 'Étape 6 : Église Saint-Léger', 'qr_map' => 'MAP_LOC_6', 'qr_mj' => 'MJ_STEP_6', 'lat' => 50.4305, 'lng' => 2.8336],
+            1 => ['name' => 'Étape 1 : Gare de Lens', 'qr_map' => 'MAP_LOC_1', 'qr_mj' => 'MJ_STEP_1', 'lat' => 50.4268, 'lng' => 2.8281, 'radius' => 30],
+            2 => ['name' => 'Étape 2 : Centre-Ville', 'qr_map' => 'MAP_LOC_2', 'qr_mj' => 'MJ_STEP_2', 'lat' => 50.4298, 'lng' => 2.8295, 'radius' => 30],
+            3 => ['name' => 'Étape 3 : Stade Bollaert-Delelis', 'qr_map' => 'MAP_LOC_3', 'qr_mj' => 'MJ_STEP_3', 'lat' => 50.4328, 'lng' => 2.8149, 'radius' => 65],
+            4 => ['name' => 'Étape 4 : Musée Louvre-Lens', 'qr_map' => 'MAP_LOC_4', 'qr_mj' => 'MJ_STEP_4', 'lat' => 50.4312, 'lng' => 2.8043, 'radius' => 60],
+            5 => ['name' => 'Étape 5 : Les Terrils de Loos-en-Gohelle', 'qr_map' => 'MAP_LOC_5', 'qr_mj' => 'MJ_STEP_5', 'lat' => 50.4485, 'lng' => 2.7845, 'radius' => 70],
+            6 => ['name' => 'Étape 6 : Office de Tourisme', 'qr_map' => 'MAP_LOC_6', 'qr_mj' => 'MJ_STEP_6', 'lat' => 50.4289, 'lng' => 2.8322, 'radius' => 30],
         ];
 
         foreach ($expectedLocations as $id => $data) {
@@ -44,13 +44,20 @@ class StepSeederAndAuthTest extends TestCase
             $this->assertEquals($data['qr_mj'], $step->qr_mj_code);
             $this->assertEquals($data['lat'], $step->lat);
             $this->assertEquals($data['lng'], $step->lng);
+            $this->assertEquals($data['radius'], $step->target_radius);
             $this->assertNotEmpty($step->riddle_text);
             $this->assertNotEmpty($step->code_part);
         }
 
-        // Test explicit lore requirement from contexte_projet.md
+        // Test explicit storytelling lore requirement (grenier + Gali + trains/locomotive, loupe at Centre-Ville)
+        $step1 = Step::find(1);
+        $this->assertStringContainsString('grenier', $step1->riddle_text);
+        $this->assertStringContainsString('Gali', $step1->riddle_text);
+        $this->assertStringContainsString('locomotive immobile', $step1->riddle_text);
+
         $step2 = Step::find(2);
-        $this->assertStringContainsString('locomotive immobile', $step2->riddle_text);
+        $this->assertStringContainsString('loupe', $step2->riddle_text);
+        $this->assertStringContainsString('corons', $step2->riddle_text);
     }
 
     public function test_step_seeder_is_idempotent(): void
@@ -215,7 +222,7 @@ class StepSeederAndAuthTest extends TestCase
             ->assertSee('Victoire !')
             ->assertSee('Code final : 4819')
             ->assertSee('Fragments et indices récoltés (6/6) :')
-            ->assertSee('Étape 1 : Place Jean Jaurès')
-            ->assertSee('Étape 6 : Église Saint-Léger');
+            ->assertSee('Étape 1 : Gare de Lens')
+            ->assertSee('Étape 6 : Office de Tourisme');
     }
 }

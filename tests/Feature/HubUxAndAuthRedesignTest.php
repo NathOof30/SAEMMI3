@@ -193,11 +193,18 @@ class HubUxAndAuthRedesignTest extends TestCase
             // Lower card with black outline
             ->assertSeeHtml('Destination : <span style="color: #F4B316;">'.$cleanName.'</span>')
             ->assertSee('Suivez la boussole, observez autour de vous et trouvez le spot')
-            // Dynamic action button: metric display (> 30m) vs Scanner button (<= 30m)
+            // Dynamic action button: calibrated radius, no fake '300 m', contextual '?' safety net
+            ->assertSeeHtml('targetRadius: 70')
+            ->assertSeeHtml('approachRadius: 150')
             ->assertSeeHtml('id="hub-distance-metric-btn"')
-            ->assertSeeHtml('x-show="distanceMeters === null || distanceMeters > 30"')
+            ->assertSeeHtml('Signal GPS...')
+            ->assertDontSee('300 m')
+            ->assertSeeHtml('id="hub-gps-help-btn"')
+            ->assertSeeHtml('id="hub-gps-help-popover"')
+            ->assertSeeHtml('id="hub-gps-fallback-scanner-btn"')
+            ->assertSeeHtml('x-show="!isWithinTarget()"')
             ->assertSeeHtml('id="hub-scanner-action-btn"')
-            ->assertSeeHtml('x-show="distanceMeters !== null && distanceMeters <= 30"')
+            ->assertSeeHtml('x-show="isWithinTarget()"')
             ->assertSeeHtml('Scanner le spot');
     }
 
