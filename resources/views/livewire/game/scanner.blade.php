@@ -600,7 +600,11 @@
                 @if($scanStatus === 'success')
                     <button type="button" x-on:click="dismiss()" id="scan-overlay-action-btn" class="btn-bounce font-display"
                         style="font-family: var(--font-display); width: 100%; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
-                        {{ $scanTargetTab === 'inventory' ? 'Ouvrir mon inventaire →' : 'Poursuivre vers la boussole →' }}
+                        @if($scanTargetTab === 'inventory')
+                            {{ ($user && ($user->fragments()->count() >= 6 || $user->current_step > 6)) ? 'Assembler la clé & voir le trésor →' : 'Placer le fragment sur la clé →' }}
+                        @else
+                            Poursuivre vers la boussole →
+                        @endif
                     </button>
                 @else
                     <button type="button" x-on:click="dismiss()" id="scan-overlay-dismiss-btn" class="btn-bounce font-display"
@@ -638,9 +642,9 @@
                 @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
                     Terminé (Toutes les étapes validées)
                 @elseif($user && $user->phase === 'GUESSING_LOCATION')
-                    Étape {{ $user->current_step }}/6 — Scannez le QR de la carte
+                    Étape {{ $user->current_step }}/6  |  Scannez le QR de la carte
                 @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                    Étape {{ $user->current_step }}/6 — Scannez le QR du Maître du Jeu
+                    Étape {{ $user->current_step }}/6  |  Scannez le badge de l'animateur sur place
                 @else
                     Terminé
                 @endif
@@ -708,7 +712,7 @@
             </div>
         </div>
 
-        <!-- Outil Simulation manuelle (Debug) — masqué par défaut, activable dans [•] debug du Hub -->
+        <!-- Outil Simulation manuelle (Debug) : masqué par défaut, activable dans [•] debug du Hub -->
         <div id="scanner-manual-sim-panel" x-show="manualScanEnabled" x-cloak
             x-on:submit.capture="const inp = $el.querySelector('#manualCode'); pendingRetryCode = inp ? inp.value.trim() : ''; if (typeof navigator !== 'undefined' && navigator.onLine === false) { $event.preventDefault(); $event.stopPropagation(); $event.stopImmediatePropagation(); networkErrorMessage = 'Vous êtes hors ligne : impossible de valider ce QR code sans réseau. Rapprochez-vous d\'une zone couverte puis appuyez sur Réessayer.'; if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]); }"
             style="flex-shrink: 0; background: #FFFFFF; border: 3px solid #1A1A1A; border-radius: 16px; box-shadow: 0 4px 0 #1A1A1A; padding: 12px 14px;">

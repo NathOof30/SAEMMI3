@@ -136,13 +136,15 @@ class P1NarrativeAndDesignTest extends TestCase
         $this->assertNotNull($step3);
 
         Livewire::test(Inventory::class)
-            ->assertSee('Carnet & Carte de Gali')
+            ->assertSee('Carnet & Clé de Gali')
             ->assertSee('2 / 6')
-            ->assertSeeHtml('id="gali-treasure-map-puzzle"')
-            ->assertSeeHtml('id="puzzle-piece-1"')
-            ->assertSeeHtml('id="puzzle-piece-2"')
-            ->assertSeeHtml('id="puzzle-piece-3"')
-            ->assertSeeHtml('id="puzzle-piece-6"')
+            ->assertSeeHtml('id="gali-key-assembly"')
+            ->assertSeeHtml('id="gali-vertical-key-svg"')
+            ->assertSeeHtml('id="key-fragment-starter"')
+            ->assertSeeHtml('id="key-fragment-1"')
+            ->assertSeeHtml('id="key-fragment-2"')
+            ->assertSeeHtml('id="key-fragment-3"')
+            ->assertSeeHtml('id="key-fragment-6"')
             ->assertSeeHtml('x-on:click="openMemory(1)"')
             ->assertSeeHtml('x-on:click="openMemory(2)"')
             ->assertDontSeeHtml('x-on:click="openMemory(3)"')
@@ -154,7 +156,7 @@ class P1NarrativeAndDesignTest extends TestCase
             ->assertDontSee($step3->heritage_info);
     }
 
-    public function test_inventory_victory_displays_full_puzzle_4819_padlock_and_local_qr_generator(): void
+    public function test_inventory_victory_displays_full_key_raffle_and_local_qr_generator(): void
     {
         $user = User::factory()->finished()->create([
             'reward_token' => 'p1testtoken1234567890abcdef12345',
@@ -171,15 +173,18 @@ class P1NarrativeAndDesignTest extends TestCase
 
         Livewire::test(Inventory::class)
             ->assertSee('Victoire !')
-            ->assertSee('Carte au Trésor de Gali (6/6)')
-            ->assertSee('Code Cadenas Coffre')
-            ->assertSee('Code final : 4819')
-            ->assertSee('QR Code Retrait du Lot Dobble')
+            ->assertSee('Clé Antique de Gali (6/6)')
+            ->assertSee('QR Code Retrait du Trésor')
+            ->assertSee('Inscription automatique au grand tirage au sort !')
+            ->assertDontSee('Code Cadenas Coffre')
+            ->assertDontSee('4819')
+            ->assertDontSee('Dobble')
+            ->assertDontSee('Asmodee')
             ->assertSeeHtml('id="reward-qr-payload"')
             ->assertSeeHtml('data-qr-payload="EXPEDITION_LENS_REWARD_p1testtoken1234567890abcdef12345"')
             ->assertSeeHtml('id="local-reward-qr-svg"')
             ->assertSee('https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=EXPEDITION_LENS_REWARD_p1testtoken1234567890abcdef12345')
-            ->assertSee('Fragments et indices récoltés (6/6) :');
+            ->assertSee('Fragments et souvenirs récoltés (6/6) :');
     }
 
     public function test_scanner_prioritizes_camera_and_debug_toggle_controls_manual_simulation(): void
@@ -201,7 +206,7 @@ class P1NarrativeAndDesignTest extends TestCase
         $component = Livewire::test(Scanner::class)
             ->assertSeeHtml('id="qr-reader"')
             ->assertSeeHtml('id="scanner-phase-reminder"')
-            ->assertSee('Étape 2/6 — Scannez le QR de la carte')
+            ->assertSee('Étape 2/6  |  Scannez le QR de la carte')
             ->assertSeeHtml('id="btn-toggle-torch"')
             ->assertSeeHtml('id="scanner-manual-sim-panel" x-show="manualScanEnabled"')
             ->assertSeeHtml('Simulation manuelle (Debug PC)')
@@ -286,7 +291,7 @@ class P1NarrativeAndDesignTest extends TestCase
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MJ_STEP_1')
             ->assertSet('scanStatus', 'error')
-            ->assertSet('scanTitle', 'Mince ! Mauvais Maître du Jeu...')
+            ->assertSet('scanTitle', 'Mince ! Mauvais badge d\'étape...')
             ->assertSee('Gare de Lens')
             ->assertSee('Stade Bollaert-Delelis');
 
@@ -397,9 +402,9 @@ class P1NarrativeAndDesignTest extends TestCase
             ->assertSeeHtml('touchStartScrollTop');
 
         Livewire::test(LoginRegister::class)
-            ->assertSee("Au dos l'attend le premier indice", false);
+            ->assertSee('Le premier indice vous attend !', false);
 
-        // 5. Inventory at 5/6 unlocks Piece 5 as readable "Office de Tourisme" (never "OT") and interlocking puzzle geometry
+        // 5. Inventory at 5/6 unlocks Shard 5 ("Garde du fût") while Shard 6 remains locked & starter attic piece is present
         foreach ([1, 2, 3, 4, 5] as $stepId) {
             Fragment::create([
                 'user_id' => $phaseBUser3->id,
@@ -409,12 +414,14 @@ class P1NarrativeAndDesignTest extends TestCase
         }
 
         Livewire::test(Inventory::class)
-            ->assertSee('Office de Tourisme')
-            ->assertDontSee('>OT<', false)
-            ->assertSeeHtml('C 37 15 51 15 51 8')
-            ->assertSee('Pièce 6');
+            ->assertSee('Grenier')
+            ->assertSee('Garde du fût')
+            ->assertSeeHtml('id="key-fragment-starter"')
+            ->assertSeeHtml('id="key-fragment-6"')
+            ->assertSee('?  |  À découvrir')
+            ->assertDontSee('Office de Tourisme');
 
-        // At 6/6 victory, Piece 6 renders "Coffre" and Piece 5 keeps "Office de Tourisme"
+        // At 6/6 victory, Shard 6 unlocks "Dents de la clé" and victory raffle card renders
         Fragment::create([
             'user_id' => $phaseBUser3->id,
             'step_id' => 6,
@@ -423,10 +430,11 @@ class P1NarrativeAndDesignTest extends TestCase
         $phaseBUser3->update(['has_won' => true, 'current_step' => 6]);
 
         Livewire::test(Inventory::class)
-            ->assertSee('Office de Tourisme')
-            ->assertSee('Coffre')
-            ->assertDontSee('>OT<', false)
-            ->assertDontSee('>COFFRE<', false);
+            ->assertSee('Garde du fût')
+            ->assertSee('Dents de la clé')
+            ->assertSeeHtml('id="victory-raffle-card"')
+            ->assertDontSee('4819')
+            ->assertDontSee('Dobble');
 
         // 6. Scanner places torch button inside viewfinder frame and wraps top action bar
         $scannerView = file_get_contents(resource_path('views/livewire/game/scanner.blade.php'));

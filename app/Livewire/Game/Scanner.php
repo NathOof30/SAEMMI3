@@ -85,7 +85,7 @@ class Scanner extends Component
             $this->applyScanFeedback(
                 'success',
                 'Expédition Déjà Terminée !',
-                'Tous les fragments ont déjà été réunis. Consultez votre inventaire.',
+                'Tous les fragments de clé ont déjà été réunis. Consultez votre inventaire.',
                 'inventory'
             );
 
@@ -145,12 +145,12 @@ class Scanner extends Component
             } elseif ($resolved['type'] === 'mj') {
                 if ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
                     $title = 'Pas si vite, explorateur !';
-                    $subtitle = "Ce Maître du Jeu correspond à {$scannedStep->cleanName()}, que tu as déjà réussi ! Trouve d'abord la prochaine destination sur la carte papier avec la loupe.";
+                    $subtitle = "Ce badge d'épreuve correspond à {$scannedStep->cleanName()}, que tu as déjà réussi ! Trouve d'abord la prochaine destination sur la carte papier avec la loupe.";
                 } else {
                     $title = ($scannedNumber !== null && $scannedNumber > $currentStep->id)
                         ? 'Holà, téléportation détectée !'
                         : 'Pas si vite, explorateur !';
-                    $subtitle = "Holà, téléportation détectée ! Ce Maître du Jeu ne peut pas encore être devant toi… Trouve d'abord la destination sur la carte papier avec la loupe !";
+                    $subtitle = "Holà, téléportation détectée ! Ce badge de l'animateur sur place ne peut pas encore être devant toi… Trouve d'abord la destination sur la carte papier avec la loupe !";
                 }
             } else {
                 $title = 'Mince ! Mauvais QR Code...';
@@ -178,22 +178,23 @@ class Scanner extends Component
                 $user->save();
 
                 $this->dispatch('step-updated');
+                $this->dispatch('fragment-unlocked', stepId: $currentStep->id);
 
                 if ($user->current_step > 6 || $user->fragments()->count() >= 6) {
-                    $this->message = "QR MJ validé ! Fragment obtenu pour l'étape {$currentStep->id}. Vous avez réuni les 6 fragments ! Rendez-vous dans l'Inventaire pour voir la victoire !";
+                    $this->message = "Badge validé ! Dernier fragment obtenu pour l'étape {$currentStep->id}. Vous avez réuni les 6 fragments ! Rendez-vous dans l'Inventaire pour voir la victoire !";
                     $this->applyScanFeedback(
                         'success',
                         'Victoire Absolue !',
-                        'Les 6 fragments sont réunis ! Rendez-vous dans votre inventaire pour ouvrir le coffre de la Lampe Cœur et récupérer votre lot Asmodee.',
+                        'Les 6 fragments de la clé sont réunis ! Rendez-vous dans votre inventaire pour assembler la clé complète, rallumer la Lampe Cœur et découvrir votre trésor secret.',
                         'inventory'
                     );
                 } else {
-                    $this->message = "QR MJ validé ! Fragment obtenu pour l'étape {$currentStep->id}.";
+                    $this->message = "Badge validé ! Fragment de clé obtenu pour l'étape {$currentStep->id}.";
                     $this->applyScanFeedback(
                         'success',
                         'Bravo ! Épreuve réussie !',
-                        "Fragment n°{$currentStep->id} débloqué ! Préparez-vous pour l'étape suivante.",
-                        'hub'
+                        "Fragment de clé {$currentStep->id}/6 débloqué ({$currentStep->code_part}) ! Placez-le sur votre clé dans l'inventaire.",
+                        'inventory'
                     );
                 }
 
@@ -206,30 +207,30 @@ class Scanner extends Component
 
             if ($resolved['type'] === 'mj') {
                 if ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
-                    $title = 'Mince ! Mauvais Maître du Jeu...';
-                    $subtitle = "Ce badge appartient à {$scannedStep->cleanName()}, une étape déjà validée ! Rejoins plutôt {$currentCleanName} pour rencontrer le bon animateur.";
+                    $title = 'Mince ! Mauvais badge d\'étape...';
+                    $subtitle = "Ce badge appartient à {$scannedStep->cleanName()}, une étape déjà validée ! Rejoins plutôt {$currentCleanName} pour rencontrer le bon animateur sur place.";
                 } elseif ($scannedNumber !== null && $scannedNumber > $currentStep->id) {
                     $title = 'Holà, téléportation détectée !';
                     $subtitle = "Ce badge appartient à une étape que tu n'as pas encore débloquée ! Rejoins d'abord {$currentCleanName} pour valider l'étape {$currentStep->id}.";
                 } else {
-                    $title = 'Mince ! Mauvais Maître du Jeu...';
-                    $subtitle = "Ce badge ne correspond pas au Maître du Jeu de {$currentCleanName} ! Scanne le badge officiel sur place pour valider l'étape {$currentStep->id}.";
+                    $title = 'Mince ! Mauvais badge d\'étape...';
+                    $subtitle = "Ce badge ne correspond pas à l'animateur sur place de {$currentCleanName} ! Scanne le badge officiel sur place pour valider l'étape {$currentStep->id}.";
                 }
             } elseif ($resolved['type'] === 'map') {
                 $title = 'Emplacement déjà validé !';
                 if ($scannedNumber === $currentStep->id) {
-                    $subtitle = "Tu as déjà localisé {$currentCleanName} sur la carte ! Rends-toi sur place et scanne le badge du Maître du Jeu.";
+                    $subtitle = "Tu as déjà localisé {$currentCleanName} sur la carte ! Rends-toi sur place et scanne le badge de l'animateur sur place.";
                 } elseif ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
-                    $subtitle = "Tu es déjà passé par {$scannedStep->cleanName()} ! Suis la boussole vers {$currentCleanName} pour scanner le Maître du Jeu sur place.";
+                    $subtitle = "Tu es déjà passé par {$scannedStep->cleanName()} ! Suis la boussole vers {$currentCleanName} pour scanner le badge de l'animateur sur place.";
                 } else {
-                    $subtitle = "L'emplacement actuel ({$currentCleanName}) est déjà validé, et ce repère appartient à une autre étape ! Scanne d'abord le Maître du Jeu sur place.";
+                    $subtitle = "L'emplacement actuel ({$currentCleanName}) est déjà validé, et ce repère appartient à une autre étape ! Scanne d'abord le badge de l'animateur sur place.";
                 }
             } else {
                 $title = 'Mince ! Mauvais QR Code...';
-                $subtitle = "Ce QR code inconnu ne fait pas partie du carnet de Gali ! Rejoins {$currentCleanName} et scanne le badge officiel du Maître du Jeu.";
+                $subtitle = "Ce QR code inconnu ne fait pas partie du carnet de Gali ! Rejoins {$currentCleanName} et scanne le badge officiel de l'animateur sur place.";
             }
 
-            $this->error = "Code invalide pour l'étape actuelle. Vous devez scanner le QR code du Maître du Jeu (MJ_STEP_{$currentStep->id}).";
+            $this->error = "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de l'animateur sur place (MJ_STEP_{$currentStep->id}).";
             $this->applyScanFeedback('error', $title, $subtitle);
 
             return;

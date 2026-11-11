@@ -152,12 +152,14 @@ class ScanOverlayAndCompassPermissionTest extends TestCase
             ->call('verifyCode', 'MJ_STEP_1')
             ->assertSet('scanStatus', 'success')
             ->assertSet('scanTitle', 'Bravo ! Épreuve réussie !')
-            ->assertSet('scanTargetTab', 'hub')
+            ->assertSet('scanTargetTab', 'inventory')
             ->assertDispatched('step-updated')
+            ->assertDispatched('fragment-unlocked', stepId: 1)
             ->assertSeeHtml('Bravo ! Épreuve réussie !')
-            ->assertSeeHtml('Fragment n°1 débloqué !')
+            ->assertSeeHtml('Fragment de clé 1/6 débloqué')
+            ->assertSeeHtml('Placer le fragment sur la clé →')
             ->call('dismissScanOverlay')
-            ->assertDispatched('set-tab', tab: 'hub');
+            ->assertDispatched('set-tab', tab: 'inventory');
 
         $user->refresh();
         $this->assertEquals(2, $user->current_step);
@@ -182,8 +184,9 @@ class ScanOverlayAndCompassPermissionTest extends TestCase
             ->assertSet('scanTitle', 'Victoire Absolue !')
             ->assertSet('scanTargetTab', 'inventory')
             ->assertDispatched('step-updated')
+            ->assertDispatched('fragment-unlocked', stepId: 6)
             ->assertSeeHtml('Victoire Absolue !')
-            ->assertSeeHtml('Ouvrir mon inventaire')
+            ->assertSeeHtml('Assembler la clé &amp; voir le trésor →')
             ->call('dismissScanOverlay')
             ->assertDispatched('set-tab', tab: 'inventory');
 

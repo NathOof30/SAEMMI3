@@ -478,12 +478,19 @@
                     }
                 }
 
-                return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${sizePx}" height="${sizePx}" shape-rendering="crispEdges" role="img" aria-label="QR Code Retrait du Lot Dobble"><rect width="${total}" height="${total}" fill="#FFFFFF"/><path d="${paths}" fill="#1A1A1A"/></svg>`;
+                return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${sizePx}" height="${sizePx}" shape-rendering="crispEdges" role="img" aria-label="QR Code Retrait du Trésor"><rect width="${total}" height="${total}" fill="#FFFFFF"/><path d="${paths}" fill="#1A1A1A"/></svg>`;
             } catch (e) {
                 console.warn('Erreur génération QR local:', e);
                 return '';
             }
         };
+
+        window.__expeditionPendingUnlockedStep = null;
+        window.addEventListener('fragment-unlocked', function (event) {
+            if (event && event.detail && event.detail.stepId) {
+                window.__expeditionPendingUnlockedStep = event.detail.stepId;
+            }
+        });
 
         window.expeditionVibrate = function (pattern) {
             try {

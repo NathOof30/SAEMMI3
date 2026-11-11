@@ -525,7 +525,7 @@
                 </div>
 
                 <div class="final-secret-box">
-                    Code Secret Final (coffre) : <strong>4819</strong> (issu des étapes 1 à 4) + Cap vers l'<strong>Office de Tourisme</strong> (Étape 5) pour ouvrir le <strong>Coffre Asmodee</strong> (Étape 6).
+                    Clé Complète (6 fragments de clé : Étapes 1 à 6) + Ouverture du Coffre du Trésor Secret à l'<strong>Office de Tourisme</strong> + Participation automatique au Grand Tirage au Sort !
                 </div>
             </section>
         </main>

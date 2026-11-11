@@ -36,7 +36,7 @@ class GameFlowTest extends TestCase
         $this->assertEquals('Étape 1 : Gare de Lens', $firstStep->name);
         $this->assertEquals('MAP_LOC_1', $firstStep->qr_map_code);
         $this->assertEquals('MJ_STEP_1', $firstStep->qr_mj_code);
-        $this->assertEquals('4', $firstStep->code_part);
+        $this->assertEquals("Bord de l'anneau", $firstStep->code_part);
         $this->assertEquals(30, $firstStep->target_radius);
         $this->assertStringContainsString('locomotive immobile', $firstStep->riddle_text);
         $this->assertIsFloat($firstStep->lat);
@@ -216,7 +216,7 @@ class GameFlowTest extends TestCase
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MAP-STEP-1')
             ->assertSet('scanStatus', 'error')
-            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code du Maître du Jeu (MJ_STEP_1).")
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de l'animateur sur place (MJ_STEP_1).")
             ->assertSee('Emplacement déjà validé !');
 
         // 4. Scan valid MJ QR code
@@ -249,7 +249,8 @@ class GameFlowTest extends TestCase
 
         // Initially 0 fragments
         Livewire::test(Inventory::class)
-            ->assertSee('0 / 6 fragments')
+            ->assertSee('0 / 6')
+            ->assertSee('Progression : 0 / 6 fragments de clé débloqués')
             ->assertDontSee('Victoire !');
 
         // Collect 5 fragments
@@ -258,16 +259,20 @@ class GameFlowTest extends TestCase
         }
 
         Livewire::test(Inventory::class)
-            ->assertSee('5 / 6 fragments')
+            ->assertSee('5 / 6')
+            ->assertSee('Progression : 5 / 6 fragments de clé débloqués')
             ->assertDontSee('Victoire !');
 
         // Collect 6th fragment
         Fragment::create(['user_id' => $user->id, 'step_id' => 6]);
 
-        // Final code should be 4-digit code for the padlock at Office de Tourisme: "4819"
         Livewire::test(Inventory::class)
             ->assertSee('Victoire !')
-            ->assertSee('Code final : 4819')
+            ->assertSee('Clé Complète assemblée (6/6)')
+            ->assertSee('QR Code Retrait du Trésor')
+            ->assertSee('Inscription automatique au grand tirage au sort !')
+            ->assertDontSee('4819')
+            ->assertDontSee('Dobble')
             ->assertDontSee('Progression :');
     }
 
@@ -307,7 +312,9 @@ class GameFlowTest extends TestCase
 
         Livewire::test(Inventory::class)
             ->assertSee('Victoire !')
-            ->assertSee('Code final : 4819');
+            ->assertSee('Clé Complète assemblée (6/6)')
+            ->assertSee('QR Code Retrait du Trésor')
+            ->assertDontSee('4819');
     }
 
     public function test_auth_validation_fails_on_empty_or_invalid_inputs(): void
@@ -485,7 +492,7 @@ class GameFlowTest extends TestCase
 
         // Router header should NOT show "Étape 7/6"
         Livewire::test(GameRouter::class)
-            ->assertSee('(Jeu terminé ! 6/6 fragments débloqués)')
+            ->assertSee('(Jeu terminé ! 6/6 fragments de clé débloqués)')
             ->assertDontSee('Étape 7/6');
 
         // Scanner should show Terminé rather than "Recherche de l'emplacement"

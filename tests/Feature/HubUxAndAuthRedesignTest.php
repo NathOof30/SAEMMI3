@@ -237,9 +237,13 @@ class HubUxAndAuthRedesignTest extends TestCase
 
         Livewire::test(Inventory::class)
             ->assertSee('Victoire !')
-            ->assertSee('Code final : 4819')
-            ->assertSee('QR Code Retrait du Lot Dobble')
-            ->assertSee('Statut : Lot en attente de retrait')
+            ->assertSee('Clé Complète assemblée (6/6)')
+            ->assertSee('QR Code Retrait du Trésor')
+            ->assertSee('Statut : Trésor en attente de retrait')
+            ->assertSee('Inscription automatique au grand tirage au sort !')
+            ->assertDontSee('4819')
+            ->assertDontSee('Dobble')
+            ->assertDontSee('Asmodee')
             ->assertSee('https://api.qrserver.com/v1/create-qr-code/?size=200x200&amp;margin=10&amp;data=EXPEDITION_LENS_REWARD_', false);
 
         $user->refresh();
@@ -252,7 +256,7 @@ class HubUxAndAuthRedesignTest extends TestCase
         $this->assertTrue($user->reward_picked);
 
         Livewire::test(Inventory::class)
-            ->assertSee('Statut : Lot déjà remis — Merci d\'avoir joué !', false);
+            ->assertSee('Statut : Trésor déjà remis  |  Merci d\'avoir joué !', false);
     }
 
     public function test_user_model_helper_methods(): void

@@ -1,7 +1,7 @@
 <div x-data="{
     onboardingStep: '{{ $mode === 'tuto' ? 'slider' : 'welcome' }}',
     activeSlide: 0,
-    totalSlides: 4,
+    totalSlides: 5,
     nextSlide() {
         if (this.activeSlide < this.totalSlides - 1) {
             this.activeSlide++;
@@ -21,12 +21,21 @@
     <!-- 1. En-tête haut de page -->
     <header style="text-align: center; flex-shrink: 0; padding-top: 2px;">
         <h1 class="font-display"
-            style="font-family: var(--font-display); font-size: clamp(27px, 6.8vw, 33px); font-weight: 700; color: #841818; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05;">
+            style="font-family: var(--font-display); font-size: clamp(27px, 6.8vw, 33px); font-weight: 700; color: #841818; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05;">
             L'Expédition Secrète
         </h1>
-        <p style="margin: 0; font-size: 13px; font-weight: 700; color: #b45309;">
-            Lens Tourisme & Asmodee
-        </p>
+        <div id="partner-logos-header"
+            style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 3px 12px; background: #FFFFFF; border: 1.5px solid #1A1A1A; border-radius: 9999px;">
+            <img src="{{ asset('lens-tourisme-logo-e1673958887436.webp') }}"
+                alt="Lens Tourisme"
+                width="225" height="78"
+                style="height: clamp(20px, 3.2dvh, 26px); width: auto; object-fit: contain; display: block; border-radius: 4px;">
+            <span aria-hidden="true" style="font-size: 13px; font-weight: 800; color: #841818; line-height: 1;">×</span>
+            <img src="{{ asset('asmodee_logo.webp') }}"
+                alt="Asmodee"
+                width="816" height="355"
+                style="height: clamp(20px, 3.2dvh, 26px); width: auto; object-fit: contain; display: block;">
+        </div>
     </header>
 
     @if($mode === 'landing' || $mode === 'tuto')
@@ -56,18 +65,18 @@
                     </h2>
 
                     <div
-                        style="background: #fdfaf2; border: 2px dashed #d97706; border-radius: 16px; padding: clamp(11px, 2dvh, 18px) 13px; text-align: left;">
-                        <p class="font-display" style="font-family: var(--font-display); margin: 0 0 clamp(6px, 1dvh, 8px) 0; font-weight: 700; font-size: 17px; color: #841818; text-align: center; letter-spacing: 0.02em;">
+                        style="background: #fdfaf2; border: 2px dashed #d97706; border-radius: 16px; padding: clamp(10px, 1.8dvh, 16px) 13px; text-align: left;">
+                        <p class="font-display" style="font-family: var(--font-display); margin: 0 0 clamp(5px, 0.9dvh, 8px) 0; font-weight: 700; font-size: 16.5px; color: #841818; text-align: center; letter-spacing: 0.02em;">
                             La légende de la Lampe Cœur
                         </p>
-                        <p style="margin: 0 0 clamp(6px, 1dvh, 8px) 0; font-size: 13px; color: #374151; line-height: 1.4;">
-                            Dans le <strong>grenier</strong> de son <strong>grand-père</strong>, sous une veste de mineur, <strong>Gali</strong> a découvert un bout de <strong>papier jauni</strong> menant à la <strong>Lampe Cœur</strong>, la <strong>gaillette de charbon magique</strong> qui illumine Lens !
+                        <p style="margin: 0 0 clamp(5px, 0.9dvh, 7px) 0; font-size: 12.5px; color: #374151; line-height: 1.38;">
+                            Dans le <strong>grenier</strong> de son <strong>grand-père</strong>, <strong>Gali</strong> a trouvé la <strong>carte</strong> en <strong>papier jauni</strong>, sa <strong>loupe</strong> et la base brisée d'une clé antique menant à la <strong>Lampe Cœur</strong>, la <strong>gaillette de charbon magique</strong> de Lens.
                         </p>
-                        <p style="margin: 0 0 clamp(6px, 1dvh, 8px) 0; font-size: 13px; color: #374151; line-height: 1.4;">
-                            Mais Gali n'a trouvé qu'un <strong>seul morceau</strong> de la carte : impossible de localiser la Lampe Cœur et de la rallumer avec un bout incomplet !
+                        <p style="margin: 0 0 clamp(5px, 0.9dvh, 7px) 0; font-size: 12.5px; color: #374151; line-height: 1.38;">
+                            Sans ses <strong>6 fragments manquants</strong>, impossible d'ouvrir le coffre secret ni de rallumer la Lampe Cœur !
                         </p>
-                        <p style="margin: 0; font-size: 12.5px; font-weight: 700; color: #92400e; text-align: center; line-height: 1.38;">
-                            Pour que l'histoire de Lens brille à nouveau, partez en ville avec votre kit retrouver les <strong>6 morceaux éparpillés</strong> et reconstituer la carte jusqu'au coffre final. Au dos l'attend le premier indice !
+                        <p style="margin: 0; font-size: 12px; font-weight: 700; color: #92400e; text-align: center; line-height: 1.35;">
+                            Partez en ville avec votre kit retrouver les <strong>6 fragments de clé</strong> et forger la clé complète jusqu'au véritable trésor. Le premier indice vous attend !
                         </p>
                     </div>
                 </main>
@@ -145,9 +154,12 @@
                         <button type="button" x-on:click="goToSlide(3)" aria-label="Étape 4"
                             style="display: inline-block; width: 14px; height: 14px; min-width: 14px; min-height: 14px; flex-shrink: 0; border-radius: 50%; border: 2.5px solid #1A1A1A; cursor: pointer; padding: 0; box-sizing: border-box; transition: transform 0.15s ease;"
                             :style="{ background: activeSlide === 3 ? '#F4B316' : '#E5E7EB', transform: activeSlide === 3 ? 'scale(1.25)' : 'scale(1)' }"></button>
+                        <button type="button" x-on:click="goToSlide(4)" aria-label="Étape 5"
+                            style="display: inline-block; width: 14px; height: 14px; min-width: 14px; min-height: 14px; flex-shrink: 0; border-radius: 50%; border: 2.5px solid #1A1A1A; cursor: pointer; padding: 0; box-sizing: border-box; transition: transform 0.15s ease;"
+                            :style="{ background: activeSlide === 4 ? '#F4B316' : '#E5E7EB', transform: activeSlide === 4 ? 'scale(1.25)' : 'scale(1)' }"></button>
                     </div>
 
-                    <!-- Bouton Suivant pour slides 0 à 2 (aligné à droite) -->
+                    <!-- Bouton Suivant pour slides 0 à 3 (aligné à droite) -->
                     <div style="display: flex; justify-content: flex-end;">
                         <div x-show="activeSlide < totalSlides - 1" style="flex-shrink: 0;">
                             <button type="button" x-on:click="nextSlide()"
@@ -159,7 +171,7 @@
                     </div>
                 </div>
 
-                <!-- Sur slides 0 à 2 : lien passer le tuto -->
+                <!-- Sur slides 0 à 3 : lien passer le tuto -->
                 <div x-show="activeSlide < totalSlides - 1" style="text-align: center;">
                     <button type="button" x-on:click="goToSlide(totalSlides - 1)"
                         style="background: transparent; border: none; color: #6b7280; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline;">
@@ -167,7 +179,7 @@
                     </button>
                 </div>
 
-                <!-- Sur slide 3 (dernière slide) : Boutons d'action créer / connecter équipe -->
+                <!-- Sur slide 4 (dernière slide) : Boutons d'action créer / connecter équipe -->
                 <div x-show="activeSlide === totalSlides - 1" class="alpine-flex" style="display: flex; flex-direction: column; gap: clamp(8px, 1.4dvh, 10px);">
                     <button type="button" wire:click="setMode('register')"
                         class="btn-bounce font-display"

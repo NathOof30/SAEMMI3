@@ -26,43 +26,43 @@ class PwaAndTestQrTest extends TestCase
                 'name' => 'Étape 1 : Gare de Lens',
                 'qr_map' => 'MAP_LOC_1',
                 'qr_mj' => 'MJ_STEP_1',
-                'code_part' => '4',
-                'riddle' => 'Sur le papier jauni du grenier, Gali lit : « Cherche l\'endroit où les trains se reposent… » Repère cette grande locomotive immobile figée dans la pierre !',
+                'code_part' => 'Bord de l\'anneau',
+                'riddle' => 'Au dos du morceau de clé trouvé dans le grenier, Gali lit sur une vieille note : « Cherche l\'endroit où les trains se reposent… » Repère cette grande locomotive immobile figée dans la pierre !',
             ],
             2 => [
                 'name' => 'Étape 2 : Centre-Ville',
                 'qr_map' => 'MAP_LOC_2',
                 'qr_mj' => 'MJ_STEP_2',
-                'code_part' => '8',
+                'code_part' => 'Base de l\'anneau',
                 'riddle' => 'Sur les traces de la vie dans les corons, plonge au cœur de la cité. Utilise la loupe du carnet pour repérer le détail caché sur une façade !',
             ],
             3 => [
                 'name' => 'Étape 3 : Stade Bollaert-Delelis',
                 'qr_map' => 'MAP_LOC_3',
                 'qr_mj' => 'MJ_STEP_3',
-                'code_part' => '1',
+                'code_part' => 'Col sculpté',
                 'riddle' => 'Là où vibre la passion Sang et Or ! Résous l\'énigme autour des couleurs de la ville pour retrouver ce temple légendaire.',
             ],
             4 => [
                 'name' => 'Étape 4 : Musée Louvre-Lens',
                 'qr_map' => 'MAP_LOC_4',
                 'qr_mj' => 'MJ_STEP_4',
-                'code_part' => '9',
+                'code_part' => 'Fût gravé',
                 'riddle' => 'Quand l\'ancienne mine laisse place aux reflets de verre et d\'aluminium… Un grand trésor culturel veille au milieu d\'un vaste parc.',
             ],
             5 => [
                 'name' => 'Étape 5 : Les Terrils de Loos-en-Gohelle',
                 'qr_map' => 'MAP_LOC_5',
                 'qr_mj' => 'MJ_STEP_5',
-                'code_part' => 'Office de Tourisme',
-                'riddle' => 'Grimpe vers les deux géants noirs jumeaux qui dominent l\'horizon minier pour récupérer le dernier morceau vers le trésor !',
+                'code_part' => 'Garde du fût',
+                'riddle' => 'Grimpe vers les deux géants noirs jumeaux qui dominent l\'horizon minier pour récupérer le cinquième fragment de la clé !',
             ],
             6 => [
                 'name' => 'Étape 6 : Office de Tourisme',
                 'qr_map' => 'MAP_LOC_6',
                 'qr_mj' => 'MJ_STEP_6',
-                'code_part' => 'Coffre Asmodee',
-                'riddle' => 'Tous tes morceaux enfin réunis mènent au point d\'accueil des voyageurs : c\'est là que t\'attend le vrai coffre de la Lampe Cœur et son code à 4 chiffres !',
+                'code_part' => 'Dents de la clé',
+                'riddle' => 'La clé est presque complète et ses repères convergent vers le point d\'accueil des voyageurs : décroche le sixième et dernier fragment pour ouvrir le coffre secret et rallumer la Lampe Cœur !',
             ],
         ];
 
@@ -78,10 +78,12 @@ class PwaAndTestQrTest extends TestCase
             $response->assertSee('https://api.qrserver.com/v1/create-qr-code/?size=180x180&amp;margin=10&amp;data='.$data['qr_mj'], false);
         }
 
-        // Verify cheat sheet summary and final combination
+        // Verify cheat sheet summary and key treasure outcome
         $response->assertSee('Récapitulatif des codes');
-        $response->assertSee('Code Secret Final (coffre) :');
-        $response->assertSee('4819');
+        $response->assertSee('Clé Complète (6 fragments de clé : Étapes 1 à 6)');
+        $response->assertSee('Participation automatique au Grand Tirage au Sort !');
+        $response->assertDontSee('4819');
+        $response->assertDontSee('Coffre Asmodee');
     }
 
     public function test_test_qr_view_auto_seeds_when_steps_table_is_empty(): void

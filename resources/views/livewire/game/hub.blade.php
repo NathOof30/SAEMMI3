@@ -6,12 +6,12 @@
             <h2 class="font-display" style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
             <p style="font-size: 15px; color: #374151; line-height: 1.5;">
                 Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour
-                découvrir le code secret final.
+                assembler votre clé complète et découvrir votre trésor secret.
             </p>
             <button type="button" x-on:click="tab = 'inventory'" wire:click="$dispatch('set-tab', { tab: 'inventory' })"
                 class="btn-bounce font-display"
                 style="font-family: var(--font-display); margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 19px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
-                Voir mon code secret Asmodee
+                Découvrir mon trésor secret →
             </button>
         </div>
     @elseif(!$step)
@@ -389,7 +389,7 @@
                 },
                 getGuidanceText() {
                     if (this.distanceMeters !== null && this.distanceMeters <= this.targetRadius) {
-                        return 'Vous êtes arrivé sur les lieux ! Cherchez l\'indice ou le Maître du Jeu.';
+                        return 'Vous êtes arrivé sur les lieux ! Cherchez l\'indice ou l\'animateur sur place.';
                     }
                     if (this.needleAngle === null || this.bearing === null) {
                         return 'Recherche de cap en cours...';
@@ -659,7 +659,7 @@
                         <h3 id="hub-help-modal-title" class="font-display"
                             style="font-family: var(--font-display); margin: 0; font-size: 21px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
                             <span x-show="helpView === 'guide'">Aide de l'Expédition</span>
-                            <span x-show="helpView === 'tutorial'" x-cloak>Tutoriel en 4 étapes</span>
+                            <span x-show="helpView === 'tutorial'" x-cloak>Tutoriel en 5 étapes</span>
                         </h3>
                         <button type="button" id="hub-help-close-btn" x-on:click="helpModalOpen = false" aria-label="Fermer l'aide"
                             style="background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 8px; width: 30px; height: 30px; font-size: 15px; font-weight: 800; cursor: pointer; color: #1A1A1A; display: inline-flex; align-items: center; justify-content: center;">
@@ -677,7 +677,7 @@
                                 <strong>L'Enfant (Explorateur) :</strong> observe la <strong>carte papier</strong> avec sa <strong>loupe</strong> pour déchiffrer l'énigme de Gali et repérer le QR code du lieu sur la carte (Phase A).
                             </p>
                             <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.4;">
-                                <strong>Le Parent (Guide) :</strong> s'oriente en ville grâce à la <strong>boussole</strong> (Phase B) puis scanne le badge QR du Maître du Jeu sur place.
+                                <strong>Le Parent (Guide) :</strong> s'oriente en ville grâce à la <strong>boussole</strong> (Phase B) puis scanne le badge QR de l'animateur sur place.
                             </p>
                         </div>
 
@@ -718,7 +718,7 @@
                     <div x-show="helpView === 'guide'" class="alpine-flex" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 2px solid #E5E7EB;">
                         <button type="button" id="hub-replay-tuto-btn" x-on:click="openHelpModal('tutorial')" class="btn-bounce font-display"
                             style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 17px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 12px; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer;">
-                            Relancer le tutoriel (4 étapes)
+                            Relancer le tutoriel (5 étapes)
                         </button>
                         <button type="button" id="hub-help-open-scanner-btn"
                             x-on:click="helpModalOpen = false; tab = 'scanner'"
@@ -729,7 +729,7 @@
                         </button>
                     </div>
 
-                    <!-- Vue 2 : Relecture interactive des 4 slides du tutoriel partagé sans se déconnecter -->
+                    <!-- Vue 2 : Relecture interactive des 5 slides du tutoriel partagé sans se déconnecter -->
                     <div x-show="helpView === 'tutorial'" x-cloak class="alpine-flex" style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
                         <div style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #FDF8EC; border: 2px solid #1A1A1A; border-radius: 16px; padding: 16px 14px; text-align: center;">
                             <x-tutorial-slides slide-var="helpTutorialSlide" :anti-spoil="true" />
@@ -746,25 +746,28 @@
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <button type="button" x-on:click="helpTutorialSlide = 0" aria-label="Slide 1"
-                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
                                     :style="{ background: helpTutorialSlide === 0 ? '#F4B316' : '#E5E7EB' }"></button>
                                 <button type="button" x-on:click="helpTutorialSlide = 1" aria-label="Slide 2"
-                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
                                     :style="{ background: helpTutorialSlide === 1 ? '#F4B316' : '#E5E7EB' }"></button>
                                 <button type="button" x-on:click="helpTutorialSlide = 2" aria-label="Slide 3"
-                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
                                     :style="{ background: helpTutorialSlide === 2 ? '#F4B316' : '#E5E7EB' }"></button>
                                 <button type="button" x-on:click="helpTutorialSlide = 3" aria-label="Slide 4"
-                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
                                     :style="{ background: helpTutorialSlide === 3 ? '#F4B316' : '#E5E7EB' }"></button>
+                                <button type="button" x-on:click="helpTutorialSlide = 4" aria-label="Slide 5"
+                                    style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    :style="{ background: helpTutorialSlide === 4 ? '#F4B316' : '#E5E7EB' }"></button>
                             </div>
                             <div style="display: flex; justify-content: flex-end;">
-                                <button type="button" id="hub-tuto-next-btn" x-show="helpTutorialSlide < 3" x-on:click="helpTutorialSlide++"
+                                <button type="button" id="hub-tuto-next-btn" x-show="helpTutorialSlide < 4" x-on:click="helpTutorialSlide++"
                                     class="btn-bounce font-display"
                                     style="font-family: var(--font-display); padding: 7px 14px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
                                     Suivant →
                                 </button>
-                                <button type="button" id="hub-tuto-done-btn" x-show="helpTutorialSlide === 3" x-cloak x-on:click="helpModalOpen = false"
+                                <button type="button" id="hub-tuto-done-btn" x-show="helpTutorialSlide === 4" x-cloak x-on:click="helpModalOpen = false"
                                     class="btn-bounce font-display"
                                     style="font-family: var(--font-display); padding: 7px 14px; background: #841818; color: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
                                     Compris !
@@ -934,7 +937,7 @@
                     </svg>
                 </div>
 
-                <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
+                <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu de plateau -->
                 <div style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div

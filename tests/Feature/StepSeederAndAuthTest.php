@@ -75,7 +75,10 @@ class StepSeederAndAuthTest extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
         $response->assertSee('L\'Expédition Secrète', false);
-        $response->assertSee('Lens Tourisme & Asmodee', false);
+        $response->assertSeeHtml('id="partner-logos-header"');
+        $response->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp');
+        $response->assertSeeHtml('asmodee_logo.webp');
+        $response->assertDontSee('Lens Tourisme & Asmodee', false);
         $response->assertSee('kit papier', false);
         $response->assertSee("l'animateur de l'étape", false);
         $response->assertDontSee('Maître du Jeu', false);
@@ -228,9 +231,12 @@ class StepSeederAndAuthTest extends TestCase
 
         Livewire::test(Inventory::class)
             ->assertSee('Victoire !')
-            ->assertSee('Code final : 4819')
-            ->assertSee('Fragments et indices récoltés (6/6) :')
-            ->assertSee('Étape 1 : Gare de Lens')
-            ->assertSee('Étape 6 : Office de Tourisme');
+            ->assertSee('Clé Complète assemblée (6/6)')
+            ->assertSee('Inscription automatique au grand tirage au sort !')
+            ->assertDontSee('4819')
+            ->assertDontSee('Dobble')
+            ->assertSee('Fragments et souvenirs récoltés (6/6) :')
+            ->assertSee('Gare de Lens')
+            ->assertSee('Office de Tourisme');
     }
 }

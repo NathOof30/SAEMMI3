@@ -85,9 +85,9 @@
                 </p>
                 <div style="font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 12px;">
                     @if(Auth::user()->fragments()->count() >= 6 || Auth::user()->current_step > 6)
-                        (Jeu terminé ! 6/6 fragments débloqués)
+                        (Jeu terminé ! 6/6 fragments de clé débloqués)
                     @else
-                        (Étape {{ Auth::user()->current_step }}/6 - Phase : {{ Auth::user()->phase }})
+                        (Étape {{ Auth::user()->current_step }}/6  |  Phase : {{ Auth::user()->phase }})
                     @endif
                 </div>
                 <button type="button" wire:click="logout"

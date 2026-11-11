@@ -55,21 +55,26 @@ class VisualReworkCompassAndDeckTest extends TestCase
 
         // Minimalist landing
         $test->assertSee('L\'Expédition Secrète', false)
-            ->assertSee('Lens Tourisme & Asmodee', false)
+            ->assertSeeHtml('id="partner-logos-header"')
+            ->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp')
+            ->assertSeeHtml('asmodee_logo.webp')
+            ->assertDontSee('Lens Tourisme & Asmodee', false)
             ->assertSee('Démarrer l\'aventure', false)
             ->assertDontSee('Application réservée au Parent', false)
-            // 4-step interactive tutorial slider
+            // 5-step interactive tutorial slider
             ->assertSee('Votre matériel : Appli + Kit', false)
             ->assertSee('kit papier', false)
             ->assertDontSee('filtre optique', false)
             ->assertDontSee('Galibrio', false)
             ->assertDontSee('Maître du Jeu', false)
+            ->assertDontSee('Dobble', false)
             ->assertSee('Chercher & Scanner', false)
             ->assertSee('Marcher & Relever l\'épreuve', false)
             ->assertSee('l\'animateur de l\'étape', false)
             ->assertSee('petit jeu en famille', false)
-            ->assertSee('La Carte & Le Coffre final', false)
-            ->assertSee('Ouvrez le vrai coffre à l\'Office de Tourisme et remportez votre jeu Dobble !', false)
+            ->assertSee('La Clé Complète', false)
+            ->assertSee('Un Véritable Trésor & Tirage au Sort', false)
+            ->assertSee('automatiquement inscrit au grand tirage au sort', false)
             // Slider controls
             ->assertSeeHtml('x-on:click="prevSlide()"')
             ->assertSeeHtml('x-on:click="nextSlide()"')
@@ -77,6 +82,7 @@ class VisualReworkCompassAndDeckTest extends TestCase
             ->assertSeeHtml('goToSlide(1)')
             ->assertSeeHtml('goToSlide(2)')
             ->assertSeeHtml('goToSlide(3)')
+            ->assertSeeHtml('goToSlide(4)')
             // Perfect round pagination dots
             ->assertSeeHtml('min-width: 14px')
             ->assertSeeHtml('min-height: 14px')
@@ -272,8 +278,10 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(Inventory::class)
-            ->assertSeeHtml('Étape 1 : Gare de Lens — Fragment :')
-            ->assertDontSee('Étape 1 : Étape 1 :');
+            ->assertSeeHtml('Fragment 1/6  |  Gare de Lens  |')
+            ->assertSeeHtml('Carnet de Gali  |  Étape 1/6')
+            ->assertDontSee('Étape 1 : Étape 1 :')
+            ->assertDontSee('—');
     }
 
     protected function assertDoesNotMatch(string $content, string $pattern): void

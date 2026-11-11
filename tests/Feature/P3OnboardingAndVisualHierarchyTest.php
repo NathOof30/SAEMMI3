@@ -37,11 +37,16 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
             ->assertSeeHtml('padding: clamp(18px, 4.2dvh, 42px) 18px clamp(16px, 3.2dvh, 32px) 18px;')
             ->assertSeeHtml('gap: clamp(10px, 2dvh, 22px);')
             ->assertSeeHtml('class="alpine-flex"')
-            ->assertSee('seul morceau', false)
-            ->assertSee('impossible de localiser la Lampe Cœur et de la rallumer avec un bout incomplet', false)
-            ->assertSee("Pour que l'histoire de Lens brille à nouveau, partez en ville avec votre kit retrouver les", false)
-            ->assertSee('6 morceaux éparpillés', false)
-            ->assertSee("Au dos l'attend le premier indice", false);
+            ->assertSeeHtml('id="partner-logos-header"')
+            ->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp')
+            ->assertSeeHtml('asmodee_logo.webp')
+            ->assertDontSee('Lens Tourisme & Asmodee', false)
+            ->assertSee("la base brisée d'une clé antique", false)
+            ->assertSee('6 fragments manquants', false)
+            ->assertSee("impossible d'ouvrir le coffre secret ni de rallumer la Lampe Cœur", false)
+            ->assertSee('Partez en ville avec votre kit retrouver les', false)
+            ->assertSee('6 fragments de clé', false)
+            ->assertSee('Le premier indice vous attend !', false);
 
         // Register & login modes preserve consistent vertical margins and scroll container
         $component->call('setMode', 'register')
@@ -56,12 +61,15 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertEquals(0, preg_match('/[\x{1F300}-\x{1F9FF}]/u', $html));
     }
 
-    public function test_t3_2_shared_four_step_tutorial_explains_kit_game_loop_without_mj_and_syncs_begin_and_hub(): void
+    public function test_t3_2_shared_five_step_tutorial_explains_kit_game_loop_without_mj_and_syncs_begin_and_hub(): void
     {
         $tutorialPartial = file_get_contents(resource_path('views/components/tutorial-slides.blade.php'));
         $this->assertNotFalse($tutorialPartial);
         $this->assertStringNotContainsString('Maître du Jeu', $tutorialPartial);
         $this->assertDoesNotMatchRegularExpression('/\bMJ\b/u', $tutorialPartial);
+        $this->assertStringNotContainsString('Dobble', $tutorialPartial);
+        $this->assertStringNotContainsString('Asmodee', $tutorialPartial);
+        $this->assertStringNotContainsString('4819', $tutorialPartial);
         $this->assertStringNotContainsString('font-family: system-ui', $tutorialPartial);
         $this->assertEquals(0, preg_match('/[\x{1F300}-\x{1F9FF}]/u', $tutorialPartial));
 
@@ -72,55 +80,65 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertStringContainsString('<x-tutorial-slides slide-var="activeSlide"', $authView);
         $this->assertStringContainsString('<x-tutorial-slides slide-var="helpTutorialSlide" :anti-spoil="true"', $hubView);
 
-        // LoginRegister onboarding tutorial shows all 4 complete slides including Office de Tourisme
+        // LoginRegister onboarding tutorial shows all 5 complete slides including Office de Tourisme & automatic raffle
         $authHtml = Livewire::test(LoginRegister::class)->html();
         foreach ([
-            'Étape 1 sur 4',
+            'Étape 1 sur 5',
             'Votre matériel : Appli + Kit',
             'kit papier',
             'carte de Lens',
             'loupe',
-            'Étape 2 sur 4',
+            'Étape 2 sur 5',
             'Chercher &amp; Scanner',
             'scannez le QR code',
-            'Étape 3 sur 4',
+            'Étape 3 sur 5',
             "Marcher &amp; Relever l'épreuve",
             'boussole',
             'JAUNE OR',
             "l'animateur de l'étape",
             'petit jeu en famille',
-            'Étape 4 sur 4',
-            'La Carte &amp; Le Coffre final',
-            'morceau de carte',
-            'bout de code',
-            "dans l'inventaire",
+            'Étape 4 sur 5',
+            'La Clé Complète',
+            'fragment de clé',
+            'clé complète',
+            'Étape 5 sur 5',
+            'Un Véritable Trésor &amp; Tirage au Sort',
+            'véritable trésor surprise',
+            'automatiquement inscrit au grand tirage au sort',
             'Office de Tourisme',
-            'Dobble',
         ] as $expected) {
             $this->assertStringContainsString($expected, $authHtml);
         }
         $this->assertStringNotContainsString('Maître du Jeu', $authHtml);
+        $this->assertStringNotContainsString('Dobble', $authHtml);
+        $this->assertStringNotContainsString('4819', $authHtml);
         $this->assertDoesNotMatchRegularExpression('/\bMJ\b/u', $authHtml);
 
-        // Hub tutorial uses the exact same shared 4 slides while avoiding Step 6 destination spoiler
+        // Hub tutorial uses the exact same shared 5 slides while avoiding Step 6 destination spoiler
         $user = User::factory()->create(['current_step' => 1, 'phase' => 'GUESSING_LOCATION']);
         $this->actingAs($user);
 
         $hubHtml = Livewire::test(Hub::class)->html();
         foreach ([
-            'Tutoriel en 4 étapes',
-            'Relancer le tutoriel (4 étapes)',
-            'Étape 1 sur 4',
+            'Tutoriel en 5 étapes',
+            'Relancer le tutoriel (5 étapes)',
+            'Étape 1 sur 5',
             'Votre matériel : Appli + Kit',
-            'Étape 2 sur 4',
-            'Étape 3 sur 4',
+            'Étape 2 sur 5',
+            'Étape 3 sur 5',
             "l'animateur de l'étape",
             'petit jeu en famille',
-            'Étape 4 sur 4',
-            'Dobble',
+            'Étape 4 sur 5',
+            'La Clé Complète',
+            'Étape 5 sur 5',
+            'Un Véritable Trésor &amp; Tirage au Sort',
+            "au point d'accueil final",
         ] as $expected) {
             $this->assertStringContainsString($expected, $hubHtml);
         }
+        $this->assertStringNotContainsString('Dobble', $hubHtml);
+        $this->assertStringNotContainsString('Asmodee', $hubHtml);
+        $this->assertStringNotContainsString('4819', $hubHtml);
         foreach (Step::all() as $step) {
             $this->assertStringNotContainsString($step->cleanName(), $hubHtml);
         }
@@ -136,18 +154,22 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         Fragment::create(['user_id' => $user->id, 'step_id' => 2]);
         $this->actingAs($user);
 
-        // 1. Inventory in-progress: puzzle board and puzzle tiles (unlocked & locked) have NO box-shadow
+        // 1. Inventory in-progress: key assembly board, starter badge, and all 6 fragment cards (unlocked & locked) have NO box-shadow
         $invInProgressHtml = Livewire::test(Inventory::class)->html();
         $invXpath = $this->makeXpath($invInProgressHtml);
 
-        $puzzleBoard = $invXpath->query('//*[@id="gali-treasure-map-puzzle"]')->item(0);
-        $this->assertInstanceOf(DOMElement::class, $puzzleBoard);
-        $this->assertStringNotContainsString('box-shadow', $puzzleBoard->getAttribute('style'));
+        $keyAssembly = $invXpath->query('//*[@id="gali-key-assembly"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $keyAssembly);
+        $this->assertStringNotContainsString('box-shadow', $keyAssembly->getAttribute('style'));
+
+        $starterSlot = $invXpath->query('//*[@id="key-fragment-starter"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $starterSlot);
+        $this->assertStringNotContainsString('box-shadow', $starterSlot->getAttribute('style'));
 
         for ($i = 1; $i <= 6; $i++) {
-            $piece = $invXpath->query("//*[@id='puzzle-piece-{$i}']")->item(0);
-            $this->assertInstanceOf(DOMElement::class, $piece, "Missing puzzle piece {$i}");
-            $this->assertStringNotContainsString('box-shadow', $piece->getAttribute('style'), "Piece {$i} should not carry box-shadow");
+            $piece = $invXpath->query("//*[@id='key-fragment-{$i}']")->item(0);
+            $this->assertInstanceOf(DOMElement::class, $piece, "Missing key fragment slot {$i}");
+            $this->assertStringNotContainsString('box-shadow', $piece->getAttribute('style'), "Fragment {$i} should not carry box-shadow");
         }
 
         // Memory modal inner story/heritage boxes have NO box-shadow while modal card keeps 0 8px 0 and close CTA keeps 0 3px 0
@@ -195,34 +217,37 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertInstanceOf(DOMElement::class, $backpackBtn);
         $this->assertStringContainsString('box-shadow: 0 3px 0 #1A1A1A', $backpackBtn->getAttribute('style'));
 
-        // 4. Inventory victory: puzzle pieces, padlock container/digits, QR frame, and summary list items have NO box-shadow
+        // 4. Inventory victory: key assembly, fragment slots, treasure QR card/frame, and automatic raffle card have NO box-shadow (no 4819 padlock)
         for ($i = 3; $i <= 6; $i++) {
             Fragment::create(['user_id' => $user->id, 'step_id' => $i]);
         }
         $invVictoryHtml = Livewire::test(Inventory::class)->html();
         $victoryXpath = $this->makeXpath($invVictoryHtml);
 
+        $victoryKeyAssembly = $victoryXpath->query('//*[@id="gali-key-assembly"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $victoryKeyAssembly);
+        $this->assertStringNotContainsString('box-shadow', $victoryKeyAssembly->getAttribute('style'));
+
         for ($i = 1; $i <= 6; $i++) {
-            $piece = $victoryXpath->query("//*[@id='puzzle-piece-{$i}']")->item(0);
+            $piece = $victoryXpath->query("//*[@id='key-fragment-{$i}']")->item(0);
             $this->assertInstanceOf(DOMElement::class, $piece);
             $this->assertStringNotContainsString('box-shadow', $piece->getAttribute('style'));
         }
+
+        $qrCard = $victoryXpath->query('//*[@id="victory-treasure-qr-card"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $qrCard);
+        $this->assertStringNotContainsString('box-shadow', $qrCard->getAttribute('style'));
 
         $qrFrame = $victoryXpath->query('//*[@id="reward-qr-payload"]')->item(0);
         $this->assertInstanceOf(DOMElement::class, $qrFrame);
         $this->assertStringNotContainsString('box-shadow', $qrFrame->getAttribute('style'));
 
-        $padlockHeading = $victoryXpath->query('//h3[contains(text(), "Code final :")]/..')->item(0);
-        $this->assertInstanceOf(DOMElement::class, $padlockHeading);
-        $this->assertStringNotContainsString('box-shadow', $padlockHeading->getAttribute('style'));
+        $raffleCard = $victoryXpath->query('//*[@id="victory-raffle-card"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $raffleCard);
+        $this->assertStringNotContainsString('box-shadow', $raffleCard->getAttribute('style'));
 
-        $digitBadges = $victoryXpath->query('//h3[contains(text(), "Code final :")]/../div/span');
-        $this->assertEquals(4, $digitBadges->length);
-        foreach ($digitBadges as $digitBadge) {
-            if ($digitBadge instanceof DOMElement) {
-                $this->assertStringNotContainsString('box-shadow', $digitBadge->getAttribute('style'));
-            }
-        }
+        $this->assertStringNotContainsString('Code final :', $invVictoryHtml);
+        $this->assertStringNotContainsString('4819', $invVictoryHtml);
     }
 
     public function test_t3_4_scanner_notification_overlay_removes_hard_black_shadow_and_ring_to_keep_clean_glow(): void
@@ -307,11 +332,92 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertStringNotContainsString('Revenir au jeu', $helpModalText);
     }
 
+    public function test_t3_7_vertical_broken_key_svg_and_clean_wording_across_game_views(): void
+    {
+        $user = User::factory()->create([
+            'current_step' => 1,
+            'phase' => 'WALKING_TO_TARGET',
+            'team_name' => 'Les Explorateurs',
+        ]);
+        $this->actingAs($user);
+
+        // 0/6 state: grey vertical key SVG with starter attic crown in gold, 6 broken locked shards, no bottom continue CTA
+        $invZeroHtml = Livewire::test(Inventory::class)->html();
+        $invZeroXpath = $this->makeXpath($invZeroHtml);
+
+        $svg = $invZeroXpath->query('//*[@id="gali-vertical-key-svg"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $svg);
+        $this->assertSame('0 0 130 350', $svg->getAttribute('viewBox'));
+
+        $starterGoldPath = $invZeroXpath->query('//*[@id="key-svg-shard-starter"]/path[1]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $starterGoldPath);
+        $this->assertSame('#F4B316', $starterGoldPath->getAttribute('fill'));
+
+        $this->assertStringContainsString('Déjà acquis  |  Grenier', $invZeroHtml);
+        $this->assertEquals(0, $invZeroXpath->query('//*[@id="inventory-continue-next-btn"]')->length);
+
+        // Scanner phase B completion redirects to inventory and dispatches fragment-unlocked
+        Livewire::test(Scanner::class)
+            ->call('verifyCode', 'MJ_STEP_1')
+            ->assertSet('scanTargetTab', 'inventory')
+            ->assertDispatched('fragment-unlocked', stepId: 1)
+            ->assertSeeHtml('Placer le fragment sur la clé →');
+
+        // 1/6 state: shard 1 becomes clickable gold, bottom continue CTA appears
+        $invOneHtml = Livewire::test(Inventory::class)->html();
+        $invOneXpath = $this->makeXpath($invOneHtml);
+
+        $unlockedSvgShard = $invOneXpath->query('//*[@id="key-svg-shard-1"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $unlockedSvgShard);
+        $this->assertStringContainsString('openMemory(1)', $unlockedSvgShard->getAttribute('x-on:click'));
+        $unlockedSvgPath = $invOneXpath->query('//*[@id="key-svg-shard-1"]/path[1]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $unlockedSvgPath);
+        $this->assertSame('#F4B316', $unlockedSvgPath->getAttribute('fill'));
+
+        $this->assertEquals(1, $invOneXpath->query('//*[@id="inventory-continue-next-btn"]')->length);
+        $this->assertStringContainsString("Bord de l'anneau", $invOneHtml);
+
+        // 6/6 victory state: secret treasure QR + automatic raffle without checkbox, zero Dobble/4819/Asmodee
+        for ($i = 2; $i <= 6; $i++) {
+            Fragment::create(['user_id' => $user->id, 'step_id' => $i]);
+        }
+        $user->update(['current_step' => 7, 'phase' => 'GUESSING_LOCATION']);
+
+        $invVictoryHtml = Livewire::test(Inventory::class)->html();
+        $this->assertStringContainsString('Clé Complète assemblée (6/6)', $invVictoryHtml);
+        $this->assertStringContainsString('QR Code Retrait du Trésor', $invVictoryHtml);
+        $this->assertStringContainsString('id="victory-raffle-card"', $invVictoryHtml);
+        $this->assertStringContainsString('automatiquement inscrite', $invVictoryHtml);
+        $this->assertStringNotContainsString('type="checkbox"', $invVictoryHtml);
+
+        $layoutBlade = file_get_contents(resource_path('views/components/layouts/app.blade.php'));
+        $this->assertNotFalse($layoutBlade);
+        $this->assertStringContainsString('aria-label="QR Code Retrait du Trésor"', $layoutBlade);
+        $this->assertStringNotContainsString('Lot Dobble', $layoutBlade);
+
+        // Enforce zero em-dashes, Dobble, 4819, Asmodee, or Maître du Jeu across player-facing livewire views
+        $viewsToCheck = [
+            Livewire::test(GameRouter::class)->html(),
+            Livewire::test(Hub::class)->html(),
+            Livewire::test(Scanner::class)->html(),
+            $invOneHtml,
+            $invVictoryHtml,
+        ];
+        foreach ($viewsToCheck as $renderedHtml) {
+            $this->assertStringNotContainsString('—', $renderedHtml);
+            $this->assertStringNotContainsString('–', $renderedHtml);
+            $this->assertStringNotContainsString('Dobble', $renderedHtml);
+            $this->assertStringNotContainsString('4819', $renderedHtml);
+            $this->assertStringNotContainsString('Asmodee', $renderedHtml);
+            $this->assertStringNotContainsString('Maître du Jeu', $renderedHtml);
+        }
+    }
+
     private function makeXpath(string $html): DOMXPath
     {
         $dom = new DOMDocument;
         libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
         libxml_clear_errors();
 
         return new DOMXPath($dom);
