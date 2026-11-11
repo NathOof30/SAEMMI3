@@ -125,7 +125,7 @@
 ## P2 — Aide, Résilience Réseau & Finition Mobile / PWA
 
 ### [P2-1] Créer le bouton `?` (Aide) sur le Hub et sa carte d'aide
-- [ ] **Offrir un point de secours clair aux familles**
+- [x] **Offrir un point de secours clair aux familles**
   - Ajouter un bouton **`?`** discret en haut du Hub (ex : en symétrie avec `[•] debug`, sans empiéter sur la boussole).
   - Ouvrir une **carte / modale d'aide** regroupant :
     - Rappel rapide des règles (rôle Enfant + loupe/carte vs rôle Parent + boussole/scanner).
@@ -134,17 +134,17 @@
     - Que faire en cas de perte réseau, de caméra bloquée ou de GPS imprécis (avec rappel vers le scanner si on est sur place avec l'animateur).
 
 ### [P2-2] Notification en cas de perte de réseau & résilience hors-ligne
-- [ ] **Éviter les crashs Livewire dans les zones sans 4G (bâtiments, parc, terrils)**
+- [x] **Éviter les crashs Livewire dans les zones sans 4G (bâtiments, parc, terrils)**
   - Écouter `window` `offline` / `online` + les erreurs réseau Livewire (`Livewire.hook('request', ...)`).
   - Afficher une **notification / bandeau d'avertissement non bloquant** dès la perte de connexion (*« Réseau perdu — La boussole continue de te guider, mais retrouve un peu de connexion pour valider un QR code »*), qui disparaît automatiquement au retour du réseau.
   - Si un scan échoue faute de réseau, afficher une alerte propre avec bouton **`[Réessayer]`** au lieu d'une erreur technique.
 
 ### [P2-3] Vérifier/corriger la barre système du bas restée orange en mode PWA (Android)
-- [ ] **Finaliser l'habillage noir (`#000000`) haut et bas sur l'application installée**
+- [x] **Finaliser l'habillage noir (`#000000`) haut et bas sur l'application installée**
   - Lors du dernier test réel sur Xiaomi Redmi Note 11, le haut était bien noir mais le bas sous la PWA restait orange : vérifier le comportement du WebAPK Android (`manifest.webmanifest`, `app.blade.php`, `viewport-fit`, et test après désinstallation/réinstallation propre pour purger le cache du WebAPK).
 
 ### [P2-4] Confort capteurs, vibrations & tests automatisés
-- [ ] **Peaufiner les retours mobiles et maintenir la couverture de tests**
+- [x] **Peaufiner les retours mobiles et maintenir la couverture de tests**
   - Ajouter de légères vibrations (`navigator.vibrate`) sur scan réussi / échoué (avec protection silencieuse pour iOS).
   - Mettre en pause le suivi GPS / gyroscope quand on quitte l'onglet Hub ou que le téléphone passe en veille (`visibilitychange`) pour préserver la batterie.
   - Mettre à jour les tests PHPUnit (`StepSeeder`, anti-spoil Phase A, messages d'erreur pédagogiques/anti-spoil, simulation debug) et exécuter `php artisan test` + `vendor/bin/pint --format agent` après chaque lot.

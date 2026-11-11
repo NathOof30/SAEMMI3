@@ -2,6 +2,7 @@
   "name": "L'Expédition Secrète - Lens",
   "short_name": "Expédition Lens",
   "description": "Escape game urbain familial au cœur de la ville de Lens avec boussole GPS et serrure numérique.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

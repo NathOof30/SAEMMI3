@@ -6,6 +6,9 @@
         lastScannedCode: null,
         lastScanTime: 0,
         cameraErrorMessage: null,
+        networkErrorMessage: null,
+        pendingRetryCode: null,
+        visibilityHandler: null,
         manualScanEnabled: false,
         torchSupported: false,
         torchOn: false,
@@ -196,6 +199,26 @@
                                 return;
                             }
 
+                            this.pendingRetryCode = scannedText;
+
+                            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                                this.lastScannedCode = scannedText;
+                                this.lastScanTime = now;
+                                this.networkErrorMessage = 'Vous êtes hors ligne : la boussole reste active, mais la validation du QR code nécessite Internet.';
+                                if (typeof window.expeditionVibrate === 'function') {
+                                    window.expeditionVibrate([90, 50, 90]);
+                                }
+                                if (typeof window.__expeditionShowNetworkBanner === 'function') {
+                                    window.__expeditionShowNetworkBanner(
+                                        'Connexion réseau perdue',
+                                        'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
+                                        false
+                                    );
+                                }
+                                return;
+                            }
+
+                            this.networkErrorMessage = null;
                             this.isLocked = true;
                             this.lastScannedCode = scannedText;
                             this.lastScanTime = now;
@@ -206,11 +229,19 @@
                                     if (promise && typeof promise.catch === 'function') {
                                         promise.catch(() => {
                                             this.isLocked = false;
+                                            this.networkErrorMessage = 'Connexion perdue ou instable : impossible de valider ce QR code pour le moment.';
+                                            if (typeof window.expeditionVibrate === 'function') {
+                                                window.expeditionVibrate([90, 50, 90]);
+                                            }
                                         });
                                     }
                                 } catch (err) {
                                     console.error('Erreur verifyCode:', err);
                                     this.isLocked = false;
+                                    this.networkErrorMessage = 'Erreur réseau lors de l\'envoi du QR code. Réessayez dès que le signal revient.';
+                                    if (typeof window.expeditionVibrate === 'function') {
+                                        window.expeditionVibrate([90, 50, 90]);
+                                    }
                                 }
                             } else {
                                 this.isLocked = false;
@@ -285,8 +316,25 @@
                 }
             };
 
+            if (!this.visibilityHandler && typeof document !== 'undefined') {
+                this.visibilityHandler = () => {
+                    if (document.visibilityState === 'hidden') {
+                        this.cleanup(false);
+                    } else if (document.visibilityState === 'visible' && this.isScannerTabVisible() && !document.getElementById('fullscreen-scan-overlay')) {
+                        this.reactivateScanner();
+                    }
+                };
+                document.addEventListener('visibilitychange', this.visibilityHandler);
+            }
+
             if (typeof this.$cleanup === 'function') {
-                this.$cleanup(() => this.cleanup(true));
+                this.$cleanup(() => {
+                    if (this.visibilityHandler && typeof document !== 'undefined') {
+                        document.removeEventListener('visibilitychange', this.visibilityHandler);
+                        this.visibilityHandler = null;
+                    }
+                    this.cleanup(true);
+                });
             }
 
             if (typeof Html5Qrcode === 'undefined') {
@@ -297,7 +345,7 @@
                     this.isStarting = false;
                     this.isInitialized = false;
                     window._expeditionScannerRunning = false;
-                    this.cameraErrorMessage = 'Impossible de charger le module de scan QR.';
+                    this.cameraErrorMessage = 'Impossible de charger le module de scan QR (vérifiez votre connexion réseau).';
                 };
                 document.head.appendChild(s);
             } else {
@@ -387,10 +435,62 @@
             setTimeout(() => {
                 this.initScanner();
             }, 100);
+        },
+
+        retryPendingScan() {
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                this.networkErrorMessage = 'Toujours hors ligne : impossible d\'envoyer le scan. Rapprochez-vous d\'une zone avec réseau puis réessayez.';
+                if (typeof window.expeditionVibrate === 'function') {
+                    window.expeditionVibrate([90, 50, 90]);
+                }
+                return;
+            }
+
+            const code = this.pendingRetryCode;
+            this.networkErrorMessage = null;
+
+            if (code && typeof @this !== 'undefined' && @this.verifyCode) {
+                this.isLocked = true;
+                try {
+                    const promise = @this.verifyCode(code);
+                    if (promise && typeof promise.catch === 'function') {
+                        promise.catch(() => {
+                            this.isLocked = false;
+                            this.networkErrorMessage = 'La requête a échoué. Vérifiez votre connexion puis appuyez sur Réessayer.';
+                        });
+                    }
+                } catch (e) {
+                    this.isLocked = false;
+                    this.networkErrorMessage = 'La requête a échoué. Vérifiez votre connexion puis appuyez sur Réessayer.';
+                }
+                return;
+            }
+
+            this.reactivateScanner();
+        },
+
+        dismissNetworkError() {
+            this.networkErrorMessage = null;
+            this.isLocked = false;
+            this.reactivateScanner();
         }
     }" x-init="initScanner()"
     x-effect="if (typeof tab !== 'undefined' && tab === 'scanner') { syncManualScanPref(); }"
     @debug-manual-scan-toggled.window="manualScanEnabled = Boolean($event.detail && $event.detail.enabled)"
+    @scan-feedback.window="if ($event.detail && $event.detail.status === 'success') {
+        networkErrorMessage = null;
+        pendingRetryCode = null;
+        if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([40, 40, 80]);
+    } else if ($event.detail && $event.detail.status === 'error') {
+        networkErrorMessage = null;
+        if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]);
+    }"
+    @expedition-network-error.window="if (isScannerTabVisible()) {
+        isLocked = false;
+        networkErrorMessage = ($event.detail && $event.detail.message) ? $event.detail.message : 'Connexion interrompue : impossible de valider ce QR code.';
+        if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]);
+    }"
+    @expedition-network-restored.window="if (networkErrorMessage && !pendingRetryCode) { networkErrorMessage = null; }"
     @tab-switched.window="if ($event.detail && $event.detail.tab === 'scanner') {
         syncManualScanPref();
         const qrEl = document.getElementById('qr-reader');
@@ -553,6 +653,25 @@
             <p style="margin: 0;"><strong>Erreur Caméra :</strong> <span x-text="cameraErrorMessage"></span></p>
         </div>
 
+        <!-- Erreur réseau sur scan (remplace toute modale technique Livewire) -->
+        <div id="scanner-network-error-alert" x-show="networkErrorMessage" x-cloak role="alert"
+            style="flex-shrink: 0; background: #FEF3C7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 10px 12px; color: #1A1A1A; font-size: 12px; box-shadow: 0 4px 0 #1A1A1A;">
+            <p class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #841818;">
+                Validation impossible hors ligne
+            </p>
+            <p style="margin: 0 0 8px 0; font-weight: 700; color: #374151; line-height: 1.35;" x-text="networkErrorMessage"></p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" id="scanner-retry-network-btn" x-on:click="retryPendingScan()" class="btn-bounce font-display"
+                    style="font-family: var(--font-display); flex: 1; padding: 7px 12px; background: #F4B316; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
+                    Réessayer
+                </button>
+                <button type="button" id="scanner-dismiss-network-btn" x-on:click="dismissNetworkError()" class="btn-bounce"
+                    style="padding: 7px 12px; background: #FFFFFF; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
+                    Fermer
+                </button>
+            </div>
+        </div>
+
         <!-- Zone vidéo maximisée avec viseur néo-brutaliste et bouton torche intégré -->
         <div
             style="flex: 1; min-height: 260px; position: relative; border-radius: 20px; overflow: hidden; border: 3.5px solid #1A1A1A; background: #000000; box-shadow: 0 6px 0 #1A1A1A;"
@@ -591,11 +710,13 @@
 
         <!-- Outil Simulation manuelle (Debug) — masqué par défaut, activable dans [•] debug du Hub -->
         <div id="scanner-manual-sim-panel" x-show="manualScanEnabled" x-cloak
+            x-on:submit.capture="const inp = $el.querySelector('#manualCode'); pendingRetryCode = inp ? inp.value.trim() : ''; if (typeof navigator !== 'undefined' && navigator.onLine === false) { $event.preventDefault(); $event.stopPropagation(); $event.stopImmediatePropagation(); networkErrorMessage = 'Vous êtes hors ligne : impossible de valider ce QR code sans réseau. Rapprochez-vous d\'une zone couverte puis appuyez sur Réessayer.'; if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]); }"
             style="flex-shrink: 0; background: #FFFFFF; border: 3px solid #1A1A1A; border-radius: 16px; box-shadow: 0 4px 0 #1A1A1A; padding: 12px 14px;">
             <h3 class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; margin: 0 0 8px 0;">
                 Simulation manuelle (Debug PC)
             </h3>
-            <form wire:submit="verifyManualCode" style="display: flex; gap: 8px; align-items: flex-end;">
+            <form wire:submit="verifyManualCode"
+                style="display: flex; gap: 8px; align-items: flex-end;">
                 <div style="flex: 1; min-width: 0;">
                     <label for="manualCode"
                         style="display: block; font-size: 11px; font-weight: 700; color: #4B5563; margin-bottom: 3px;">Code QR :</label>

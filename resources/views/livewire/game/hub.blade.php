@@ -20,13 +20,43 @@
             <p>Aucune étape active disponible.</p>
         </div>
     @else
-        <div x-data="{
+        <div id="hub-compass-root"
+            data-phase="{{ $user ? $user->phase : '' }}"
+            data-step-lat="{{ $step->lat }}"
+            data-step-lng="{{ $step->lng }}"
+            data-step-radius="{{ (int) ($step->target_radius ?? 30) }}"
+            data-gps-idle-label="{{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}"
+            x-data="{
                 debugModalOpen: false,
+                helpModalOpen: false,
+                helpView: 'guide',
+                helpTutorialSlide: 0,
                 manualScanEnabled: false,
                 deckExpanded: false,
+                activeTab: 'hub',
+                sensorsPaused: false,
+                wasWithinTarget: false,
+                visibilityHandler: null,
                 touchStartY: null,
                 touchStartScrollTop: 0,
                 touchStartedInScroll: false,
+                openHelpModal(view = 'guide') {
+                    this.helpView = view;
+                    if (view === 'tutorial') {
+                        this.helpTutorialSlide = 0;
+                    }
+                    this.helpModalOpen = true;
+                },
+                isWalkingPhase() {
+                    const root = document.getElementById('hub-compass-root');
+                    return root ? root.dataset.phase === 'WALKING_TO_TARGET' : ('{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET');
+                },
+                isHubVisible() {
+                    const pane = document.getElementById('tab-pane-hub');
+                    const paneVisible = !pane || pane.style.display !== 'none';
+                    const pageVisible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+                    return paneVisible && pageVisible && this.activeTab === 'hub';
+                },
                 targetLat: {{ $step->lat }},
                 targetLng: {{ $step->lng }},
                 targetRadius: {{ (int) ($step->target_radius ?? 30) }},
@@ -179,9 +209,14 @@
                         clearTimeout(this.gpsTimeoutId);
                         this.gpsTimeoutId = null;
                     }
-                    if (distance <= this.targetRadius) {
+                    const nowWithin = distance <= this.targetRadius;
+                    if (nowWithin) {
                         this.gpsHelpOpen = false;
+                        if (!this.wasWithinTarget && !this.sensorsPaused && typeof window.expeditionVibrate === 'function') {
+                            window.expeditionVibrate([60, 40, 60]);
+                        }
                     }
+                    this.wasWithinTarget = nowWithin;
                     this.distanceText = distance + ' mètres';
                     const el = document.getElementById('distance-display');
                     if (el) {
@@ -242,10 +277,9 @@
 
                     if (navigator.geolocation) {
                         try {
-                            const isWalking = '{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET';
                             navigator.geolocation.getCurrentPosition(
                                 (pos) => {
-                                    if (isWalking) {
+                                    if (this.isWalkingPhase()) {
                                         this.onGpsPosition(pos);
                                     }
                                 },
@@ -255,7 +289,7 @@
                     }
                 },
                 startOrientationListener() {
-                    if (this.orientationBound) return;
+                    if (this.orientationBound || !this.isHubVisible()) return;
                     this.orientationBound = true;
 
                     this.orientationHandler = (event) => {
@@ -380,6 +414,20 @@
                         this.$cleanup(() => this.cleanup());
                     }
 
+                    const hubPane = document.getElementById('tab-pane-hub');
+                    this.activeTab = (hubPane && hubPane.style.display === 'none') ? 'other' : 'hub';
+
+                    if (!this.visibilityHandler && typeof document !== 'undefined') {
+                        this.visibilityHandler = () => {
+                            if (document.visibilityState === 'hidden') {
+                                this.pauseSensors();
+                            } else if (document.visibilityState === 'visible' && this.activeTab === 'hub') {
+                                this.resumeSensors();
+                            }
+                        };
+                        document.addEventListener('visibilitychange', this.visibilityHandler);
+                    }
+
                     try {
                         this.manualScanEnabled = localStorage.getItem('expedition_debug_manual_scan') === '1';
                     } catch (e) {
@@ -398,7 +446,9 @@
                     if (hasStoredPermission) {
                         this.needsPermission = false;
                         this.permissionState = 'granted';
-                        this.startOrientationListener();
+                        if (this.isHubVisible()) {
+                            this.startOrientationListener();
+                        }
 
                         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function' && !window.__compass_permission_granted) {
                             setTimeout(() => {
@@ -412,10 +462,12 @@
                         this.permissionState = 'prompt';
                     } else {
                         this.needsPermission = false;
-                        this.startOrientationListener();
+                        if (this.isHubVisible()) {
+                            this.startOrientationListener();
+                        }
                     }
 
-                    const isWalking = '{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET';
+                    const isWalking = this.isWalkingPhase();
                     const el = document.getElementById('distance-display');
 
                     if (!navigator.geolocation) {
@@ -426,7 +478,35 @@
                         return;
                     }
 
-                    if (isWalking) {
+                    if (isWalking && this.isHubVisible()) {
+                        this.startGpsWatch();
+                    }
+                },
+                pauseSensors() {
+                    this.sensorsPaused = true;
+                    if (this.gpsTimeoutId) {
+                        clearTimeout(this.gpsTimeoutId);
+                        this.gpsTimeoutId = null;
+                    }
+                    if (this.watchId && navigator.geolocation) {
+                        navigator.geolocation.clearWatch(this.watchId);
+                        this.watchId = null;
+                    }
+                    if (this.orientationHandler) {
+                        window.removeEventListener('deviceorientationabsolute', this.orientationHandler, true);
+                        window.removeEventListener('deviceorientation', this.orientationHandler, true);
+                        this.orientationBound = false;
+                    }
+                },
+                resumeSensors() {
+                    if (!this.isHubVisible()) {
+                        return;
+                    }
+                    this.sensorsPaused = false;
+                    if (!this.needsPermission) {
+                        this.startOrientationListener();
+                    }
+                    if (this.isWalkingPhase() && !this.isMocking && navigator.geolocation && !this.watchId) {
                         this.startGpsWatch();
                     }
                 },
@@ -463,8 +543,10 @@
                     this.recalculate(true);
                 },
                 resetStepTarget() {
-                    this.targetLat = {{ $step->lat }};
-                    this.targetLng = {{ $step->lng }};
+                    const root = document.getElementById('hub-compass-root');
+                    this.targetLat = root && root.dataset.stepLat ? parseFloat(root.dataset.stepLat) : {{ $step->lat }};
+                    this.targetLng = root && root.dataset.stepLng ? parseFloat(root.dataset.stepLng) : {{ $step->lng }};
+                    this.targetRadius = root && root.dataset.stepRadius ? parseInt(root.dataset.stepRadius, 10) : {{ (int) ($step->target_radius ?? 30) }};
                     this.targetLabel = 'Monument de l’étape';
 
                     if (this.userLat !== null && this.userLng !== null) {
@@ -485,12 +567,13 @@
                     this.gpsAccuracy = null;
                     this.gpsWaitTooLong = false;
                     this.gpsHelpOpen = false;
+                    this.wasWithinTarget = false;
                     if (this.gpsTimeoutId) {
                         clearTimeout(this.gpsTimeoutId);
                         this.gpsTimeoutId = null;
                     }
                     const el = document.getElementById('distance-display');
-                    const isWalking = '{{ $user ? $user->phase : '' }}' === 'WALKING_TO_TARGET';
+                    const isWalking = this.isWalkingPhase();
                     if (!navigator.geolocation) {
                         this.gpsStatus = 'unsupported';
                         this.gpsErrorMessage = 'Géolocalisation non supportée par votre navigateur.';
@@ -499,7 +582,8 @@
                     } else {
                         this.gpsStatus = 'searching';
                         this.gpsErrorMessage = null;
-                        const idleLabel = '{{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}';
+                        const root = document.getElementById('hub-compass-root');
+                        const idleLabel = (root && root.dataset.gpsIdleLabel) ? root.dataset.gpsIdleLabel : 'Non active en phase de recherche';
                         this.distanceText = isWalking ? idleLabel : '';
                         if (el) el.innerText = 'Distance : ' + idleLabel;
                         if (isWalking) {
@@ -542,23 +626,195 @@
                     this.touchStartedInScroll = false;
                 },
                 cleanup() {
-                    if (this.gpsTimeoutId) {
-                        clearTimeout(this.gpsTimeoutId);
-                        this.gpsTimeoutId = null;
+                    this.pauseSensors();
+                    if (this.visibilityHandler && typeof document !== 'undefined') {
+                        document.removeEventListener('visibilitychange', this.visibilityHandler);
+                        this.visibilityHandler = null;
                     }
-                    if (this.watchId) {
-                        navigator.geolocation.clearWatch(this.watchId);
-                        this.watchId = null;
-                    }
-                    if (this.orientationHandler) {
-                        window.removeEventListener('deviceorientationabsolute', this.orientationHandler, true);
-                        window.removeEventListener('deviceorientation', this.orientationHandler, true);
-                        this.orientationHandler = null;
-                        this.orientationBound = false;
-                    }
+                    this.orientationHandler = null;
                 }
             }" x-init="init()"
+            @tab-switched.window="activeTab = ($event.detail && $event.detail.tab) ? $event.detail.tab : 'hub'; if (activeTab === 'hub') { resumeSensors(); } else { pauseSensors(); }"
+            @keydown.escape.window="helpModalOpen = false; debugModalOpen = false;"
             style="display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; flex: 1; min-height: 0; position: relative; justify-content: space-between; overflow: hidden;">
+
+            <!-- Bouton Aide Discret (?) en haut à gauche sous le header -->
+            <div style="position: absolute; top: 0; left: 4px; z-index: 30;">
+                <button type="button" id="hub-help-btn" x-on:click="openHelpModal('guide')"
+                    title="Aide, règles et dépannage" aria-label="Aide, règles et dépannage"
+                    class="btn-bounce font-display"
+                    style="font-family: var(--font-display); background: #FFFFFF; border: 2px solid #1A1A1A; border-radius: 9999px; width: 30px; height: 30px; padding: 0; font-size: 17px; font-weight: 700; color: #841818; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; line-height: 1;">
+                    ?
+                </button>
+            </div>
+
+            <!-- Modale d'Aide & Relance du Tutoriel (sans déconnexion) -->
+            <div id="hub-help-modal" x-show="helpModalOpen" x-cloak
+                x-on:click.self="helpModalOpen = false"
+                role="dialog" aria-modal="true" aria-labelledby="hub-help-modal-title"
+                style="position: fixed; inset: 0; z-index: 120; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <div style="width: 100%; max-width: 420px; max-height: 86dvh; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 22px; box-shadow: 0 8px 0 #1A1A1A; padding: 16px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 12px; flex-shrink: 0;">
+                        <h3 id="hub-help-modal-title" class="font-display"
+                            style="font-family: var(--font-display); margin: 0; font-size: 21px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
+                            <span x-show="helpView === 'guide'">Aide de l'Expédition</span>
+                            <span x-show="helpView === 'tutorial'" x-cloak>Tutoriel en 3 étapes</span>
+                        </h3>
+                        <button type="button" id="hub-help-close-btn" x-on:click="helpModalOpen = false" aria-label="Fermer l'aide"
+                            style="background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 8px; width: 30px; height: 30px; font-size: 15px; font-weight: 800; cursor: pointer; color: #1A1A1A; display: inline-flex; align-items: center; justify-content: center;">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Vue 1 : Guide complet, boussole et dépannage -->
+                    <div x-show="helpView === 'guide'" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; padding-right: 2px;">
+                        <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #841818;">
+                                Rôles de l'équipe (Enfant &amp; Parent)
+                            </h4>
+                            <p style="margin: 0 0 6px 0; font-size: 13px; color: #374151; line-height: 1.4;">
+                                <strong>L'Enfant (Explorateur) :</strong> observe la <strong>carte papier</strong> avec sa <strong>loupe</strong> pour déchiffrer l'énigme de Gali et repérer le QR code du lieu sur la carte (Phase A).
+                            </p>
+                            <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.4;">
+                                <strong>Le Parent (Guide) :</strong> s'oriente en ville grâce à la <strong>boussole</strong> (Phase B) puis scanne le badge QR du Maître du Jeu sur place.
+                            </p>
+                        </div>
+
+                        <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #1A1A1A;">
+                                Lire et calibrer la boussole
+                            </h4>
+                            <p style="margin: 0 0 6px 0; font-size: 13px; color: #374151; line-height: 1.4;">
+                                Sur la flèche bicolore, suivez toujours la <strong>pointe JAUNE OR</strong> : elle désigne votre destination (la pointe rouge indique l'opposé).
+                            </p>
+                            <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.4;">
+                                <strong>Calibration :</strong> si l'aiguille hésite, décrivez plusieurs grands mouvements en <strong>« 8 »</strong> avec le téléphone loin d'objets métalliques, à plat dans la main.
+                            </p>
+                            <div x-show="needsPermission" x-cloak style="margin-top: 8px;">
+                                <button type="button" x-on:click="requestOrientationPermission()" class="btn-bounce"
+                                    style="width: 100%; padding: 7px 10px; background: #841818; color: #FFFFFF; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                                    Autoriser la boussole du téléphone
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="background: #F9FAFB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #1A1A1A;">
+                                Dépannage rapide
+                            </h4>
+                            <p style="margin: 0 0 5px 0; font-size: 12px; color: #374151; line-height: 1.4;">
+                                <strong>Perte de réseau :</strong> la boussole et la distance GPS continuent hors ligne une fois l'écran chargé. Seul le scan de validation nécessite Internet.
+                            </p>
+                            <p style="margin: 0 0 5px 0; font-size: 12px; color: #374151; line-height: 1.4;">
+                                <strong>Caméra bloquée :</strong> autorisez la caméra dans votre navigateur, puis appuyez sur <em>Réactiver le scanner</em> dans l'onglet Scanner.
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #374151; line-height: 1.4;">
+                                <strong>GPS imprécis :</strong> entre bâtiments ou zones boisées, si vous êtes devant le lieu, ouvrez directement le scanner avec le bouton ci-dessous.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div x-show="helpView === 'guide'" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                        <button type="button" id="hub-replay-tuto-btn" x-on:click="openHelpModal('tutorial')" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 17px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 12px; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer;">
+                            Relancer le tutoriel (3 slides)
+                        </button>
+                        <button type="button" id="hub-help-open-scanner-btn"
+                            x-on:click="helpModalOpen = false; tab = 'scanner'"
+                            wire:click="$dispatch('set-tab', { tab: 'scanner' })"
+                            class="btn-bounce"
+                            style="width: 100%; box-sizing: border-box; padding: 9px 14px; background: #FFFFFF; color: #841818; font-size: 13px; font-weight: 800; border: 2px solid #1A1A1A; border-radius: 10px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
+                            Ouvrir le scanner directement →
+                        </button>
+                    </div>
+
+                    <!-- Vue 2 : Relecture interactive des 3 slides du tutoriel sans se déconnecter -->
+                    <div x-show="helpView === 'tutorial'" x-cloak style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+                        <div style="background: #FDF8EC; border: 2.5px solid #1A1A1A; border-radius: 16px; padding: 18px 14px; text-align: center; box-shadow: 0 4px 0 #1A1A1A;">
+                            <div x-show="helpTutorialSlide === 0">
+                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
+                                    Étape 1 sur 3
+                                </span>
+                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
+                                    L'Explorateur
+                                </h4>
+                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
+                                    L'enfant résout les énigmes de Gali sur la carte papier physique avec sa loupe.
+                                </p>
+                            </div>
+
+                            <div x-show="helpTutorialSlide === 1">
+                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
+                                    Étape 2 sur 3
+                                </span>
+                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
+                                    Le Maître du Jeu
+                                </h4>
+                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
+                                    Le parent s'oriente en ville grâce à la boussole (pointe JAUNE OR) et valide les étapes.
+                                </p>
+                            </div>
+
+                            <div x-show="helpTutorialSlide === 2">
+                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
+                                    Étape 3 sur 3
+                                </span>
+                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
+                                    Le Trésor
+                                </h4>
+                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
+                                    Trouvez les 6 fragments pour réunir le code du coffre et remporter le jeu Dobble exclusif !
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;">
+                            <div style="display: flex; justify-content: flex-start;">
+                                <button type="button" id="hub-tuto-prev-btn" x-on:click="if (helpTutorialSlide > 0) helpTutorialSlide--"
+                                    :disabled="helpTutorialSlide === 0" class="btn-bounce"
+                                    style="width: 40px; height: 40px; border-radius: 10px; border: 2.5px solid #1A1A1A; background: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer;"
+                                    :style="{ opacity: helpTutorialSlide === 0 ? 0.3 : 1 }">
+                                    ←
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button" x-on:click="helpTutorialSlide = 0" aria-label="Slide 1"
+                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    :style="{ background: helpTutorialSlide === 0 ? '#F4B316' : '#E5E7EB' }"></button>
+                                <button type="button" x-on:click="helpTutorialSlide = 1" aria-label="Slide 2"
+                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    :style="{ background: helpTutorialSlide === 1 ? '#F4B316' : '#E5E7EB' }"></button>
+                                <button type="button" x-on:click="helpTutorialSlide = 2" aria-label="Slide 3"
+                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    :style="{ background: helpTutorialSlide === 2 ? '#F4B316' : '#E5E7EB' }"></button>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button type="button" id="hub-tuto-next-btn" x-show="helpTutorialSlide < 2" x-on:click="helpTutorialSlide++"
+                                    class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); padding: 7px 14px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
+                                    Suivant →
+                                </button>
+                                <button type="button" id="hub-tuto-done-btn" x-show="helpTutorialSlide === 2" x-cloak x-on:click="helpModalOpen = false"
+                                    class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); padding: 7px 14px; background: #841818; color: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
+                                    Compris !
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button type="button" id="hub-tuto-back-guide-btn" x-on:click="helpView = 'guide'"
+                                style="background: none; border: none; color: #6B7280; font-size: 12px; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0;">
+                                ← Retour à l'aide
+                            </button>
+                            <button type="button" x-on:click="helpModalOpen = false"
+                                style="background: none; border: none; color: #841818; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer; padding: 0;">
+                                Revenir au jeu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Bouton Debug Discret en haut à droite sous le header -->
             <div style="position: absolute; top: 0; right: 4px; z-index: 30;">
@@ -659,7 +915,7 @@
 
             <!-- Permission iOS Safari -->
             <div id="compass-permission-section" x-show="needsPermission" x-cloak
-                style="flex-shrink: 0; width: 100%; box-sizing: border-box; margin-top: 26px; margin-bottom: 4px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 8px 10px; text-align: center;">
+                style="flex-shrink: 0; width: 100%; box-sizing: border-box; margin-top: 34px; margin-bottom: 4px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 8px 10px; text-align: center;">
                 <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #92400E;">Permission boussole requise
                     sur smartphone :</p>
                 <button type="button" id="request-orientation-btn" x-on:click="requestOrientationPermission()"
@@ -861,6 +1117,11 @@
                                     wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
                                     style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 16px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
                                     Ouvrir le scanner
+                                </button>
+                                <button type="button" id="hub-gps-retry-btn"
+                                    x-on:click="gpsHelpOpen = false; resetLiveSensors()"
+                                    style="display: block; width: 100%; margin-top: 8px; padding: 7px 10px; background: #FFFFFF; color: #841818; font-size: 12px; font-weight: 800; border: 2px solid #1A1A1A; border-radius: 8px; cursor: pointer;">
+                                    Actualiser la position GPS
                                 </button>
                             </div>
 

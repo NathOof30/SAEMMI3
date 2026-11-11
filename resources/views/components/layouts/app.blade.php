@@ -8,6 +8,9 @@
     <!-- PWA Web App Manifest -->
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#000000">
+    <meta name="msapplication-navbutton-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="color-scheme" content="light">
 
     <!-- iOS / Safari PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,12 +29,28 @@
             --font-display: "hwt-artz", "Impact", sans-serif;
             --font-body: "nunito", system-ui, -apple-system, sans-serif;
         }
-        html, body {
+        html {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            background-color: #FAF8F5;
+            background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+            background-attachment: fixed;
+            -webkit-text-size-adjust: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
             height: 100%;
             height: 100vh;
             height: 100dvh;
+            min-height: 100%;
             max-height: 100dvh;
             overflow: hidden;
             overscroll-behavior: none;
@@ -103,7 +122,49 @@
     @endif
     @livewireStyles
 </head>
-<body style="margin: 0; padding: 0; height: 100%; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed;">
+<body style="margin: 0; padding: 0; width: 100%; height: 100%; height: 100vh; height: 100dvh; min-height: 100%; max-height: 100dvh; overflow: hidden; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed;">
+    @if(!request()->is('test-qr*'))
+        <!-- Bandeau non bloquant de perte réseau / reconnexion -->
+        <div id="offline-network-banner" role="alert" aria-live="polite"
+            style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 12px; right: 12px; max-width: 456px; margin: 0 auto; z-index: 9500; background: #FEF3C7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 10px 12px; box-shadow: 0 4px 0 #1A1A1A; font-family: var(--font-body); box-sizing: border-box;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 8px; background: #FEE2E2; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B91C1C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <p id="offline-network-banner-title" class="font-display"
+                        style="font-family: var(--font-display); margin: 0 0 2px 0; font-size: 15px; font-weight: 700; color: #841818; line-height: 1.1;">
+                        Connexion réseau perdue
+                    </p>
+                    <p id="offline-network-banner-text"
+                        style="margin: 0; font-size: 12px; font-weight: 700; color: #374151; line-height: 1.35;">
+                        La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.
+                    </p>
+                    <button type="button" id="offline-network-reload-btn" onclick="window.location.reload()"
+                        style="display: none; margin-top: 6px; padding: 4px 10px; background: #F4B316; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                        Recharger la page
+                    </button>
+                </div>
+                <button type="button" id="offline-network-dismiss-btn" aria-label="Masquer l'alerte réseau"
+                    onclick="window.__expeditionDismissNetworkBanner && window.__expeditionDismissNetworkBanner()"
+                    style="background: transparent; border: none; font-size: 16px; font-weight: 800; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0;">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <div id="online-restored-banner" role="status" aria-live="polite"
+            style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 12px; right: 12px; max-width: 456px; margin: 0 auto; z-index: 9500; background: #DCFCE7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 8px 12px; box-shadow: 0 4px 0 #1A1A1A; font-family: var(--font-body); box-sizing: border-box;">
+            <p class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 15px; font-weight: 700; color: #15803D; text-align: center;">
+                Connexion retrouvée !
+            </p>
+        </div>
+    @endif
+
     {{ $slot }}
 
     <script>
@@ -417,6 +478,122 @@
                 return '';
             }
         };
+
+        window.expeditionVibrate = function (pattern) {
+            try {
+                if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                    return navigator.vibrate(pattern);
+                }
+            } catch (e) {}
+            return false;
+        };
+
+        (function initConnectivityMonitor() {
+            const getEls = () => ({
+                offline: document.getElementById('offline-network-banner'),
+                title: document.getElementById('offline-network-banner-title'),
+                text: document.getElementById('offline-network-banner-text'),
+                reloadBtn: document.getElementById('offline-network-reload-btn'),
+                restored: document.getElementById('online-restored-banner'),
+            });
+
+            let restoredTimer = null;
+            let wasOfflineOrErrored = false;
+
+            const showNetworkBanner = (titleText, bodyText, showReload = false) => {
+                const els = getEls();
+                if (!els.offline) return;
+                if (els.title && titleText) els.title.textContent = titleText;
+                if (els.text && bodyText) els.text.textContent = bodyText;
+                if (els.reloadBtn) els.reloadBtn.style.display = showReload ? 'inline-block' : 'none';
+                if (els.restored) els.restored.style.display = 'none';
+                els.offline.style.display = 'block';
+                wasOfflineOrErrored = true;
+            };
+
+            const hideNetworkBanner = (flashRestored = false) => {
+                const els = getEls();
+                if (els.offline) els.offline.style.display = 'none';
+                if (flashRestored && wasOfflineOrErrored && els.restored) {
+                    els.restored.style.display = 'block';
+                    if (restoredTimer) clearTimeout(restoredTimer);
+                    restoredTimer = setTimeout(() => {
+                        if (els.restored) els.restored.style.display = 'none';
+                    }, 2600);
+                }
+                wasOfflineOrErrored = false;
+            };
+
+            window.__expeditionDismissNetworkBanner = () => hideNetworkBanner(false);
+            window.__expeditionShowNetworkBanner = showNetworkBanner;
+
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                showNetworkBanner(
+                    'Connexion réseau perdue',
+                    'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
+                    false
+                );
+            }
+
+            window.addEventListener('offline', () => {
+                showNetworkBanner(
+                    'Connexion réseau perdue',
+                    'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
+                    false
+                );
+            });
+
+            window.addEventListener('online', () => {
+                hideNetworkBanner(true);
+                window.dispatchEvent(new CustomEvent('expedition-network-restored'));
+            });
+
+            document.addEventListener('livewire:init', () => {
+                if (!window.Livewire || typeof window.Livewire.interceptRequest !== 'function') {
+                    return;
+                }
+
+                window.Livewire.interceptRequest(({ onFailure, onError, onSuccess }) => {
+                    onFailure(({ error }) => {
+                        const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+                        const msg = isOffline
+                            ? 'Vous êtes hors ligne : la boussole reste active, mais cette action nécessite Internet.'
+                            : 'Réseau instable ou serveur injoignable. Rapprochez-vous d\'une zone couverte et réessayez.';
+                        showNetworkBanner('Connexion interrompue', msg, false);
+                        window.dispatchEvent(new CustomEvent('expedition-network-error', {
+                            detail: { type: isOffline ? 'offline' : 'network', message: msg, error }
+                        }));
+                    });
+
+                    onError(({ response, preventDefault }) => {
+                        const status = response && typeof response.status === 'number' ? response.status : 0;
+                        if (status === 419 || status >= 500 || status === 0 || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+                            if (typeof preventDefault === 'function') {
+                                preventDefault();
+                            }
+                            const isExpired = status === 419;
+                            const msg = isExpired
+                                ? 'Votre session a expiré. Rechargez la page pour retrouver votre expédition en toute sécurité.'
+                                : 'Impossible de contacter le serveur pour le moment. Vérifiez votre réseau puis réessayez.';
+                            showNetworkBanner(
+                                isExpired ? 'Session à rafraîchir' : 'Problème de connexion',
+                                msg,
+                                isExpired
+                            );
+                            window.dispatchEvent(new CustomEvent('expedition-network-error', {
+                                detail: { type: isExpired ? 'expired' : 'server', status, message: msg }
+                            }));
+                        }
+                    });
+
+                    onSuccess(() => {
+                        if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+                            hideNetworkBanner(false);
+                        }
+                    });
+                });
+            });
+        })();
     </script>
 
     @livewireScripts
