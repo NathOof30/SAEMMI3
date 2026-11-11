@@ -29,11 +29,11 @@ class StepSeederAndAuthTest extends TestCase
 
         $expectedLocations = [
             1 => ['name' => 'Étape 1 : Gare de Lens', 'qr_map' => 'MAP_LOC_1', 'qr_mj' => 'MJ_STEP_1', 'lat' => 50.4268, 'lng' => 2.8281, 'radius' => 30],
-            2 => ['name' => 'Étape 2 : Centre-Ville', 'qr_map' => 'MAP_LOC_2', 'qr_mj' => 'MJ_STEP_2', 'lat' => 50.4298, 'lng' => 2.8295, 'radius' => 30],
-            3 => ['name' => 'Étape 3 : Stade Bollaert-Delelis', 'qr_map' => 'MAP_LOC_3', 'qr_mj' => 'MJ_STEP_3', 'lat' => 50.4328, 'lng' => 2.8149, 'radius' => 65],
-            4 => ['name' => 'Étape 4 : Musée Louvre-Lens', 'qr_map' => 'MAP_LOC_4', 'qr_mj' => 'MJ_STEP_4', 'lat' => 50.4312, 'lng' => 2.8043, 'radius' => 60],
-            5 => ['name' => 'Étape 5 : Les Terrils de Loos-en-Gohelle', 'qr_map' => 'MAP_LOC_5', 'qr_mj' => 'MJ_STEP_5', 'lat' => 50.4485, 'lng' => 2.7845, 'radius' => 70],
-            6 => ['name' => 'Étape 6 : Office de Tourisme', 'qr_map' => 'MAP_LOC_6', 'qr_mj' => 'MJ_STEP_6', 'lat' => 50.4289, 'lng' => 2.8322, 'radius' => 30],
+            2 => ['name' => 'Étape 2 : Centre-Ville', 'qr_map' => 'MAP_LOC_2', 'qr_mj' => 'MJ_STEP_2', 'lat' => 50.42903639271235, 'lng' => 2.8308603520021958, 'radius' => 30],
+            3 => ['name' => 'Étape 3 : Stade Bollaert-Delelis', 'qr_map' => 'MAP_LOC_3', 'qr_mj' => 'MJ_STEP_3', 'lat' => 50.43307979422415, 'lng' => 2.81708718207351, 'radius' => 65],
+            4 => ['name' => 'Étape 4 : Musée Louvre-Lens', 'qr_map' => 'MAP_LOC_4', 'qr_mj' => 'MJ_STEP_4', 'lat' => 50.4308, 'lng' => 2.8044, 'radius' => 60],
+            5 => ['name' => 'Étape 5 : Les Terrils de Loos-en-Gohelle', 'qr_map' => 'MAP_LOC_5', 'qr_mj' => 'MJ_STEP_5', 'lat' => 50.44497222222222, 'lng' => 2.786388888888889, 'radius' => 70],
+            6 => ['name' => 'Étape 6 : Office de Tourisme', 'qr_map' => 'MAP_LOC_6', 'qr_mj' => 'MJ_STEP_6', 'lat' => 50.42934084491061, 'lng' => 2.832335350234869, 'radius' => 30],
         ];
 
         foreach ($expectedLocations as $id => $data) {
@@ -42,8 +42,8 @@ class StepSeederAndAuthTest extends TestCase
             $this->assertEquals($data['name'], $step->name);
             $this->assertEquals($data['qr_map'], $step->qr_map_code);
             $this->assertEquals($data['qr_mj'], $step->qr_mj_code);
-            $this->assertEquals($data['lat'], $step->lat);
-            $this->assertEquals($data['lng'], $step->lng);
+            $this->assertEqualsWithDelta($data['lat'], $step->lat, 0.000000000001);
+            $this->assertEqualsWithDelta($data['lng'], $step->lng, 0.000000000001);
             $this->assertEquals($data['radius'], $step->target_radius);
             $this->assertNotEmpty($step->riddle_text);
             $this->assertNotEmpty($step->code_part);
