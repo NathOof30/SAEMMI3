@@ -6,6 +6,60 @@
         lastScannedCode: null,
         lastScanTime: 0,
         cameraErrorMessage: null,
+        manualScanEnabled: false,
+        torchSupported: false,
+        torchOn: false,
+        videoTrack: null,
+
+        syncManualScanPref() {
+            try {
+                this.manualScanEnabled = localStorage.getItem('expedition_debug_manual_scan') === '1';
+            } catch (e) {
+                this.manualScanEnabled = Boolean(window.__expeditionManualScanEnabled);
+            }
+            window.__expeditionManualScanEnabled = this.manualScanEnabled;
+        },
+
+        detectTorchSupport() {
+            try {
+                const qrEl = document.getElementById('qr-reader');
+                const video = qrEl ? qrEl.querySelector('video') : null;
+                if (!video || !video.srcObject || typeof video.srcObject.getVideoTracks !== 'function') {
+                    this.torchSupported = false;
+                    this.videoTrack = null;
+                    return;
+                }
+                const tracks = video.srcObject.getVideoTracks();
+                const track = tracks && tracks.length ? tracks[0] : null;
+                if (track && typeof track.getCapabilities === 'function') {
+                    const caps = track.getCapabilities();
+                    if (caps && caps.torch) {
+                        this.videoTrack = track;
+                        this.torchSupported = true;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Vérification torche non disponible:', e);
+            }
+            this.torchSupported = false;
+            this.videoTrack = null;
+        },
+
+        async toggleTorch() {
+            if (!this.videoTrack || typeof this.videoTrack.applyConstraints !== 'function') {
+                return;
+            }
+            try {
+                const nextState = !this.torchOn;
+                await this.videoTrack.applyConstraints({
+                    advanced: [{ torch: nextState }]
+                });
+                this.torchOn = nextState;
+            } catch (e) {
+                console.warn('Impossible de basculer la torche:', e);
+            }
+        },
 
         isScannerTabVisible() {
             const pane = document.getElementById('tab-pane-scanner');
@@ -81,6 +135,8 @@
         },
 
         initScanner() {
+            this.syncManualScanPref();
+
             if (this.isInitialized || this.isStarting || window._expeditionScannerRunning) {
                 return;
             }
@@ -214,6 +270,8 @@
                         if (!started) {
                             throw lastStartError || new Error('Impossible de démarrer la caméra.');
                         }
+
+                        setTimeout(() => this.detectTorchSupport(), 250);
                     } catch (err) {
                         console.error('Erreur initialisation scanner:', err);
                         window._expeditionScannerRunning = false;
@@ -271,6 +329,9 @@
         async cleanup(fullReset = true) {
             window._expeditionScannerRunning = false;
             this.isStarting = false;
+            this.torchOn = false;
+            this.torchSupported = false;
+            this.videoTrack = null;
             const inst = this.scannerInstance || window._html5QrCodeInstance;
             this.scannerInstance = null;
             window._html5QrCodeInstance = null;
@@ -327,7 +388,11 @@
                 this.initScanner();
             }, 100);
         }
-    }" x-init="initScanner()" @tab-switched.window="if ($event.detail && $event.detail.tab === 'scanner') {
+    }" x-init="initScanner()"
+    x-effect="if (typeof tab !== 'undefined' && tab === 'scanner') { syncManualScanPref(); }"
+    @debug-manual-scan-toggled.window="manualScanEnabled = Boolean($event.detail && $event.detail.enabled)"
+    @tab-switched.window="if ($event.detail && $event.detail.tab === 'scanner') {
+        syncManualScanPref();
         const qrEl = document.getElementById('qr-reader');
         const video = qrEl ? qrEl.querySelector('video') : null;
         const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
@@ -336,7 +401,17 @@
         }
     } else if ($event.detail && $event.detail.tab !== 'scanner') {
         cleanup(false);
-    }">
+    }"
+    style="height: 100%; display: flex; flex-direction: column; min-height: 0; font-family: var(--font-body);">
+    <style>
+        #qr-reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block;
+        }
+    </style>
+
     @if($scanStatus)
         <div id="fullscreen-scan-overlay" x-data="{
                     dismiss() {
@@ -410,8 +485,8 @@
                 @endif
 
                 <!-- Titre -->
-                <h3 id="scan-overlay-title"
-                    style="font-size: 21px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: -0.5px; {{ $scanStatus === 'success' ? 'color: #15803D;' : 'color: #B91C1C;' }}">
+                <h3 id="scan-overlay-title" class="font-display"
+                    style="font-family: var(--font-display); font-size: 25px; font-weight: 700; margin: 0 0 10px 0; letter-spacing: 0.02em; line-height: 1.1; {{ $scanStatus === 'success' ? 'color: #15803D;' : 'color: #B91C1C;' }}">
                     {{ $scanTitle }}
                 </h3>
 
@@ -423,103 +498,116 @@
 
                 <!-- Bouton d'action / indicateur néobrutaliste -->
                 @if($scanStatus === 'success')
-                    <button type="button" x-on:click="dismiss()" id="scan-overlay-action-btn" class="btn-bounce"
-                        style="width: 100%; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-weight: 900; font-size: 14px; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
+                    <button type="button" x-on:click="dismiss()" id="scan-overlay-action-btn" class="btn-bounce font-display"
+                        style="font-family: var(--font-display); width: 100%; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
                         {{ $scanTargetTab === 'inventory' ? 'Ouvrir mon inventaire →' : 'Poursuivre vers la boussole →' }}
                     </button>
                 @else
-                    <button type="button" x-on:click="dismiss()" id="scan-overlay-dismiss-btn" class="btn-bounce"
-                        style="width: 100%; padding: 12px 16px; background: #F3F4F6; color: #1A1A1A; font-weight: 900; font-size: 14px; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
+                    <button type="button" x-on:click="dismiss()" id="scan-overlay-dismiss-btn" class="btn-bounce font-display"
+                        style="font-family: var(--font-display); width: 100%; padding: 12px 16px; background: #F3F4F6; color: #1A1A1A; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 3px solid #1A1A1A; border-radius: 12px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer;">
                         Réessayer le scan ✕
                     </button>
                 @endif
             </div>
         </div>
     @endif
-    <div style="max-width: 480px; margin: 0 auto; padding: 10px 16px;">
-        <div style="margin-bottom: 12px;">
+
+    <div style="width: 100%; max-width: 480px; margin: 0 auto; padding: 8px 14px 12px 14px; box-sizing: border-box; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;"
+        :style="{ overflowY: manualScanEnabled ? 'auto' : 'hidden' }">
+        <!-- Barre supérieure flottante : Retour + réactivation -->
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;">
             <button type="button" id="scanner-back-to-hub-btn" x-on:click="tab = 'hub'"
                 wire:click="$dispatch('set-tab', { tab: 'hub' })" class="btn-bounce"
-                style="background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                style="background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 7px 11px; font-size: 12px; font-weight: 800; color: #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; max-width: 100%;">
                 ← Retour à la boussole
+            </button>
+
+            <button type="button" id="btn-reactivate-scanner" x-on:click="reactivateScanner()" class="btn-bounce"
+                style="padding: 7px 10px; background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; font-weight: 800; font-size: 12px; color: #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; white-space: nowrap; max-width: 100%;">
+                Réactiver le scanner
             </button>
         </div>
 
+        <!-- Rappel minimaliste en 1 ligne -->
+        <div id="scanner-phase-reminder"
+            style="flex-shrink: 0; background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 7px 12px; box-shadow: 0 3px 0 #1A1A1A; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; white-space: nowrap;">
+                Scanner
+            </span>
+            <span style="font-size: 12px; font-weight: 700; color: #1A1A1A; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
+                    Terminé (Toutes les étapes validées)
+                @elseif($user && $user->phase === 'GUESSING_LOCATION')
+                    Étape {{ $user->current_step }}/6 — Scannez le QR de la carte
+                @elseif($user && $user->phase === 'WALKING_TO_TARGET')
+                    Étape {{ $user->current_step }}/6 — Scannez le QR du Maître du Jeu
+                @else
+                    Terminé
+                @endif
+            </span>
+        </div>
+
+        <!-- Erreur matérielle caméra éventuelle -->
+        <div x-show="cameraErrorMessage" x-cloak
+            style="flex-shrink: 0; background: #FEE2E2; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 8px 12px; color: #991B1B; font-size: 12px; font-weight: 700; box-shadow: 0 3px 0 #1A1A1A;">
+            <p style="margin: 0;"><strong>Erreur Caméra :</strong> <span x-text="cameraErrorMessage"></span></p>
+        </div>
+
+        <!-- Zone vidéo maximisée avec viseur néo-brutaliste et bouton torche intégré -->
         <div
-            style="background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 20px; box-shadow: 0 6px 0 #1A1A1A; padding: 20px;">
-            <h2
-                style="font-size: 20px; font-weight: 900; color: #841818; margin: 0 0 10px 0; text-transform: uppercase;">
-                Scanner de QR Code</h2>
-
-            <p style="font-size: 13px; margin: 0 0 12px 0; color: #4B5563;">
-                Phase actuelle :
-                <strong style="color: #1A1A1A;">
-                    @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
-                        Terminé (Toutes les étapes validées)
-                    @elseif($user && $user->phase === 'GUESSING_LOCATION')
-                        Recherche de l'emplacement (Scanner le QR Map)
-                    @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                        Marche vers la cible (Scanner le QR MJ)
-                    @else
-                        Terminé
-                    @endif
-                </strong>
-            </p>
-
-            @if($message)
-                <p
-                    style="background: #DCFCE7; border: 2px solid #16A34A; border-radius: 8px; padding: 8px 12px; color: #166534; font-size: 13px; font-weight: 700; margin-bottom: 12px;">
-                    <strong>Succès :</strong> {{ $message }}
-                </p>
-            @endif
-
-            @if($error)
-                <p
-                    style="background: #FEE2E2; border: 2px solid #DC2626; border-radius: 8px; padding: 8px 12px; color: #991B1B; font-size: 13px; font-weight: 700; margin-bottom: 12px;">
-                    <strong>Erreur :</strong> {{ $error }}
-                </p>
-            @endif
-
-            <div x-show="cameraErrorMessage"
-                style="display: none; background: #FEE2E2; border: 2px solid #DC2626; border-radius: 8px; padding: 8px 12px; color: #991B1B; font-size: 13px; margin-bottom: 12px;">
-                <p style="margin: 0;"><strong>Erreur Caméra :</strong> <span x-text="cameraErrorMessage"></span></p>
+            style="flex: 1; min-height: 260px; position: relative; border-radius: 20px; overflow: hidden; border: 3.5px solid #1A1A1A; background: #000000; box-shadow: 0 6px 0 #1A1A1A;"
+            :style="{ minHeight: manualScanEnabled ? '230px' : '260px', maxHeight: manualScanEnabled ? '46vh' : 'none' }">
+            <div id="qr-reader" wire:ignore
+                style="width: 100%; height: 100%; min-height: 230px; background: #000000;">
             </div>
 
-            <div style="margin-bottom: 14px;">
-                <button type="button" id="btn-reactivate-scanner" x-on:click="reactivateScanner()" class="btn-bounce"
-                    style="padding: 8px 14px; background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
-                    Réactiver le scanner
-                </button>
-                <span x-show="isLocked" style="display: none; margin-left: 8px; font-size: 11px; color: #6B7280;">
-                    (Scanner en pause : patientez 2 s ou cliquez pour réactiver)
+            <!-- Bouton torche discret dans le coin du viseur (si supporté par le matériel) -->
+            <button type="button" id="btn-toggle-torch" x-show="torchSupported" x-cloak
+                x-on:click="toggleTorch()" class="btn-bounce"
+                :style="{ background: torchOn ? '#F4B316' : 'rgba(255, 255, 255, 0.92)', color: '#1A1A1A' }"
+                style="position: absolute; top: 10px; right: 10px; z-index: 15; border: 2.5px solid #1A1A1A; border-radius: 9999px; padding: 6px 11px; font-size: 11px; font-weight: 800; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                title="Allumer ou éteindre la lampe torche">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                <span x-text="torchOn ? 'Torche ON' : 'Torche'">Torche</span>
+            </button>
+
+            <!-- Viseur néo-brutaliste centré -->
+            <div aria-hidden="true"
+                style="pointer-events: none; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;">
+                <div style="width: min(64vw, 230px); height: min(64vw, 230px); position: relative;">
+                    <span style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 10px 0 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span style="position: absolute; top: 0; right: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 10px 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span style="position: absolute; bottom: 0; left: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 0 0 0 10px; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 0 10px 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                </div>
+                <span x-show="isLocked" x-cloak
+                    style="margin-top: 10px; background: rgba(26, 26, 26, 0.85); color: #F4B316; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1.5px solid #F4B316;">
+                    Analyse en cours...
                 </span>
             </div>
+        </div>
 
-            <div style="margin-bottom: 16px;">
-                <h3 style="font-size: 15px; font-weight: 800; color: #1A1A1A; margin: 0 0 8px 0;">Caméra</h3>
-                <div id="qr-reader" wire:ignore
-                    style="border-radius: 12px; overflow: hidden; border: 2px solid #1A1A1A; background: #000000;">
+        <!-- Outil Simulation manuelle (Debug) — masqué par défaut, activable dans [•] debug du Hub -->
+        <div id="scanner-manual-sim-panel" x-show="manualScanEnabled" x-cloak
+            style="flex-shrink: 0; background: #FFFFFF; border: 3px solid #1A1A1A; border-radius: 16px; box-shadow: 0 4px 0 #1A1A1A; padding: 12px 14px;">
+            <h3 class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; margin: 0 0 8px 0;">
+                Simulation manuelle (Debug PC)
+            </h3>
+            <form wire:submit="verifyManualCode" style="display: flex; gap: 8px; align-items: flex-end;">
+                <div style="flex: 1; min-width: 0;">
+                    <label for="manualCode"
+                        style="display: block; font-size: 11px; font-weight: 700; color: #4B5563; margin-bottom: 3px;">Code QR :</label>
+                    <input type="text" id="manualCode" wire:model="manualCode"
+                        placeholder="MAP_LOC_1 / MJ_STEP_1"
+                        style="width: 100%; box-sizing: border-box; padding: 8px 9px; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 13px;">
                 </div>
-            </div>
-
-            <div style="border-top: 1px dashed #D1D5DB; padding-top: 14px; margin-top: 14px;">
-                <h3 style="font-size: 13px; font-weight: 800; color: #6B7280; margin: 0 0 8px 0;">Simulation manuelle
-                    (Debug)</h3>
-                <form wire:submit="verifyManualCode" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div>
-                        <label for="manualCode"
-                            style="display: block; font-size: 12px; font-weight: 700; color: #4B5563; margin-bottom: 4px;">Code
-                            QR :</label>
-                        <input type="text" id="manualCode" wire:model="manualCode"
-                            placeholder="Exemple: MAP_LOC_1 ou MJ_STEP_1"
-                            style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 13px;">
-                    </div>
-                    <button type="submit" class="btn-bounce"
-                        style="padding: 8px 12px; background: #F4B316; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
-                        Simuler le scan
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="btn-bounce font-display"
+                    style="font-family: var(--font-display); padding: 8px 12px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A; white-space: nowrap;">
+                    Simuler le scan
+                </button>
+            </form>
         </div>
     </div>
 </div>

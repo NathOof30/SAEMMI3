@@ -192,7 +192,10 @@ class GameFlowTest extends TestCase
         // 1. Wrong QR code
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'WRONG-CODE')
-            ->assertSee('Code invalide');
+            ->assertSet('scanStatus', 'error')
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_1).")
+            ->assertSee('Mince ! Mauvais QR Code...')
+            ->assertDontSee('Erreur :');
 
         $user->refresh();
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
@@ -200,7 +203,10 @@ class GameFlowTest extends TestCase
         // 2. Scan valid map QR code in GUESSING_LOCATION
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MAP-STEP-1')
-            ->assertSee('QR Map validé');
+            ->assertSet('scanStatus', 'success')
+            ->assertSet('error', null)
+            ->assertSee('Bravo ! Emplacement trouvé !')
+            ->assertDontSee('Succès :');
 
         $user->refresh();
         $this->assertEquals('WALKING_TO_TARGET', $user->phase);
@@ -209,12 +215,16 @@ class GameFlowTest extends TestCase
         // 3. In WALKING_TO_TARGET, scanning map code again fails
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MAP-STEP-1')
-            ->assertSee('Code invalide');
+            ->assertSet('scanStatus', 'error')
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code du Maître du Jeu (MJ_STEP_1).")
+            ->assertSee('Emplacement déjà validé !');
 
         // 4. Scan valid MJ QR code
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MJ-STEP-1')
-            ->assertSee('QR MJ validé');
+            ->assertSet('scanStatus', 'success')
+            ->assertSet('error', null)
+            ->assertSee('Bravo ! Épreuve réussie !');
 
         $user->refresh();
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
@@ -334,7 +344,9 @@ class GameFlowTest extends TestCase
         // Try scanning step 2 map code while on step 1
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MAP-STEP-2')
-            ->assertSee('Code invalide');
+            ->assertSet('scanStatus', 'error')
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_1).")
+            ->assertSee('Mince ! Je ne crois pas que ça soit...');
 
         $user->refresh();
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
@@ -343,7 +355,9 @@ class GameFlowTest extends TestCase
         // Try scanning step 1 MJ code while still in GUESSING_LOCATION
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MJ-STEP-1')
-            ->assertSee('Code invalide');
+            ->assertSet('scanStatus', 'error')
+            ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_1).")
+            ->assertSee('Pas si vite, explorateur !');
 
         $user->refresh();
         $this->assertEquals('GUESSING_LOCATION', $user->phase);
@@ -367,7 +381,9 @@ class GameFlowTest extends TestCase
 
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'MAP-STEP-1')
-            ->assertSee('Toutes les étapes ont déjà été validées');
+            ->assertSet('scanStatus', 'success')
+            ->assertSet('message', 'Toutes les étapes ont déjà été validées ! Félicitations !')
+            ->assertSee('Expédition Déjà Terminée !');
     }
 
     public function test_hub_shows_completion_message_when_finished(): void
@@ -406,7 +422,8 @@ class GameFlowTest extends TestCase
         Livewire::test(Scanner::class)
             ->set('manualCode', 'MAP-STEP-1')
             ->call('verifyManualCode')
-            ->assertSee('QR Map validé !')
+            ->assertSet('scanStatus', 'success')
+            ->assertSee('Bravo ! Emplacement trouvé !')
             ->assertSet('manualCode', '');
 
         $user->refresh();
@@ -416,7 +433,8 @@ class GameFlowTest extends TestCase
         Livewire::test(Scanner::class)
             ->set('manualCode', 'MJ-STEP-1')
             ->call('verifyCode')
-            ->assertSee('QR MJ validé !')
+            ->assertSet('scanStatus', 'success')
+            ->assertSee('Bravo ! Épreuve réussie !')
             ->assertSet('manualCode', '');
 
         $user->refresh();
@@ -443,7 +461,10 @@ class GameFlowTest extends TestCase
         Livewire::test(Scanner::class)
             ->set('manualCode', '')
             ->call('verifyCode', '')
-            ->assertSee('Veuillez saisir ou scanner un code.');
+            ->assertSet('scanStatus', 'error')
+            ->assertSet('error', 'Veuillez saisir ou scanner un code.')
+            ->assertSee('Code manquant')
+            ->assertSee('Veuillez scanner ou saisir un QR code valide.');
     }
 
     public function test_completed_game_ui_shows_correct_status_in_router_and_scanner(): void
@@ -559,12 +580,16 @@ class GameFlowTest extends TestCase
         Livewire::test(Scanner::class)
             // Trigger an error first
             ->call('verifyCode', 'INVALID-CODE')
-            ->assertSee('Code invalide')
+            ->assertSet('scanStatus', 'error')
+            ->assertSee('Mince ! Mauvais QR Code...')
             ->assertSet('error', "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_1).")
             // Call resetScanState
             ->call('resetScanState')
             ->assertSet('error', null)
             ->assertSet('message', null)
+            ->assertSet('scanStatus', null)
+            ->assertSet('scanTitle', null)
+            ->assertSet('scanSubtitle', null)
             ->assertSet('manualCode', '');
     }
 
@@ -601,16 +626,19 @@ class GameFlowTest extends TestCase
 
         // 1. First scan is invalid
         $component->call('verifyCode', 'NOT_VALID')
-            ->assertSee('Code invalide')
+            ->assertSet('scanStatus', 'error')
+            ->assertSee('Mince ! Mauvais QR Code...')
             ->assertSet('message', null);
 
         // 2. User recovers / resets
         $component->call('resetScanState')
-            ->assertSet('error', null);
+            ->assertSet('error', null)
+            ->assertSet('scanStatus', null);
 
         // 3. User scans valid Map QR
         $component->call('verifyCode', 'MAP_LOC_1')
-            ->assertSee('QR Map validé')
+            ->assertSet('scanStatus', 'success')
+            ->assertSee('Bravo ! Emplacement trouvé !')
             ->assertSet('error', null);
 
         $user->refresh();
@@ -618,13 +646,15 @@ class GameFlowTest extends TestCase
 
         // 4. In walking phase, user scans wrong MJ code
         $component->call('verifyCode', 'MJ_STEP_999')
-            ->assertSee('Code invalide')
+            ->assertSet('scanStatus', 'error')
+            ->assertSee('Holà, téléportation détectée !')
             ->assertSet('message', null);
 
         // 5. User resets and scans valid MJ code
         $component->call('resetScanState')
             ->call('verifyCode', 'MJ_STEP_1')
-            ->assertSee('QR MJ validé')
+            ->assertSet('scanStatus', 'success')
+            ->assertSee('Bravo ! Épreuve réussie !')
             ->assertSet('error', null);
 
         $user->refresh();

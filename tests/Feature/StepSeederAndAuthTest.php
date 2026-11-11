@@ -183,7 +183,10 @@ class StepSeederAndAuthTest extends TestCase
         // Lowercase MAP code
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'map_loc_1')
-            ->assertSee('QR Map validé !');
+            ->assertSet('scanStatus', 'success')
+            ->assertSet('error', null)
+            ->assertSee('Bravo ! Emplacement trouvé !')
+            ->assertDontSee('Succès :');
 
         $user->refresh();
         $this->assertEquals('WALKING_TO_TARGET', $user->phase);
@@ -191,7 +194,10 @@ class StepSeederAndAuthTest extends TestCase
         // Lowercase MJ code
         Livewire::test(Scanner::class)
             ->call('verifyCode', 'mj_step_1')
-            ->assertSee('QR MJ validé !');
+            ->assertSet('scanStatus', 'success')
+            ->assertSet('error', null)
+            ->assertSee('Bravo ! Épreuve réussie !')
+            ->assertDontSee('Succès :');
 
         $user->refresh();
         $this->assertEquals(2, $user->current_step);

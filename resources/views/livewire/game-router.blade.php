@@ -3,7 +3,7 @@
     profileModalOpen: false
 }"
 @set-tab.window="if ($event.detail && $event.detail.tab && tab !== $event.detail.tab) { tab = $event.detail.tab; }"
-    style="max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; background: transparent; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; position: relative; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;">
+    style="max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; max-height: 100dvh; display: flex; flex-direction: column; background: transparent; font-family: var(--font-body); overflow: hidden; position: relative; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;">
     @if(!Auth::check())
         <livewire:auth.login-register />
     @else
@@ -51,7 +51,7 @@
                             style="height: 100%; width: {{ $fragmentCount > 0 ? min(100, round(($fragmentCount / 6) * 100)) : 0 }}%; background: #F4B316; border-radius: 9999px; {{ $fragmentCount > 0 && $fragmentCount < 6 ? 'border-right: 2px solid #1A1A1A;' : 'border-right: none;' }}">
                         </div>
                     </div>
-                    <span style="font-size: 17px; font-weight: 900; color: #841818; letter-spacing: -0.5px;">
+                    <span class="font-display" style="font-family: var(--font-display); font-size: 20px; font-weight: 700; color: #841818; letter-spacing: 0.03em;">
                         {{ min($fragmentCount, 6) }}/6
                     </span>
                 </div>
@@ -77,7 +77,7 @@
             <!-- Modale de profil / déconnexion au clic sur l'avatar -->
             <div x-show="profileModalOpen" x-cloak x-on:click.outside="profileModalOpen = false"
                 style="position: absolute; top: 68px; left: 16px; width: 260px; background: #ffffff; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 6px 0 #1A1A1A; padding: 14px; z-index: 50;">
-                <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 800; color: #841818;">
+                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
                     Équipe : {{ Auth::user()->team_name ?? Auth::user()->name }}
                 </h4>
                 <p style="margin: 0 0 10px 0; font-size: 12px; color: #6B7280;">

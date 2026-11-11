@@ -16,78 +16,83 @@
         this.activeSlide = index;
     }
 }"
-    style="width: 100%; max-width: 420px; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: 20px 18px; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
+    style="width: 100%; max-width: 420px; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: 16px 18px; box-sizing: border-box; font-family: var(--font-body); color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
 
     <!-- 1. En-tête haut de page -->
-    <header style="text-align: center; flex-shrink: 0; padding-top: 4px;">
-        <h1
-            style="font-size: 26px; font-weight: 900; color: #841818; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+    <header style="text-align: center; flex-shrink: 0; padding-top: 2px;">
+        <h1 class="font-display"
+            style="font-family: var(--font-display); font-size: 30px; font-weight: 700; color: #841818; margin: 0 0 2px 0; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05;">
             L'Expédition Secrète
         </h1>
-        <p style="margin: 0; font-size: 14px; font-weight: 700; color: #b45309;">
+        <p style="margin: 0; font-size: 13px; font-weight: 700; color: #b45309;">
             Lens Tourisme & Asmodee
         </p>
     </header>
 
     @if($mode === 'landing' || $mode === 'tuto')
         <!-- MODE ACCUEIL (WELCOME) -->
-        <div x-show="onboardingStep === 'welcome'" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; margin: 16px 0;">
+        <div x-show="onboardingStep === 'welcome'" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; margin: 10px 0;">
             <!-- Carte centrale -->
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 8px 0;">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 4px 0;">
                 <main
-                    style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 28px 22px; box-sizing: border-box; text-align: center; width: 100%;">
+                    style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 18px 16px; box-sizing: border-box; text-align: center; width: 100%;">
                     <span class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Connexion / Inscription Équipe</span>
 
-                    <!-- Emblème de l'Expédition -->
-                    <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-                        <div style="width: 52px; height: 52px; border-radius: 50%; background: #FEF3C7; border: 2.5px solid #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; display: flex; align-items: center; justify-content: center;">
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#841818" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10" stroke="#1A1A1A" stroke-width="2" fill="#F4B316"/>
-                                <polygon points="12 4 14.5 9.5 20 12 14.5 14.5 12 20 9.5 14.5 4 12 9.5 9.5 12 4" fill="#841818" stroke="#1A1A1A" stroke-width="1.2"/>
-                                <circle cx="12" cy="12" r="2" fill="#FFFFFF"/>
+                    <!-- Emblème de la Lampe Cœur (placeholder vectoriel remplaçable) -->
+                    <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #FEF3C7; border: 2.5px solid #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; display: flex; align-items: center; justify-content: center;">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" aria-hidden="true">
+                                <path d="M11 6 H21" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/>
+                                <path d="M13 6 V9 H19 V6" stroke="#1A1A1A" stroke-width="2" fill="#9CA3AF"/>
+                                <rect x="9" y="9" width="14" height="14" rx="3" fill="#FFFBEB" stroke="#1A1A1A" stroke-width="2.2"/>
+                                <path d="M16 20.5 C16 20.5 11.5 17.5 11.5 14.3 C11.5 12.8 12.7 11.8 14 11.8 C14.9 11.8 15.6 12.3 16 13 C16.4 12.3 17.1 11.8 18 11.8 C19.3 11.8 20.5 12.8 20.5 14.3 C20.5 17.5 16 20.5 16 20.5 Z" fill="#F4B316" stroke="#841818" stroke-width="1.5"/>
+                                <rect x="8" y="23" width="16" height="4" rx="1.5" fill="#841818" stroke="#1A1A1A" stroke-width="2"/>
                             </svg>
                         </div>
                     </div>
 
-                    <h2 style="font-size: 22px; font-weight: 900; margin: 0 0 16px 0; color: #1a1a1a;">
+                    <h2 class="font-display" style="font-family: var(--font-display); font-size: 24px; font-weight: 700; margin: 0 0 10px 0; color: #1a1a1a; letter-spacing: 0.02em; line-height: 1.1;">
                         Bienvenue, Explorateurs !
                     </h2>
 
                     <div
-                        style="background: #fdfaf2; border: 2.5px dashed #d97706; border-radius: 16px; padding: 22px 16px;">
-                        <p style="margin: 0 0 10px 0; font-weight: 900; font-size: 17px; color: #841818;">
-                            Aidez Gali à retrouver la Lampe Cœur !
+                        style="background: #fdfaf2; border: 2.5px dashed #d97706; border-radius: 16px; padding: 14px 12px; text-align: left;">
+                        <p class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-weight: 700; font-size: 18px; color: #841818; text-align: center; letter-spacing: 0.02em;">
+                            La légende de la Lampe Cœur
                         </p>
-                        <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.5;">
-                            Tout commence au grenier avec un premier bout de carte jauni… Partez explorer Lens en famille pour réunir les 6 fragments secrets.
+                        <p style="margin: 0 0 6px 0; font-size: 13px; color: #374151; line-height: 1.4;">
+                            Dans le <strong>grenier</strong> de son grand-père, sous une veste de mineur, <strong>Gali</strong> a découvert un bout de <strong>papier jauni</strong> menant à la <strong>Lampe Cœur</strong>, la gaillette de charbon magique qui illumine Lens !
+                        </p>
+                        <p style="margin: 0; font-size: 12px; font-weight: 700; color: #92400e; text-align: center; line-height: 1.35;">
+                            Au dos l'attend le premier indice : partez en famille réunir les 6 fragments et faites briller la ville à nouveau.
                         </p>
                     </div>
                 </main>
             </div>
 
             <!-- Bloc d'actions ancré en bas -->
-            <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;">
+            <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
                 <button type="button" x-on:click="onboardingStep = 'slider'; activeSlide = 0;"
-                    class="btn-bounce"
-                    style="width: 100%; box-sizing: border-box; padding: 16px 20px; background: #F4B316; color: #1a1a1a; font-weight: 900; font-size: 18px; text-transform: uppercase; border: 3px solid #1a1a1a; border-radius: 14px; box-shadow: 0 5px 0 #1a1a1a; cursor: pointer; letter-spacing: 0.5px;">
+                    class="btn-bounce font-display"
+                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 14px 18px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 21px; text-transform: uppercase; border: 3px solid #1a1a1a; border-radius: 14px; box-shadow: 0 5px 0 #1a1a1a; cursor: pointer; letter-spacing: 0.04em;">
                     Démarrer l'aventure
                 </button>
 
                 <div style="display: flex; gap: 10px;">
                     <button type="button" wire:click="setMode('register')"
                         class="btn-bounce"
-                        style="flex: 1; box-sizing: border-box; padding: 11px 10px; background: #F9FAFB; color: #1a1a1a; font-weight: 800; font-size: 13px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; text-align: center;">
+                        style="flex: 1; box-sizing: border-box; padding: 10px 10px; background: #F9FAFB; color: #1a1a1a; font-weight: 700; font-size: 13px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; text-align: center;">
                         Créer une équipe
                     </button>
 
                     <button type="button" wire:click="setMode('login')"
                         class="btn-bounce"
-                        style="flex: 1; box-sizing: border-box; padding: 11px 10px; background: #F9FAFB; color: #1a1a1a; font-weight: 800; font-size: 13px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; text-align: center;">
+                        style="flex: 1; box-sizing: border-box; padding: 10px 10px; background: #F9FAFB; color: #1a1a1a; font-weight: 700; font-size: 13px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; text-align: center;">
                         Connexion équipe
                     </button>
                 </div>
 
-                <p style="margin: 4px 0 0 0; text-align: center; font-size: 11px;">
+                <p style="margin: 2px 0 0 0; text-align: center; font-size: 11px;">
                     <a href="{{ route('test-qr') }}" target="_blank" style="color: #6b7280; text-decoration: underline;">
                         Tester les QR Codes sur écran PC (/test-qr)
                     </a>
@@ -96,12 +101,12 @@
         </div>
 
         <!-- MODE TUTORIEL (SLIDER) -->
-        <div x-show="onboardingStep === 'slider'" x-cloak style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; margin: 16px 0;">
+        <div x-show="onboardingStep === 'slider'" x-cloak style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; margin: 12px 0;">
             <!-- Carte centrale du slide -->
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 8px 0;">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 6px 0;">
                 <main
-                    style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 26px 20px; box-sizing: border-box; width: 100%; min-height: 220px; display: flex; flex-direction: column; justify-content: center;">
-                    <h2 style="font-size: 20px; font-weight: 900; margin: 0 0 16px 0; text-align: center; color: #1a1a1a;">
+                    style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 22px 18px; box-sizing: border-box; width: 100%; min-height: 210px; display: flex; flex-direction: column; justify-content: center;">
+                    <h2 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 14px 0; text-align: center; color: #1a1a1a; letter-spacing: 0.02em;">
                         Règles de l'Expédition
                     </h2>
 
@@ -117,13 +122,13 @@
                             </div>
                         </div>
                         <span
-                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 900; color: #841818; text-transform: uppercase; margin-bottom: 10px;">
+                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
                             Étape 1 sur 3
                         </span>
-                        <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 900; color: #841818;">
+                        <h3 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
                             L'Explorateur
                         </h3>
-                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.5;">
+                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
                             L'enfant résout les énigmes de Gali sur la carte papier physique avec sa loupe.
                         </p>
                     </div>
@@ -139,13 +144,13 @@
                             </div>
                         </div>
                         <span
-                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 900; color: #841818; text-transform: uppercase; margin-bottom: 10px;">
+                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
                             Étape 2 sur 3
                         </span>
-                        <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 900; color: #841818;">
+                        <h3 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
                             Le Maître du Jeu
                         </h3>
-                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.5;">
+                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
                             Le parent s'oriente en ville grâce à la boussole et valide les étapes.
                         </p>
                     </div>
@@ -165,13 +170,13 @@
                             </div>
                         </div>
                         <span
-                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 900; color: #841818; text-transform: uppercase; margin-bottom: 10px;">
+                            style="display: inline-block; padding: 4px 12px; background: #fef3c7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
                             Étape 3 sur 3
                         </span>
-                        <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 900; color: #841818;">
+                        <h3 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
                             Le Trésor
                         </h3>
-                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.5;">
+                        <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
                             Trouvez les 6 fragments et remportez le jeu Dobble exclusif à l'Office de Tourisme !
                         </p>
                     </div>
@@ -179,15 +184,15 @@
             </div>
 
             <!-- Bloc de navigation du slider ancré en bas -->
-            <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;">
+            <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;">
                 <!-- Barre de pagination et flèches (3 colonnes pour centrage absolu des pastilles) -->
                 <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;">
                     <!-- Bouton Précédent 3D (aligné à gauche) -->
                     <div style="display: flex; justify-content: flex-start;">
                         <button type="button" x-on:click="prevSlide()" :disabled="activeSlide === 0"
                             class="btn-bounce"
-                            style="width: 44px; height: 44px; border-radius: 12px; border: 2.5px solid #1A1A1A; background: #FFFFFF; font-weight: 900; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
-                            :style="activeSlide === 0 ? 'opacity: 0.25; cursor: not-allowed; box-shadow: none;' : 'box-shadow: 0 3px 0 #1A1A1A;'">
+                            style="width: 44px; height: 44px; border-radius: 12px; border: 2.5px solid #1A1A1A; background: #FFFFFF; font-weight: 700; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                            :style="{ opacity: activeSlide === 0 ? 0.25 : 1, cursor: activeSlide === 0 ? 'not-allowed' : 'pointer', boxShadow: activeSlide === 0 ? 'none' : '0 3px 0 #1A1A1A' }">
                             ←
                         </button>
                     </div>
@@ -196,21 +201,21 @@
                     <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-shrink: 0;">
                         <button type="button" x-on:click="goToSlide(0)"
                             style="display: inline-block; width: 14px; height: 14px; min-width: 14px; min-height: 14px; flex-shrink: 0; border-radius: 50%; border: 2.5px solid #1A1A1A; cursor: pointer; padding: 0; box-sizing: border-box; transition: transform 0.15s ease;"
-                            :style="activeSlide === 0 ? 'background: #F4B316; transform: scale(1.25);' : 'background: #E5E7EB;'"></button>
+                            :style="{ background: activeSlide === 0 ? '#F4B316' : '#E5E7EB', transform: activeSlide === 0 ? 'scale(1.25)' : 'scale(1)' }"></button>
                         <button type="button" x-on:click="goToSlide(1)"
                             style="display: inline-block; width: 14px; height: 14px; min-width: 14px; min-height: 14px; flex-shrink: 0; border-radius: 50%; border: 2.5px solid #1A1A1A; cursor: pointer; padding: 0; box-sizing: border-box; transition: transform 0.15s ease;"
-                            :style="activeSlide === 1 ? 'background: #F4B316; transform: scale(1.25);' : 'background: #E5E7EB;'"></button>
+                            :style="{ background: activeSlide === 1 ? '#F4B316' : '#E5E7EB', transform: activeSlide === 1 ? 'scale(1.25)' : 'scale(1)' }"></button>
                         <button type="button" x-on:click="goToSlide(2)"
                             style="display: inline-block; width: 14px; height: 14px; min-width: 14px; min-height: 14px; flex-shrink: 0; border-radius: 50%; border: 2.5px solid #1A1A1A; cursor: pointer; padding: 0; box-sizing: border-box; transition: transform 0.15s ease;"
-                            :style="activeSlide === 2 ? 'background: #F4B316; transform: scale(1.25);' : 'background: #E5E7EB;'"></button>
+                            :style="{ background: activeSlide === 2 ? '#F4B316' : '#E5E7EB', transform: activeSlide === 2 ? 'scale(1.25)' : 'scale(1)' }"></button>
                     </div>
 
                     <!-- Bouton Suivant pour slides 0 et 1 (aligné à droite) -->
                     <div style="display: flex; justify-content: flex-end;">
                         <div x-show="activeSlide < totalSlides - 1" style="flex-shrink: 0;">
                             <button type="button" x-on:click="nextSlide()"
-                                class="btn-bounce"
-                                style="padding: 10px 18px; height: 44px; background: #F4B316; color: #1a1a1a; font-weight: 900; font-size: 14px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; display: flex; align-items: center; justify-content: center; text-transform: uppercase;">
+                                class="btn-bounce font-display"
+                                style="font-family: var(--font-display); padding: 8px 18px; height: 44px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 16px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.03em;">
                                 Suivant →
                             </button>
                         </div>
@@ -226,16 +231,16 @@
                 </div>
 
                 <!-- Sur slide 2 (dernière slide) : Boutons d'action créer / connecter équipe -->
-                <div x-show="activeSlide === totalSlides - 1" style="display: flex; flex-direction: column; gap: 10px;">
+                <div x-show="activeSlide === totalSlides - 1" style="display: flex; flex-direction: column; gap: 8px;">
                     <button type="button" wire:click="setMode('register')"
-                        class="btn-bounce"
-                        style="width: 100%; box-sizing: border-box; padding: 13px 18px; background: #F4B316; color: #1a1a1a; font-weight: 900; font-size: 15px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer;">
+                        class="btn-bounce font-display"
+                        style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 18px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer;">
                         Créer une équipe
                     </button>
 
                     <button type="button" wire:click="setMode('login')"
-                        class="btn-bounce"
-                        style="width: 100%; box-sizing: border-box; padding: 13px 18px; background: #841818; color: #ffffff; font-weight: 900; font-size: 15px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer;">
+                        class="btn-bounce font-display"
+                        style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 18px; background: #841818; color: #ffffff; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; cursor: pointer;">
                         Connexion équipe
                     </button>
 
@@ -253,9 +258,9 @@
         <!-- CONTENU DU MODE REGISTER (mêmes marges et largeur uniformisées) -->
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; margin: 12px 0; overflow-y: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch;">
             <main
-                style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 22px 20px; box-sizing: border-box; width: 100%;">
+                style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 20px 18px; box-sizing: border-box; width: 100%;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <h2 style="margin: 0; font-size: 18px; font-weight: 900; color: #841818;">Créer une équipe</h2>
+                    <h2 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 22px; font-weight: 700; color: #841818;">Créer une équipe</h2>
                     <button type="button" wire:click="setMode('landing')"
                         style="background: transparent; border: none; color: #6b7280; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline;">
                         ← Retour
@@ -293,8 +298,8 @@
                     </div>
 
                     <button type="submit"
-                        class="btn-bounce"
-                        style="margin-top: 6px; padding: 12px; background: #F4B316; color: #1a1a1a; font-weight: 800; font-size: 15px; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
+                        class="btn-bounce font-display"
+                        style="font-family: var(--font-display); margin-top: 6px; padding: 12px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
                         Créer mon équipe et commencer
                     </button>
                 </form>
@@ -313,9 +318,9 @@
         <!-- CONTENU DU MODE LOGIN (mêmes marges et largeur uniformisées) -->
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; margin: 12px 0; overflow-y: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch;">
             <main
-                style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 22px 20px; box-sizing: border-box; width: 100%;">
+                style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 20px 18px; box-sizing: border-box; width: 100%;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <h2 style="margin: 0; font-size: 18px; font-weight: 900; color: #841818;">Connexion équipe</h2>
+                    <h2 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 22px; font-weight: 700; color: #841818;">Connexion équipe</h2>
                     <button type="button" wire:click="setMode('landing')"
                         style="background: transparent; border: none; color: #6b7280; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline;">
                         ← Retour
@@ -345,8 +350,8 @@
                     </div>
 
                     <button type="submit"
-                        class="btn-bounce"
-                        style="margin-top: 6px; padding: 12px; background: #841818; color: #ffffff; font-weight: 800; font-size: 15px; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
+                        class="btn-bounce font-display"
+                        style="font-family: var(--font-display); margin-top: 6px; padding: 12px; background: #841818; color: #ffffff; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
                         Se connecter
                     </button>
                 </form>

@@ -61,7 +61,7 @@
 ## P1 — Direction Artistique, Narration & Refonte des Écrans
 
 ### [P1-1] Intégrer les typographies officielles (Adobe Typekit)
-- [ ] **Remplacer les polices système par `hwt-artz` (titres) et `nunito` (corps)**
+- [x] **Remplacer les polices système par `hwt-artz` (titres) et `nunito` (corps)**
   - **Ressource à ajouter** dans `<head>` de [`resources/views/components/layouts/app.blade.php`](../../resources/views/components/layouts/app.blade.php) :
     ```html
     <link rel="stylesheet" href="https://use.typekit.net/msd2zjt.css">
@@ -75,7 +75,7 @@
     - Définir `font-display: swap` et des fallbacks propres en cas de coupure réseau.
 
 ### [P1-2] Refondre l'Inventaire en « Carte au Trésor Puzzle » RP
-- [ ] **Afficher les morceaux de carte comme un puzzle évolutif plutôt qu'une liste**
+- [x] **Afficher les morceaux de carte comme un puzzle évolutif plutôt qu'une liste**
   - **Constat actuel :** [`inventory.blade.php`](../../resources/views/livewire/game/inventory.blade.php) liste les fragments dans une simple `<ul>` avec le chiffre brut.
   - **Attendu :**
     - Remplacer la grille/liste par un plateau visuel RP (« Carnet / Carte de Gali ») assemblant les **morceaux de carte** (assets fournis) au bon emplacement exact, façon **puzzle qui se complète progressivement**.
@@ -84,7 +84,7 @@
     - **Climax (6/6) :** Mise en valeur du puzzle complet + **Code final à 4 chiffres** façon cadenas + **QR code de retrait du lot** déjà en place (bonus démo : générer le QR localement en JS/SVG si possible pour ne pas dépendre d'`api.qrserver.com` en cas de Wi-Fi capricieux).
 
 ### [P1-3] Raconter « l'histoire » (RP de Gali & Lampe Cœur) et « l'Histoire » (Patrimoine de Lens)
-- [ ] **Intégrer le lore de Gali et les explications patrimoniales sans alourdir l'interface**
+- [x] **Intégrer le lore de Gali et les explications patrimoniales sans alourdir l'interface**
   - **Architecture UX retenue (séparer marche guidée et lecture culturelle) :**
     1. **L'histoire (RP) dès l'Accueil & le Tutoriel ([`login-register.blade.php`](../../resources/views/livewire/auth/login-register.blade.php)) :**
        - Introduire **Gali**, la légende de la **« Lampe Cœur »** (la gaillette de charbon magique de son grand-père) et la découverte du premier morceau de papier jauni dans le grenier menant au 1er indice.
@@ -99,7 +99,7 @@
   - **À rédiger :** Les 6 courtes fiches *RP Gali* + *Histoire patrimoniale* (à stocker sur la table `steps`).
 
 ### [P1-4] Simplifier l'écran Scanner & conditionner la simulation via Debug
-- [ ] **Donner la priorité absolue à la caméra et déplacer l'input de simulation PC**
+- [x] **Donner la priorité absolue à la caméra et déplacer l'input de simulation PC**
   - **Constat actuel :** [`scanner.blade.php`](../../resources/views/livewire/game/scanner.blade.php) conserve d'anciennes bannières texte `$message`/`$error` redondantes avec la notif plein écran, ainsi que le bloc *"Simuler un scan"* affiché en permanence en bas.
   - **Attendu :**
     - **Vue caméra épurée :** Maximiser la zone vidéo `#qr-reader` avec le viseur néo-brutaliste au centre, le bouton retour flottant et un rappel minimaliste (1 ligne) de ce qui est attendu (*carte* ou *Maître du Jeu*).
@@ -108,7 +108,7 @@
     - **Bonus terrain :** Bouton discret torche/flash dans le viseur si l'appareil photo le supporte.
 
 ### [P1-5] Messages d'erreur pédagogiques, humoristiques et anti-spoil sur mauvais QR
-- [ ] **Adapter dynamiquement le message selon le type de mauvais QR scanné**
+- [x] **Adapter dynamiquement le message selon le type de mauvais QR scanné**
   - **Constat actuel :** [`Scanner.php`](../../app/Livewire/Game/Scanner.php#L122-L185) ne regarde pas à quelle étape appartient un mauvais code `MAP_LOC_Y` ou `MJ_STEP_Y`.
   - **Attendu :**
     1. **Mauvais `MAP_LOC_Y` en Phase A :** Identifier le lieu scanné sur la carte papier et répondre avec pédagogie **sans spoiler le bon lieu** (exemple exact attendu) :

@@ -99,17 +99,17 @@ class Scanner extends Component
         $upperCode = strtoupper($code);
         $expectedMapCode = strtoupper($currentStep->qr_map_code);
         $expectedMjCode = strtoupper($currentStep->qr_mj_code);
+        $resolved = Step::resolveFromQrCode($code);
 
         if ($user->phase === 'GUESSING_LOCATION') {
             $isMapMatch = ($upperCode === $expectedMapCode)
-                || ($upperCode === "MAP_LOC_{$currentStep->id}")
-                || ($upperCode === "MAP-STEP-{$currentStep->id}");
+                || ($resolved['type'] === 'map' && $resolved['step_number'] === $currentStep->id);
 
             if ($isMapMatch) {
                 $user->phase = 'WALKING_TO_TARGET';
                 $user->save();
 
-                $cleanStepName = preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $currentStep->name);
+                $cleanStepName = $currentStep->cleanName();
 
                 $this->message = "QR Map validé ! Direction la cible pour l'étape {$user->current_step} : {$currentStep->name}.";
                 $this->scanStatus = 'success';
@@ -121,15 +121,34 @@ class Scanner extends Component
                 return;
             }
 
-            if (preg_match('/^MAP[-_]/i', $upperCode)) {
-                $this->scanTitle = 'Mince ! Je ne crois pas que ça soit...';
-                $this->scanSubtitle = "Ce repère ne correspond pas à l'énigme de l'étape {$currentStep->id}. Observez bien l'indice de Gali avec la loupe et cherchez un autre symbole sur la carte !";
-            } elseif (preg_match('/^MJ[-_]/i', $upperCode)) {
-                $this->scanTitle = 'Pas si vite, explorateur !';
-                $this->scanSubtitle = "Vous devez d'abord localiser le lieu sur la carte avec la loupe avant de rencontrer le Maître du Jeu.";
+            $scannedStep = $resolved['step'];
+            $scannedNumber = $resolved['step_number'] ?? $scannedStep?->id;
+
+            if ($resolved['type'] === 'map') {
+                if ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
+                    $this->scanTitle = 'Déjà exploré !';
+                    $this->scanSubtitle = "Tu es déjà passé par {$scannedStep->cleanName()} ! Observe bien l'indice de l'étape {$currentStep->id} avec ta loupe pour trouver la suite.";
+                } elseif ($scannedStep && $scannedStep->id !== $currentStep->id) {
+                    $this->scanTitle = 'Mince ! Je ne crois pas que ça soit...';
+                    $this->scanSubtitle = $scannedStep->buildWrongMapFeedback($currentStep);
+                } else {
+                    $this->scanTitle = 'Mince ! Je ne crois pas que ça soit...';
+                    $this->scanSubtitle = "Ce repère ne correspond pas à l'énigme de l'étape {$currentStep->id}. Observez bien l'indice de Gali avec la loupe et cherchez un autre symbole sur la carte !";
+                }
+            } elseif ($resolved['type'] === 'mj') {
+                if ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
+                    $this->scanTitle = 'Pas si vite, explorateur !';
+                    $this->scanSubtitle = "Ce Maître du Jeu correspond à {$scannedStep->cleanName()}, que tu as déjà réussi ! Trouve d'abord la prochaine destination sur la carte papier avec la loupe.";
+                } elseif ($scannedNumber !== null && $scannedNumber > $currentStep->id) {
+                    $this->scanTitle = 'Holà, téléportation détectée !';
+                    $this->scanSubtitle = "Holà, téléportation détectée ! Ce Maître du Jeu ne peut pas encore être devant toi… Trouve d'abord la destination sur la carte papier avec la loupe !";
+                } else {
+                    $this->scanTitle = 'Pas si vite, explorateur !';
+                    $this->scanSubtitle = "Holà, téléportation détectée ! Ce Maître du Jeu ne peut pas encore être devant toi… Trouve d'abord la destination sur la carte papier avec la loupe !";
+                }
             } else {
                 $this->scanTitle = 'Mince ! Mauvais QR Code...';
-                $this->scanSubtitle = "Vous devez scanner le repère de la carte papier pour l'étape {$currentStep->id}.";
+                $this->scanSubtitle = "Ce QR code inconnu ne fait pas partie du carnet de Gali ! Scanne un repère imprimé sur la carte papier pour l'étape {$currentStep->id}.";
             }
 
             $this->error = "Code invalide pour l'étape actuelle. Vous devez scanner le QR code de la carte (MAP_LOC_{$currentStep->id}).";
@@ -140,8 +159,7 @@ class Scanner extends Component
 
         if ($user->phase === 'WALKING_TO_TARGET') {
             $isMjMatch = ($upperCode === $expectedMjCode)
-                || ($upperCode === "MJ_STEP_{$currentStep->id}")
-                || ($upperCode === "MJ-STEP-{$currentStep->id}");
+                || ($resolved['type'] === 'mj' && $resolved['step_number'] === $currentStep->id);
 
             if ($isMjMatch) {
                 Fragment::firstOrCreate([
@@ -171,15 +189,35 @@ class Scanner extends Component
                 return;
             }
 
-            if (preg_match('/^MJ[-_]/i', $upperCode)) {
-                $this->scanTitle = 'Mince ! Mauvais Maître du Jeu...';
-                $this->scanSubtitle = "Ce badge correspond à une autre étape. Cherchez le Maître du Jeu de l'étape {$currentStep->id} !";
-            } elseif (preg_match('/^MAP[-_]/i', $upperCode)) {
-                $this->scanTitle = 'Emplacement déjà validé !';
-                $this->scanSubtitle = "Vous avez déjà trouvé le lieu ! Vous devez maintenant accomplir l'épreuve du Maître du Jeu.";
+            $scannedStep = $resolved['step'];
+            $scannedNumber = $resolved['step_number'] ?? $scannedStep?->id;
+            $currentCleanName = $currentStep->cleanName();
+
+            if ($resolved['type'] === 'mj') {
+                if ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
+                    $this->scanTitle = 'Mince ! Mauvais Maître du Jeu...';
+                    $this->scanSubtitle = "Ce badge appartient à {$scannedStep->cleanName()}, une étape déjà validée ! Rejoins plutôt {$currentCleanName} pour rencontrer le bon animateur.";
+                } elseif ($scannedNumber !== null && $scannedNumber > $currentStep->id) {
+                    $this->scanTitle = 'Holà, téléportation détectée !';
+                    $this->scanSubtitle = "Ce badge appartient à une étape que tu n'as pas encore débloquée ! Rejoins d'abord {$currentCleanName} pour valider l'étape {$currentStep->id}.";
+                } else {
+                    $this->scanTitle = 'Mince ! Mauvais Maître du Jeu...';
+                    $this->scanSubtitle = "Ce badge ne correspond pas au Maître du Jeu de {$currentCleanName} ! Scanne le badge officiel sur place pour valider l'étape {$currentStep->id}.";
+                }
+            } elseif ($resolved['type'] === 'map') {
+                if ($scannedNumber === $currentStep->id) {
+                    $this->scanTitle = 'Emplacement déjà validé !';
+                    $this->scanSubtitle = "Tu as déjà localisé {$currentCleanName} sur la carte ! Rends-toi sur place et scanne le badge du Maître du Jeu.";
+                } elseif ($scannedStep && $scannedNumber !== null && $scannedNumber < $currentStep->id) {
+                    $this->scanTitle = 'Emplacement déjà validé !';
+                    $this->scanSubtitle = "Tu es déjà passé par {$scannedStep->cleanName()} ! Suis la boussole vers {$currentCleanName} pour scanner le Maître du Jeu sur place.";
+                } else {
+                    $this->scanTitle = 'Emplacement déjà validé !';
+                    $this->scanSubtitle = "L'emplacement actuel ({$currentCleanName}) est déjà validé, et ce repère appartient à une autre étape ! Scanne d'abord le Maître du Jeu sur place.";
+                }
             } else {
                 $this->scanTitle = 'Mince ! Mauvais QR Code...';
-                $this->scanSubtitle = "Vous devez scanner le badge du Maître du Jeu pour valider l'étape {$currentStep->id}.";
+                $this->scanSubtitle = "Ce QR code inconnu ne fait pas partie du carnet de Gali ! Rejoins {$currentCleanName} et scanne le badge officiel du Maître du Jeu.";
             }
 
             $this->error = "Code invalide pour l'étape actuelle. Vous devez scanner le QR code du Maître du Jeu (MJ_STEP_{$currentStep->id}).";

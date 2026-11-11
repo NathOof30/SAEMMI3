@@ -1,16 +1,16 @@
 <div
-    style="width: 100%; max-width: 480px; margin: 0 auto; padding: 4px 16px 0 16px; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; position: relative; height: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
+    style="width: 100%; max-width: 480px; margin: 0 auto; padding: 4px 16px 0 16px; box-sizing: border-box; font-family: var(--font-body); position: relative; height: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
     @if($isFinished)
         <div
             style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #1a1a1a; text-align: center; margin: auto;">
-            <h2 style="font-size: 24px; font-weight: 900; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
+            <h2 class="font-display" style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
             <p style="font-size: 15px; color: #374151; line-height: 1.5;">
                 Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour
                 découvrir le code secret final.
             </p>
             <button type="button" x-on:click="tab = 'inventory'" wire:click="$dispatch('set-tab', { tab: 'inventory' })"
-                class="btn-bounce"
-                style="margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 900; font-size: 16px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
+                class="btn-bounce font-display"
+                style="font-family: var(--font-display); margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 19px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
                 Voir mon code secret Asmodee
             </button>
         </div>
@@ -22,6 +22,11 @@
     @else
         <div x-data="{
                 debugModalOpen: false,
+                manualScanEnabled: false,
+                deckExpanded: false,
+                touchStartY: null,
+                touchStartScrollTop: 0,
+                touchStartedInScroll: false,
                 targetLat: {{ $step->lat }},
                 targetLng: {{ $step->lng }},
                 targetRadius: {{ (int) ($step->target_radius ?? 30) }},
@@ -375,6 +380,13 @@
                         this.$cleanup(() => this.cleanup());
                     }
 
+                    try {
+                        this.manualScanEnabled = localStorage.getItem('expedition_debug_manual_scan') === '1';
+                    } catch (e) {
+                        this.manualScanEnabled = Boolean(window.__expeditionManualScanEnabled);
+                    }
+                    window.__expeditionManualScanEnabled = this.manualScanEnabled;
+
                     const hasStoredPermission = window.__compass_permission_granted || (function() {
                         try {
                             return localStorage.getItem('compass_permission_granted') === '1';
@@ -496,6 +508,39 @@
                     }
                     this.recalculate(false);
                 },
+                toggleManualScan() {
+                    try {
+                        localStorage.setItem('expedition_debug_manual_scan', this.manualScanEnabled ? '1' : '0');
+                    } catch (e) {}
+                    window.__expeditionManualScanEnabled = this.manualScanEnabled;
+                    window.dispatchEvent(new CustomEvent('debug-manual-scan-toggled', {
+                        detail: { enabled: this.manualScanEnabled }
+                    }));
+                },
+                toggleDeck() {
+                    this.deckExpanded = !this.deckExpanded;
+                },
+                onDeckTouchStart(event) {
+                    if (!event.touches || !event.touches.length) return;
+                    this.touchStartY = event.touches[0].clientY;
+                    const scrollEl = document.getElementById('phase-b-story-scroll');
+                    this.touchStartedInScroll = !!(scrollEl && event.target && scrollEl.contains(event.target));
+                    this.touchStartScrollTop = scrollEl ? scrollEl.scrollTop : 0;
+                },
+                onDeckTouchEnd(event) {
+                    if (this.touchStartY === null || !event.changedTouches || !event.changedTouches.length) return;
+                    const endY = event.changedTouches[0].clientY;
+                    const deltaY = endY - this.touchStartY;
+                    this.touchStartY = null;
+                    if (!this.deckExpanded && deltaY < -35) {
+                        this.deckExpanded = true;
+                    } else if (this.deckExpanded && deltaY > 35) {
+                        if (!this.touchStartedInScroll || this.touchStartScrollTop <= 2) {
+                            this.deckExpanded = false;
+                        }
+                    }
+                    this.touchStartedInScroll = false;
+                },
                 cleanup() {
                     if (this.gpsTimeoutId) {
                         clearTimeout(this.gpsTimeoutId);
@@ -529,10 +574,19 @@
                 style="position: fixed; inset: 20px; max-width: 420px; max-height: 80vh; margin: auto; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 18px; z-index: 100; overflow-y: auto;">
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px;">
-                    <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #841818;">Console Technique &amp; Debug
+                    <h4 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 18px; font-weight: 700; color: #841818;">Console Technique &amp; Debug
                         GPS</h4>
                     <button type="button" x-on:click="debugModalOpen = false"
-                        style="background: none; border: none; font-size: 18px; font-weight: 900; cursor: pointer; color: #1A1A1A;">✕</button>
+                        style="background: none; border: none; font-size: 18px; font-weight: 700; cursor: pointer; color: #1A1A1A;">✕</button>
+                </div>
+
+                <div style="margin-bottom: 12px; background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 10px; padding: 10px 12px;">
+                    <label for="debug-manual-scan-toggle"
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: #1A1A1A; margin: 0;">
+                        <input type="checkbox" id="debug-manual-scan-toggle" x-model="manualScanEnabled" x-on:change="toggleManualScan()"
+                            style="width: 18px; height: 18px; accent-color: #841818; cursor: pointer; flex-shrink: 0;">
+                        <span>Activer la simulation de scan (PC)</span>
+                    </label>
                 </div>
 
                 <div style="font-size: 12px; color: #4B5563;">
@@ -650,9 +704,9 @@
                         <g :transform="'rotate(' + mysteryAngle + ' 100 100)'">
                             <g class="idle-sway">
                                 <text id="phase-a-question-mark" x="100" y="122" text-anchor="middle" font-size="70"
-                                    font-weight="900" fill="#F4B316" stroke="#1A1A1A" stroke-width="4" stroke-linejoin="round"
+                                    font-weight="700" fill="#F4B316" stroke="#1A1A1A" stroke-width="4" stroke-linejoin="round"
                                     paint-order="stroke fill"
-                                    style="font-family: 'Arial Black', Impact, system-ui, sans-serif;">?</text>
+                                    style="font-family: var(--font-display);">?</text>
                             </g>
                         </g>
                     </svg>
@@ -673,7 +727,7 @@
                     <!-- Carte principale au premier plan (descend au-delà du bas) -->
                     <div
                         style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 20px 20px 36px 20px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
-                        <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 10px 0; color: #1A1A1A;">
+                        <h3 class="font-display" style="font-family: var(--font-display); font-size: 23px; font-weight: 700; margin: 0 0 10px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
                             Destination : <span style="color: #F4B316;">Mystère (Étape {{ $step->id }}/6)</span>
                         </h3>
 
@@ -692,8 +746,8 @@
 
                         <!-- Gros bouton d'action Scanner en bas de carte -->
                         <button type="button" id="phase-a-scanner-btn" x-on:click="tab = 'scanner'"
-                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce"
-                            style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 20px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
+                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 22px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
                             Scanner la carte
                         </button>
                     </div>
@@ -746,8 +800,11 @@
                     </svg>
                 </div>
 
-                <!-- Deck de Cartes en éventail (-5deg / +5deg) façon jeu Asmodee -->
-                <div style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
+                <!-- Deck de Cartes en éventail (-5deg / +5deg) compact par défaut, extensible vers le haut par tap ou swipe -->
+                <div id="phase-b-deck-wrapper"
+                    x-on:touchstart.passive="onDeckTouchStart($event)"
+                    x-on:touchend="onDeckTouchEnd($event)"
+                    style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
@@ -758,14 +815,24 @@
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2; box-shadow: 0 4px 0 #1A1A1A;">
                     </div>
 
-                    <!-- Carte principale au premier plan (descend au-delà du bas) -->
-                    <div
-                        style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 18px 18px 34px 18px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
-                        <h3 style="font-size: 20px; font-weight: 900; margin: 0 0 8px 0; color: #1A1A1A;">
-                            Destination : <span style="color: #F4B316;">{{ preg_replace('/^[EÉeé]tape\s*\d+\s*:\s*/iu', '', $step->name) }}</span>
+                    <!-- Carte principale au premier plan (compacte pour la marche) -->
+                    <div id="phase-b-card"
+                        style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 10px 18px 28px 18px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
+                        <!-- Poignée de tirage & bouton tap pour étendre -->
+                        <button type="button" id="phase-b-deck-toggle-btn" x-on:click="toggleDeck()"
+                            :aria-expanded="deckExpanded ? 'true' : 'false'"
+                            style="width: 100%; background: transparent; border: none; padding: 2px 0 8px 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <span style="display: block; width: 42px; height: 4px; border-radius: 9999px; background: #D1D5DB;"></span>
+                            <span style="font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; letter-spacing: 0.04em;">
+                                Carnet de Gali &amp; Histoire du lieu ↑
+                            </span>
+                        </button>
+
+                        <h3 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
+                            Destination : <span style="color: #F4B316;">{{ $step->cleanName() }}</span>
                         </h3>
 
-                        <p style="font-size: 13px; color: #4B5563; line-height: 1.4; margin: 0 0 12px 0;">
+                        <p style="font-size: 13px; color: #4B5563; line-height: 1.35; margin: 0 0 10px 0;">
                             Suivez la boussole, observez autour de vous et trouvez le spot
                         </p>
 
@@ -785,14 +852,14 @@
                                         Vous êtes arrivé mais le point GPS n'est pas précis ?
                                     </p>
                                     <button type="button" x-on:click="gpsHelpOpen = false" aria-label="Fermer l'aide GPS"
-                                        style="background: none; border: none; font-size: 16px; font-weight: 900; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1;">
+                                        style="background: none; border: none; font-size: 16px; font-weight: 700; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1;">
                                         ✕
                                     </button>
                                 </div>
                                 <button type="button" id="hub-gps-fallback-scanner-btn"
                                     x-on:click="gpsHelpOpen = false; tab = 'scanner'"
-                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce"
-                                    style="width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 14px; font-weight: 900; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase;">
+                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 16px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
                                     Ouvrir le scanner
                                 </button>
                             </div>
@@ -800,9 +867,9 @@
                             <!-- Si distance > targetRadius (ou GPS en attente) : affiche la distance réelle ou 'Signal GPS...' + bouton ? contextuel -->
                             <div x-show="!isWithinTarget()" style="width: 100%;">
                                 <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-                                    <div id="hub-distance-metric-btn"
-                                        style="flex: 1; min-width: 0; box-sizing: border-box; padding: 14px 12px; background: #841818; color: #FFFFFF; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center;"
-                                        :style="{ fontSize: distanceMeters !== null ? '26px' : '19px' }">
+                                    <div id="hub-distance-metric-btn" class="font-display"
+                                        style="font-family: var(--font-display); flex: 1; min-width: 0; box-sizing: border-box; padding: 12px 12px; background: #841818; color: #FFFFFF; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center;"
+                                        :style="{ fontSize: distanceMeters !== null ? '28px' : '22px' }">
                                         <span id="metric-distance-text"
                                             x-text="distanceMeters !== null ? distanceMeters + ' m' : (gpsStatus === 'denied' ? 'GPS refusé' : (gpsStatus === 'unavailable' || gpsStatus === 'unsupported' ? 'GPS indisponible' : 'Signal GPS...'))">Signal GPS...</span>
                                     </div>
@@ -813,8 +880,8 @@
                                             x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
                                             title="Vous êtes arrivé mais le point GPS n'est pas précis ?"
                                             aria-label="Vous êtes arrivé mais le point GPS n'est pas précis ? Ouvrir le scanner"
-                                            class="btn-bounce"
-                                            style="width: 54px; height: 100%; box-sizing: border-box; background: #FEF3C7; color: #841818; font-size: 24px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            class="btn-bounce font-display"
+                                            style="font-family: var(--font-display); width: 54px; height: 100%; box-sizing: border-box; background: #FEF3C7; color: #841818; font-size: 26px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                                             ?
                                         </button>
                                     </div>
@@ -832,11 +899,75 @@
                             <!-- Si distance <= targetRadius : se transforme en bouton interactif 'Scanner le spot' (fond or) -->
                             <button type="button" x-show="isWithinTarget()" x-cloak
                                 id="hub-scanner-action-btn" x-on:click="tab = 'scanner'"
-                                wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce"
-                                style="width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 22px; font-weight: 900; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                                wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                                style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 24px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Scanner le spot
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Voile et Tiroir animé vers le haut : Le mot de Gali + L'Histoire patrimoniale du lieu -->
+                <div id="phase-b-drawer-backdrop"
+                    x-on:click="deckExpanded = false"
+                    aria-hidden="true"
+                    style="position: absolute; inset: 0; z-index: 23; background: rgba(250, 248, 245, 0.88); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: opacity 0.25s ease;"
+                    :style="{ opacity: deckExpanded ? 1 : 0, pointerEvents: deckExpanded ? 'auto' : 'none' }">
+                </div>
+
+                <div id="phase-b-story-drawer"
+                    x-on:touchstart.passive="onDeckTouchStart($event)"
+                    x-on:touchend="onDeckTouchEnd($event)"
+                    :aria-hidden="deckExpanded ? 'false' : 'true'"
+                    style="position: absolute; top: 32px; left: 4px; right: 4px; bottom: 0; z-index: 24; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 28px rgba(0,0,0,0.18); padding: 10px 18px 16px 18px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;"
+                    :style="{ transform: deckExpanded ? 'translateY(0)' : 'translateY(105%)', opacity: deckExpanded ? 1 : 0, pointerEvents: deckExpanded ? 'auto' : 'none' }">
+                    <div style="flex-shrink: 0;">
+                        <button type="button" id="phase-b-deck-collapse-btn" x-on:click="deckExpanded = false"
+                            style="width: 100%; background: transparent; border: none; padding: 2px 0 8px 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <span style="display: block; width: 42px; height: 4px; border-radius: 9999px; background: #D1D5DB;"></span>
+                            <span style="font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; letter-spacing: 0.04em;">
+                                Replier vers la boussole ↓
+                            </span>
+                        </button>
+
+                        <h3 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
+                            Destination : <span style="color: #F4B316;">{{ $step->cleanName() }}</span>
+                        </h3>
+                    </div>
+
+                    <div id="phase-b-story-scroll"
+                        style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; margin: 4px 0 12px 0; padding: 2px 6px 6px 2px;">
+                        <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
+                                Le mot de Gali
+                            </h4>
+                            <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.45;">
+                                {{ $step->story_rp }}
+                            </p>
+                        </div>
+
+                        <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #1A1A1A; letter-spacing: 0.02em;">
+                                L'Histoire du lieu
+                            </h4>
+                            <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.45;">
+                                {{ $step->heritage_info }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="flex-shrink: 0;">
+                        <button type="button" x-show="isWithinTarget()" x-cloak
+                            x-on:click="deckExpanded = false; tab = 'scanner'"
+                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-size: 20px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
+                            Scanner le spot
+                        </button>
+                        <button type="button" x-show="!isWithinTarget()"
+                            x-on:click="deckExpanded = false" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 16px; background: #841818; color: #FFFFFF; font-size: 18px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; letter-spacing: 0.03em;">
+                            Retour à la boussole ↓
+                        </button>
                     </div>
                 </div>
             @endif
