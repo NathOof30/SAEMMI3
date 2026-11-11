@@ -73,7 +73,7 @@
         <div
             style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: 20px 18px; text-align: center;">
             <div
-                style="display: inline-block; background: #fef3c7; border: 2.5px solid #1a1a1a; border-radius: 9999px; padding: 5px 14px; font-size: 12px; font-weight: 800; color: #841818; margin-bottom: 10px; text-transform: uppercase;">
+                style="display: inline-block; background: #fef3c7; border: 2px solid #1a1a1a; border-radius: 9999px; padding: 5px 14px; font-size: 12px; font-weight: 800; color: #841818; margin-bottom: 10px; text-transform: uppercase;">
                 Triomphe de l'Expédition
             </div>
 
@@ -90,7 +90,7 @@
 
             <!-- Plateau Puzzle 6/6 complété (cliquable pour relire chaque souvenir) -->
             <div id="gali-treasure-map-puzzle"
-                style="background: #F4EBD9; border: 3px solid #1A1A1A; border-radius: 16px; padding: 12px; margin-bottom: 18px; box-shadow: 0 4px 0 #1A1A1A; text-align: left;">
+                style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 16px; padding: 12px; margin-bottom: 18px; text-align: left;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; flex-wrap: wrap;">
                     <span class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818;">
                         Carte au Trésor de Gali (6/6)
@@ -100,7 +100,7 @@
                     </span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; background: #E7DEC8; border: 2px dashed #B45309; border-radius: 12px; padding: 6px;">
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; background: #E7DEC8; border: 1.5px dashed rgba(180, 83, 9, 0.55); border-radius: 12px; padding: 6px;">
                     @for($i = 1; $i <= 6; $i++)
                         @php
                             $unlocked = $fragments->firstWhere('step_id', $i);
@@ -113,8 +113,7 @@
                         <button type="button"
                             id="puzzle-piece-{{ $i }}"
                             x-on:click="openMemory({{ $i }})"
-                            class="btn-bounce"
-                            style="position: relative; background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 10px; padding: 6px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 90px; box-shadow: 0 2px 0 #1A1A1A;">
+                            style="position: relative; background: #FFFBEB; border: 1.5px solid #B45309; border-radius: 10px; padding: 6px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 90px;">
                             {{-- PLACEHOLDER PUZZLE PIECE {{ $i }} : déposez votre asset dans public/images/puzzle/piece-{{ $i }}.png (ou .svg) pour remplacer ce SVG --}}
                             @if($assetSvg || $assetPng)
                                 <img src="/images/puzzle/piece-{{ $i }}.{{ $assetSvg ? 'svg' : 'png' }}"
@@ -166,13 +165,13 @@
 
             <!-- Cadenas du Code Secret Final -->
             <div
-                style="background: #fffbeb; border: 3px solid #1a1a1a; border-radius: 16px; padding: 16px; margin-bottom: 18px; box-shadow: 0 4px 0 #1a1a1a;">
+                style="background: #fffbeb; border: 2px solid #1a1a1a; border-radius: 16px; padding: 16px; margin-bottom: 18px;">
                 <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #92400e; text-transform: uppercase;">
                     Code Cadenas Coffre
                 </p>
                 <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 8px;" aria-hidden="true">
                     @foreach(str_split($finalCode) as $digit)
-                        <span class="font-display" style="font-family: var(--font-display); display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 48px; background: #FFFFFF; border: 3px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; font-size: 30px; font-weight: 700; color: #841818;">
+                        <span class="font-display" style="font-family: var(--font-display); display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 48px; background: #FFFFFF; border: 1.5px solid #1A1A1A; border-radius: 10px; font-size: 30px; font-weight: 700; color: #841818;">
                             {{ $digit }}
                         </span>
                     @endforeach
@@ -188,7 +187,7 @@
 
             <!-- QR Code Retrait Lot (généré localement en SVG hors-ligne + repli API) -->
             <div
-                style="background: #fdfaf2; border: 3px solid #1a1a1a; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px; box-shadow: 0 4px 0 #1a1a1a;">
+                style="background: #fdfaf2; border: 2px solid #1a1a1a; border-radius: 16px; padding: 18px 16px; margin-bottom: 18px;">
                 <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 19px; font-weight: 700; color: #841818;">
                     QR Code Retrait du Lot Dobble
                 </h4>
@@ -204,8 +203,9 @@
                 @endphp
 
                 <div id="reward-qr-payload" data-qr-payload="{{ $qrPayload }}"
-                    style="display: inline-block; background: #ffffff; padding: 12px; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 3px 0 #1a1a1a; margin-bottom: 12px;">
+                    style="display: inline-block; background: #ffffff; padding: 12px; border: 1.5px solid #1a1a1a; border-radius: 12px; margin-bottom: 12px;">
                     <div id="local-reward-qr-svg" x-show="localQrSvg" x-html="localQrSvg"
+                        class="alpine-flex"
                         style="display: flex; align-items: center; justify-content: center;"></div>
                     <img x-show="!localQrSvg" src="{{ $qrUrl }}" alt="QR Code Retrait Lot" width="180" height="180"
                         style="display: block; max-width: 100%; height: auto;">
@@ -218,12 +218,12 @@
                 <div style="margin-top: 6px;">
                     @if($rewardPicked)
                         <div
-                            style="background: #dcfce7; border: 2px solid #16a34a; border-radius: 10px; padding: 10px; color: #166534; font-weight: 800; font-size: 13px;">
+                            style="background: #dcfce7; border: 1.5px solid #16a34a; border-radius: 10px; padding: 10px; color: #166534; font-weight: 800; font-size: 13px;">
                             Statut : Lot déjà remis — Merci d'avoir joué !
                         </div>
                     @else
                         <div
-                            style="background: #fef3c7; border: 2px solid #d97706; border-radius: 10px; padding: 10px; color: #92400e; font-weight: 800; font-size: 13px;">
+                            style="background: #fef3c7; border: 1.5px solid #d97706; border-radius: 10px; padding: 10px; color: #92400e; font-weight: 800; font-size: 13px;">
                             Statut : Lot en attente de retrait
                         </div>
                     @endif
@@ -232,14 +232,14 @@
 
             <!-- Récapitulatif cliquable des Fiches Souvenirs -->
             <div
-                style="text-align: left; background: #f9fafb; border: 2.5px solid #1a1a1a; border-radius: 14px; padding: 14px;">
+                style="text-align: left; background: #f9fafb; border: 2px solid #1a1a1a; border-radius: 14px; padding: 14px;">
                 <h3 class="font-display" style="font-family: var(--font-display); margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #1a1a1a;">
                     Fragments et indices récoltés (6/6) :
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
                     @foreach($fragments as $fragment)
                         <button type="button" x-on:click="openMemory({{ $fragment->step->id }})"
-                            style="width: 100%; text-align: left; background: #FFFFFF; border: 2px solid #1A1A1A; border-radius: 10px; padding: 8px 10px; font-size: 12px; color: #374151; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 2px 0 #1A1A1A;">
+                            style="width: 100%; text-align: left; background: #FFFFFF; border: 1.5px solid rgba(26, 26, 26, 0.45); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: #374151; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                             <span>
                                 Étape {{ $fragment->step->id }} : {{ $fragment->step->cleanName() }} — Fragment :
                                 <strong>{{ $fragment->step->code_part }}</strong>
@@ -269,14 +269,14 @@
 
             @if($fragments->isEmpty())
                 <div
-                    style="background: #fdfaf2; border: 2.5px dashed #d97706; border-radius: 12px; padding: 12px 14px; text-align: center; color: #78350f; font-size: 13px; line-height: 1.45; margin-bottom: 14px;">
+                    style="background: #fdfaf2; border: 2px dashed #d97706; border-radius: 12px; padding: 12px 14px; text-align: center; color: #78350f; font-size: 13px; line-height: 1.45; margin-bottom: 14px;">
                     <p style="margin: 0;">Aucun fragment débloqué pour le moment. Résolvez la première énigme de Gali avec la loupe et trouvez le Maître du Jeu !</p>
                 </div>
             @endif
 
             <!-- Plateau Visuel RP : Puzzle 6 morceaux de la Carte au Trésor -->
             <div id="gali-treasure-map-puzzle"
-                style="background: #F4EBD9; border: 3px solid #1A1A1A; border-radius: 16px; padding: 12px; box-shadow: 0 4px 0 #1A1A1A;">
+                style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 16px; padding: 12px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; flex-wrap: wrap;">
                     <span class="font-display" style="font-family: var(--font-display); font-size: 17px; font-weight: 700; color: #1A1A1A;">
                         Carte au Trésor Puzzle
@@ -286,7 +286,7 @@
                     </span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; background: #E7DEC8; border: 2px dashed #B45309; border-radius: 12px; padding: 8px;">
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; background: #E7DEC8; border: 1.5px dashed rgba(180, 83, 9, 0.55); border-radius: 12px; padding: 8px;">
                     @for($i = 1; $i <= 6; $i++)
                         @php
                             $unlocked = $fragments->firstWhere('step_id', $i);
@@ -301,9 +301,8 @@
                             <button type="button"
                                 id="puzzle-piece-{{ $i }}"
                                 x-on:click="openMemory({{ $i }})"
-                                class="btn-bounce"
                                 title="Ouvrir la fiche souvenir : {{ $unlocked->step->cleanName() }}"
-                                style="position: relative; background: #FFFBEB; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 6px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 98px; box-shadow: 0 3px 0 #1A1A1A;">
+                                style="position: relative; background: #FFFBEB; border: 1.5px solid #B45309; border-radius: 12px; padding: 6px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 98px;">
                                 {{-- PLACEHOLDER PUZZLE PIECE {{ $i }} : déposez votre asset dans public/images/puzzle/piece-{{ $i }}.png (ou .svg) pour remplacer ce SVG --}}
                                 @if($assetSvg || $assetPng)
                                     <img src="/images/puzzle/piece-{{ $i }}.{{ $assetSvg ? 'svg' : 'png' }}"
@@ -355,7 +354,7 @@
                             </button>
                         @else
                             <div id="puzzle-piece-{{ $i }}"
-                                style="background: #EFEAE0; border: 2px dashed #9CA3AF; border-radius: 12px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 98px; opacity: 0.9;">
+                                style="background: #EFEAE0; border: 1.5px dashed #9CA3AF; border-radius: 12px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 98px; opacity: 0.9;">
                                 {{-- PLACEHOLDER VERROUILLE {{ $i }} --}}
                                 <svg viewBox="0 0 88 64" width="72" height="50" aria-hidden="true" style="display: block;">
                                     <path d="{{ $piecePath }}" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round" />
@@ -376,6 +375,8 @@
     @if($fragments->isNotEmpty())
         <div id="inventory-memory-modal" x-show="selectedMemory !== null" x-cloak
             x-on:click.self="closeMemory()"
+            role="dialog" aria-modal="true"
+            class="alpine-flex"
             style="position: fixed; inset: 0; z-index: 9990; background: rgba(17, 24, 39, 0.78); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 18px; box-sizing: border-box;">
             <div style="width: 100%; max-width: 390px; max-height: 85vh; overflow-y: auto; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 22px; box-shadow: 0 8px 0 #1A1A1A; padding: 20px 18px; box-sizing: border-box;">
                 @foreach($fragments as $fragment)
@@ -384,19 +385,13 @@
                     @endphp
                     @if($stepModel)
                         <div x-show="selectedMemory === {{ $stepModel->id }}" x-cloak>
-                            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 12px;">
-                                <div>
-                                    <span style="display: inline-block; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; padding: 2px 10px; font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; margin-bottom: 4px;">
-                                        Carnet de Gali — Étape {{ $stepModel->id }}/6
-                                    </span>
-                                    <h3 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 24px; font-weight: 700; color: #1A1A1A; line-height: 1.1;">
-                                        {{ $stepModel->cleanName() }}
-                                    </h3>
-                                </div>
-                                <button type="button" id="close-memory-modal-btn" x-on:click="closeMemory()" aria-label="Fermer la fiche souvenir"
-                                    style="background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 10px; width: 34px; height: 34px; font-size: 16px; font-weight: 800; cursor: pointer; flex-shrink: 0;">
-                                    ✕
-                                </button>
+                            <div style="border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 12px;">
+                                <span style="display: inline-block; background: #FEF3C7; border: 1.5px solid #1A1A1A; border-radius: 9999px; padding: 2px 10px; font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; margin-bottom: 4px;">
+                                    Carnet de Gali — Étape {{ $stepModel->id }}/6
+                                </span>
+                                <h3 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 24px; font-weight: 700; color: #1A1A1A; line-height: 1.1;">
+                                    {{ $stepModel->cleanName() }}
+                                </h3>
                             </div>
 
                             <div style="background: #841818; color: #FFFFFF; border: 2px solid #1A1A1A; border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px;">
@@ -404,7 +399,7 @@
                                 <strong style="color: #F4B316;">{{ $stepModel->code_part }}</strong>
                             </div>
 
-                            <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; margin-bottom: 10px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; margin-bottom: 12px;">
                                 <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #841818;">
                                     Le mot de Gali
                                 </h4>
@@ -413,7 +408,7 @@
                                 </p>
                             </div>
 
-                            <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; margin-bottom: 14px; box-shadow: 0 3px 0 #1A1A1A;">
+                            <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; margin-bottom: 14px;">
                                 <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #1A1A1A;">
                                     L'Histoire du lieu
                                 </h4>
@@ -422,7 +417,7 @@
                                 </p>
                             </div>
 
-                            <button type="button" x-on:click="closeMemory()" class="btn-bounce font-display"
+                            <button type="button" id="close-memory-modal-btn" x-on:click="closeMemory()" class="btn-bounce font-display"
                                 style="font-family: var(--font-display); width: 100%; padding: 10px 14px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 12px; box-shadow: 0 3px 0 #1A1A1A; font-size: 17px; font-weight: 700; cursor: pointer;">
                                 Fermer la fiche
                             </button>

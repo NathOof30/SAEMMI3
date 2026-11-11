@@ -652,13 +652,14 @@
             <div id="hub-help-modal" x-show="helpModalOpen" x-cloak
                 x-on:click.self="helpModalOpen = false"
                 role="dialog" aria-modal="true" aria-labelledby="hub-help-modal-title"
+                class="alpine-flex"
                 style="position: fixed; inset: 0; z-index: 120; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-                <div style="width: 100%; max-width: 420px; max-height: 86dvh; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 22px; box-shadow: 0 8px 0 #1A1A1A; padding: 16px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
+                <div style="width: 100%; max-width: 420px; max-height: 86dvh; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 22px; box-shadow: 0 8px 0 #1A1A1A; padding: 18px 16px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 12px; flex-shrink: 0;">
                         <h3 id="hub-help-modal-title" class="font-display"
                             style="font-family: var(--font-display); margin: 0; font-size: 21px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
                             <span x-show="helpView === 'guide'">Aide de l'Expédition</span>
-                            <span x-show="helpView === 'tutorial'" x-cloak>Tutoriel en 3 étapes</span>
+                            <span x-show="helpView === 'tutorial'" x-cloak>Tutoriel en 4 étapes</span>
                         </h3>
                         <button type="button" id="hub-help-close-btn" x-on:click="helpModalOpen = false" aria-label="Fermer l'aide"
                             style="background: #F3F4F6; border: 2px solid #1A1A1A; border-radius: 8px; width: 30px; height: 30px; font-size: 15px; font-weight: 800; cursor: pointer; color: #1A1A1A; display: inline-flex; align-items: center; justify-content: center;">
@@ -666,9 +667,9 @@
                         </button>
                     </div>
 
-                    <!-- Vue 1 : Guide complet, boussole et dépannage -->
-                    <div x-show="helpView === 'guide'" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; padding-right: 2px;">
-                        <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                    <!-- Vue 1 : Guide complet, boussole et dépannage (Niveau 2 : contour seul, espacement aéré) -->
+                    <div id="hub-help-guide-scroll" x-show="helpView === 'guide'" class="alpine-flex" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding: 6px 4px 10px 2px;">
+                        <div style="flex-shrink: 0; background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 13px 14px;">
                             <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #841818;">
                                 Rôles de l'équipe (Enfant &amp; Parent)
                             </h4>
@@ -680,7 +681,7 @@
                             </p>
                         </div>
 
-                        <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                        <div style="flex-shrink: 0; background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 13px 14px;">
                             <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #1A1A1A;">
                                 Lire et calibrer la boussole
                             </h4>
@@ -698,7 +699,7 @@
                             </div>
                         </div>
 
-                        <div style="background: #F9FAFB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                        <div style="flex-shrink: 0; background: #F9FAFB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 13px 14px;">
                             <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #1A1A1A;">
                                 Dépannage rapide
                             </h4>
@@ -714,10 +715,10 @@
                         </div>
                     </div>
 
-                    <div x-show="helpView === 'guide'" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                    <div x-show="helpView === 'guide'" class="alpine-flex" style="flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 2px solid #E5E7EB;">
                         <button type="button" id="hub-replay-tuto-btn" x-on:click="openHelpModal('tutorial')" class="btn-bounce font-display"
                             style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 17px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 12px; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer;">
-                            Relancer le tutoriel (3 slides)
+                            Relancer le tutoriel (4 étapes)
                         </button>
                         <button type="button" id="hub-help-open-scanner-btn"
                             x-on:click="helpModalOpen = false; tab = 'scanner'"
@@ -728,52 +729,18 @@
                         </button>
                     </div>
 
-                    <!-- Vue 2 : Relecture interactive des 3 slides du tutoriel sans se déconnecter -->
-                    <div x-show="helpView === 'tutorial'" x-cloak style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
-                        <div style="background: #FDF8EC; border: 2.5px solid #1A1A1A; border-radius: 16px; padding: 18px 14px; text-align: center; box-shadow: 0 4px 0 #1A1A1A;">
-                            <div x-show="helpTutorialSlide === 0">
-                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
-                                    Étape 1 sur 3
-                                </span>
-                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
-                                    L'Explorateur
-                                </h4>
-                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
-                                    L'enfant résout les énigmes de Gali sur la carte papier physique avec sa loupe.
-                                </p>
-                            </div>
-
-                            <div x-show="helpTutorialSlide === 1">
-                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
-                                    Étape 2 sur 3
-                                </span>
-                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
-                                    Le Maître du Jeu
-                                </h4>
-                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
-                                    Le parent s'oriente en ville grâce à la boussole (pointe JAUNE OR) et valide les étapes.
-                                </p>
-                            </div>
-
-                            <div x-show="helpTutorialSlide === 2">
-                                <span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; border: 2px solid #1A1A1A; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #841818; text-transform: uppercase; margin-bottom: 8px;">
-                                    Étape 3 sur 3
-                                </span>
-                                <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #841818;">
-                                    Le Trésor
-                                </h4>
-                                <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.45;">
-                                    Trouvez les 6 fragments pour réunir le code du coffre et remporter le jeu Dobble exclusif !
-                                </p>
-                            </div>
+                    <!-- Vue 2 : Relecture interactive des 4 slides du tutoriel partagé sans se déconnecter -->
+                    <div x-show="helpView === 'tutorial'" x-cloak class="alpine-flex" style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+                        <div style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #FDF8EC; border: 2px solid #1A1A1A; border-radius: 16px; padding: 16px 14px; text-align: center;">
+                            <x-tutorial-slides slide-var="helpTutorialSlide" :anti-spoil="true" />
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;">
+                        <div style="flex-shrink: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;">
                             <div style="display: flex; justify-content: flex-start;">
                                 <button type="button" id="hub-tuto-prev-btn" x-on:click="if (helpTutorialSlide > 0) helpTutorialSlide--"
                                     :disabled="helpTutorialSlide === 0" class="btn-bounce"
-                                    style="width: 40px; height: 40px; border-radius: 10px; border: 2.5px solid #1A1A1A; background: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer;"
-                                    :style="{ opacity: helpTutorialSlide === 0 ? 0.3 : 1 }">
+                                    style="width: 40px; height: 40px; border-radius: 10px; border: 2.5px solid #1A1A1A; background: #FFFFFF; font-weight: 700; font-size: 16px; display: inline-flex; align-items: center; justify-content: center;"
+                                    :style="{ opacity: helpTutorialSlide === 0 ? 0.3 : 1, cursor: helpTutorialSlide === 0 ? 'not-allowed' : 'pointer', boxShadow: helpTutorialSlide === 0 ? 'none' : '0 2px 0 #1A1A1A' }">
                                     ←
                                 </button>
                             </div>
@@ -787,14 +754,17 @@
                                 <button type="button" x-on:click="helpTutorialSlide = 2" aria-label="Slide 3"
                                     style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
                                     :style="{ background: helpTutorialSlide === 2 ? '#F4B316' : '#E5E7EB' }"></button>
+                                <button type="button" x-on:click="helpTutorialSlide = 3" aria-label="Slide 4"
+                                    style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1A1A1A; padding: 0; cursor: pointer;"
+                                    :style="{ background: helpTutorialSlide === 3 ? '#F4B316' : '#E5E7EB' }"></button>
                             </div>
                             <div style="display: flex; justify-content: flex-end;">
-                                <button type="button" id="hub-tuto-next-btn" x-show="helpTutorialSlide < 2" x-on:click="helpTutorialSlide++"
+                                <button type="button" id="hub-tuto-next-btn" x-show="helpTutorialSlide < 3" x-on:click="helpTutorialSlide++"
                                     class="btn-bounce font-display"
                                     style="font-family: var(--font-display); padding: 7px 14px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
                                     Suivant →
                                 </button>
-                                <button type="button" id="hub-tuto-done-btn" x-show="helpTutorialSlide === 2" x-cloak x-on:click="helpModalOpen = false"
+                                <button type="button" id="hub-tuto-done-btn" x-show="helpTutorialSlide === 3" x-cloak x-on:click="helpModalOpen = false"
                                     class="btn-bounce font-display"
                                     style="font-family: var(--font-display); padding: 7px 14px; background: #841818; color: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer;">
                                     Compris !
@@ -802,14 +772,10 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex-shrink: 0; text-align: center;">
                             <button type="button" id="hub-tuto-back-guide-btn" x-on:click="helpView = 'guide'"
                                 style="background: none; border: none; color: #6B7280; font-size: 12px; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0;">
                                 ← Retour à l'aide
-                            </button>
-                            <button type="button" x-on:click="helpModalOpen = false"
-                                style="background: none; border: none; color: #841818; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer; padding: 0;">
-                                Revenir au jeu
                             </button>
                         </div>
                     </div>
@@ -972,12 +938,12 @@
                 <div style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
-                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
+                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1;">
                     </div>
 
                     <!-- Carte arrière-plan Droite (+5 deg, décalée vers le bas de 14px) -->
                     <div
-                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2; box-shadow: 0 4px 0 #1A1A1A;">
+                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2;">
                     </div>
 
                     <!-- Carte principale au premier plan (descend au-delà du bas) -->
@@ -1063,12 +1029,12 @@
                     style="position: relative; flex-shrink: 0; width: calc(100% - 44px); max-width: 295px; margin: auto auto 0 auto; z-index: 10;">
                     <!-- Carte arrière-plan Gauche (-5 deg, décalée vers le bas de 14px) -->
                     <div
-                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1; box-shadow: 0 4px 0 #1A1A1A;">
+                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(-5deg); transform-origin: bottom center; z-index: 1;">
                     </div>
 
                     <!-- Carte arrière-plan Droite (+5 deg, décalée vers le bas de 14px) -->
                     <div
-                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2.5px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2; box-shadow: 0 4px 0 #1A1A1A;">
+                        style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2;">
                     </div>
 
                     <!-- Carte principale au premier plan (compacte pour la marche) -->
@@ -1197,8 +1163,8 @@
                     </div>
 
                     <div id="phase-b-story-scroll"
-                        style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; margin: 4px 0 12px 0; padding: 2px 6px 6px 2px;">
-                        <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                        style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; margin: 4px 0 12px 0; padding: 4px 4px 8px 0;">
+                        <div style="flex-shrink: 0; background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 14px; padding: 13px 14px;">
                             <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #841818; letter-spacing: 0.02em;">
                                 Le mot de Gali
                             </h4>
@@ -1207,7 +1173,7 @@
                             </p>
                         </div>
 
-                        <div style="background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 12px; box-shadow: 0 3px 0 #1A1A1A;">
+                        <div style="flex-shrink: 0; background: #F4EBD9; border: 2px solid #1A1A1A; border-radius: 14px; padding: 13px 14px;">
                             <h4 class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #1A1A1A; letter-spacing: 0.02em;">
                                 L'Histoire du lieu
                             </h4>

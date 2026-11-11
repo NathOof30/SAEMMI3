@@ -552,11 +552,11 @@
                 }
 
                 .scan-card-glow-success {
-                    box-shadow: 0 10px 0 #1A1A1A, 0 0 0 8px rgba(34, 197, 94, 0.35), 0 0 50px rgba(34, 197, 94, 0.6) !important;
+                    box-shadow: 0 0 38px rgba(34, 197, 94, 0.55) !important;
                 }
 
                 .scan-card-glow-error {
-                    box-shadow: 0 10px 0 #1A1A1A, 0 0 0 8px rgba(239, 68, 68, 0.35), 0 0 50px rgba(239, 68, 68, 0.6) !important;
+                    box-shadow: 0 0 38px rgba(239, 68, 68, 0.55) !important;
                 }
             </style>
 
@@ -566,7 +566,7 @@
                 <!-- Badge Icône Néobrutaliste avec Halo lumineux & Outline noir -->
                 @if($scanStatus === 'success')
                     <div
-                        style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #DCFCE7; border: 3.5px solid #1A1A1A; box-shadow: 0 4px 0 #1A1A1A, 0 0 25px rgba(34, 197, 94, 0.5); display: flex; align-items: center; justify-content: center;">
+                        style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #DCFCE7; border: 3px solid #1A1A1A; box-shadow: 0 0 20px rgba(34, 197, 94, 0.45); display: flex; align-items: center; justify-content: center;">
                         <svg viewBox="0 0 48 48" width="46" height="46" fill="none">
                             <path d="M10 25 L20 35 L38 13" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round"
                                 stroke-linejoin="round" />
@@ -576,7 +576,7 @@
                     </div>
                 @else
                     <div
-                        style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #FEE2E2; border: 3.5px solid #1A1A1A; box-shadow: 0 4px 0 #1A1A1A, 0 0 25px rgba(239, 68, 68, 0.5); display: flex; align-items: center; justify-content: center;">
+                        style="margin: 0 auto 18px auto; width: 80px; height: 80px; border-radius: 50%; background: #FEE2E2; border: 3px solid #1A1A1A; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45); display: flex; align-items: center; justify-content: center;">
                         <svg viewBox="0 0 48 48" width="46" height="46" fill="none">
                             <path d="M14 14 L34 34 M34 14 L14 34" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round" />
                             <path d="M14 14 L34 34 M34 14 L14 34" stroke="#EF4444" stroke-width="5" stroke-linecap="round" />
@@ -682,7 +682,7 @@
 
             <!-- Bouton torche discret dans le coin du viseur (si supporté par le matériel) -->
             <button type="button" id="btn-toggle-torch" x-show="torchSupported" x-cloak
-                x-on:click="toggleTorch()" class="btn-bounce"
+                x-on:click="toggleTorch()" class="btn-bounce alpine-inline-flex"
                 :style="{ background: torchOn ? '#F4B316' : 'rgba(255, 255, 255, 0.92)', color: '#1A1A1A' }"
                 style="position: absolute; top: 10px; right: 10px; z-index: 15; border: 2.5px solid #1A1A1A; border-radius: 9999px; padding: 6px 11px; font-size: 11px; font-weight: 800; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
                 title="Allumer ou éteindre la lampe torche">

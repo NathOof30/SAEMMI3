@@ -16,7 +16,7 @@
                 <button type="button" x-on:click.stop="profileModalOpen = !profileModalOpen" title="Profil et équipe"
                     style="background: transparent; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                     <div
-                        style="width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid #1A1A1A; overflow: hidden; background: #ffffff; box-shadow: 0 2px 0 #1A1A1A; display: flex; align-items: center; justify-content: center;">
+                        style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1A1A1A; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;">
                         <svg viewBox="0 0 40 40" width="38" height="38" style="display: block;">
                             <!-- Visage -->
                             <circle cx="20" cy="20" r="19" fill="#FDE68A" />

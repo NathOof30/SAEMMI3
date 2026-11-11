@@ -84,6 +84,12 @@
         [x-cloak] {
             display: none !important;
         }
+        .alpine-flex {
+            display: flex;
+        }
+        .alpine-inline-flex {
+            display: inline-flex;
+        }
         .tab-pane-wrapper {
             flex: 1;
             min-height: 0;

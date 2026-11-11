@@ -76,7 +76,9 @@ class StepSeederAndAuthTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('L\'Expédition Secrète', false);
         $response->assertSee('Lens Tourisme & Asmodee', false);
-        $response->assertSee('Maître du Jeu', false);
+        $response->assertSee('kit papier', false);
+        $response->assertSee("l'animateur de l'étape", false);
+        $response->assertDontSee('Maître du Jeu', false);
         $response->assertSee('Connexion / Inscription Équipe');
     }
 
