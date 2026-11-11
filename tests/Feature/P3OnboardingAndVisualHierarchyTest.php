@@ -139,6 +139,19 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertStringNotContainsString('Dobble', $hubHtml);
         $this->assertStringNotContainsString('Asmodee', $hubHtml);
         $this->assertStringNotContainsString('4819', $hubHtml);
+
+        $hubTutorialXpath = $this->makeXpath($hubHtml);
+        for ($slide = 0; $slide <= 4; $slide++) {
+            $slideNodes = $hubTutorialXpath->query('//*[@id="hub-help-modal"]//div[@x-show="helpTutorialSlide === '.$slide.'"]');
+            $this->assertEquals(1, $slideNodes->length, "Hub help modal missing tutorial slide {$slide}");
+            $this->assertNotEmpty(trim($slideNodes->item(0)?->textContent ?? ''), "Hub tutorial slide {$slide} must not be empty");
+        }
+        $hubSlide5Text = $hubTutorialXpath->query('//*[@id="hub-help-modal"]//div[@x-show="helpTutorialSlide === 4"]')->item(0)?->textContent ?? '';
+        $this->assertStringContainsString('Étape 5 sur 5', $hubSlide5Text);
+        $this->assertStringContainsString('Un Véritable Trésor & Tirage au Sort', $hubSlide5Text);
+        $this->assertEquals(5, $hubTutorialXpath->query('//*[@id="hub-help-modal"]//button[starts-with(@aria-label, "Slide ")]')->length);
+        $this->assertStringContainsString('x-on:click="helpTutorialSlide = 4"', $hubHtml);
+
         foreach (Step::all() as $step) {
             $this->assertStringNotContainsString($step->cleanName(), $hubHtml);
         }
@@ -347,7 +360,7 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
 
         $svg = $invZeroXpath->query('//*[@id="gali-vertical-key-svg"]')->item(0);
         $this->assertInstanceOf(DOMElement::class, $svg);
-        $this->assertSame('0 0 130 350', $svg->getAttribute('viewBox'));
+        $this->assertSame('0 0 130 350', $svg->getAttribute('viewBox') ?: $svg->getAttribute('viewbox'));
 
         $starterGoldPath = $invZeroXpath->query('//*[@id="key-svg-shard-starter"]/path[1]')->item(0);
         $this->assertInstanceOf(DOMElement::class, $starterGoldPath);
@@ -374,8 +387,12 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
         $this->assertInstanceOf(DOMElement::class, $unlockedSvgPath);
         $this->assertSame('#F4B316', $unlockedSvgPath->getAttribute('fill'));
 
-        $this->assertEquals(1, $invOneXpath->query('//*[@id="inventory-continue-next-btn"]')->length);
-        $this->assertStringContainsString("Bord de l'anneau", $invOneHtml);
+        $continueBtn = $invOneXpath->query('//*[@id="inventory-continue-next-btn"]')->item(0);
+        $this->assertInstanceOf(DOMElement::class, $continueBtn);
+        $this->assertSame("Poursuivre vers l'étape suivante", trim($continueBtn->textContent));
+        $this->assertStringNotContainsString('→', $continueBtn->textContent);
+        $this->assertStringContainsString('white-space: nowrap', $continueBtn->getAttribute('style'));
+        $this->assertStringContainsString("Bord de l'anneau", html_entity_decode($invOneHtml, ENT_QUOTES));
 
         // 6/6 victory state: secret treasure QR + automatic raffle without checkbox, zero Dobble/4819/Asmodee
         for ($i = 2; $i <= 6; $i++) {
@@ -417,7 +434,7 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
     {
         $dom = new DOMDocument;
         libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
         libxml_clear_errors();
 
         return new DOMXPath($dom);

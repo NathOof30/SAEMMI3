@@ -440,8 +440,8 @@
                 <div style="margin-top: 14px;">
                     <button type="button" id="inventory-continue-next-btn" x-on:click="tab = 'hub'"
                         wire:click="$dispatch('set-tab', { tab: 'hub' })" class="btn-bounce font-display"
-                        style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 13px 16px; background: #F4B316; color: #1A1A1A; font-size: 19px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer; text-align: center; letter-spacing: 0.03em;">
-                        Poursuivre vers l'étape suivante →
+                        style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 13px 12px; background: #F4B316; color: #1A1A1A; font-size: clamp(14.5px, 4.4vw, 18px); font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; cursor: pointer; text-align: center; letter-spacing: 0.02em; white-space: nowrap;">
+                        Poursuivre vers l'étape suivante
                     </button>
                 </div>
             @endif
