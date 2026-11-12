@@ -679,9 +679,9 @@
                 @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
                     Terminé (Toutes les étapes validées)
                 @elseif($user && $user->phase === 'GUESSING_LOCATION')
-                    Étape {{ $user->current_step }}/6 | Scannez le QR de la carte
+                    Étape {{ $user->current_step }}/6  |  Scannez le QR de la carte
                 @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                    Étape {{ $user->current_step }}/6 | Scannez le badge de l'animateur sur place
+                    Étape {{ $user->current_step }}/6  |  Scannez le badge de l'animateur sur place
                 @else
                     Terminé
                 @endif

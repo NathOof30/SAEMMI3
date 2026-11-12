@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>{{ $title ?? "GALI L'Expédition Secrète" }}</title>
 
     <!-- PWA Web App Manifest -->
@@ -30,6 +32,7 @@
             --font-display: "hwt-artz", "Impact", sans-serif;
             --font-body: "nunito", system-ui, -apple-system, sans-serif;
         }
+
         html {
             margin: 0;
             padding: 0;
@@ -44,6 +47,7 @@
             background-attachment: fixed;
             -webkit-text-size-adjust: 100%;
         }
+
         body {
             margin: 0;
             padding: 0;
@@ -64,33 +68,45 @@
             -webkit-text-size-adjust: 100%;
             touch-action: manipulation;
         }
+
         .font-display {
             font-family: var(--font-display);
             font-weight: 700;
             font-style: normal;
         }
+
         .font-body {
             font-family: var(--font-body);
         }
-        input, textarea, select, button {
+
+        input,
+        textarea,
+        select,
+        button {
             font-family: var(--font-body);
         }
+
         .btn-bounce {
             transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
+
         .btn-bounce:active {
             transform: translateY(3px) !important;
             box-shadow: 0 1px 0 #1A1A1A !important;
         }
+
         [x-cloak] {
             display: none !important;
         }
+
         .alpine-flex {
             display: flex;
         }
+
         .alpine-inline-flex {
             display: inline-flex;
         }
+
         .tab-pane-wrapper {
             flex: 1;
             min-height: 0;
@@ -101,14 +117,19 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
+
         @keyframes idle-sway {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: rotate(-10deg);
             }
+
             50% {
                 transform: rotate(10deg);
             }
         }
+
         .idle-sway {
             animation: idle-sway 2.6s ease-in-out infinite;
             transform-origin: center;
@@ -117,7 +138,8 @@
     </style>
     @if(request()->is('test-qr*'))
         <style>
-            html, body {
+            html,
+            body {
                 overflow-y: auto !important;
                 height: auto !important;
                 max-height: none !important;
@@ -129,17 +151,22 @@
     @endif
     @livewireStyles
 </head>
-<body style="margin: 0; padding: 0; width: 100%; height: 100%; height: 100vh; height: 100dvh; min-height: 100%; max-height: 100dvh; overflow: hidden; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed;">
+
+<body
+    style="margin: 0; padding: 0; width: 100%; height: 100%; height: 100vh; height: 100dvh; min-height: 100%; max-height: 100dvh; overflow: hidden; background-color: #FAF8F5; background-image: radial-gradient(#D1D5DB 1.5px, transparent 1.5px); background-size: 20px 20px; background-attachment: fixed;">
     @if(!request()->is('test-qr*'))
         <!-- Bandeau non bloquant de perte réseau / reconnexion -->
         <div id="offline-network-banner" role="alert" aria-live="polite"
             style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 12px; right: 12px; max-width: 456px; margin: 0 auto; z-index: 9500; background: #FEF3C7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 10px 12px; box-shadow: 0 4px 0 #1A1A1A; font-family: var(--font-body); box-sizing: border-box;">
             <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="width: 28px; height: 28px; border-radius: 8px; background: #FEE2E2; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B91C1C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                <div
+                    style="width: 28px; height: 28px; border-radius: 8px; background: #FEE2E2; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B91C1C" stroke-width="2.4"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path
+                            d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                 </div>
                 <div style="flex: 1; min-width: 0;">
@@ -166,7 +193,8 @@
 
         <div id="online-restored-banner" role="status" aria-live="polite"
             style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 12px; right: 12px; max-width: 456px; margin: 0 auto; z-index: 9500; background: #DCFCE7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 8px 12px; box-shadow: 0 4px 0 #1A1A1A; font-family: var(--font-body); box-sizing: border-box;">
-            <p class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 15px; font-weight: 700; color: #15803D; text-align: center;">
+            <p class="font-display"
+                style="font-family: var(--font-display); margin: 0; font-size: 15px; font-weight: 700; color: #15803D; text-align: center;">
                 Connexion retrouvée !
             </p>
         </div>
@@ -176,10 +204,12 @@
                 from {
                     transform: rotate(0deg);
                 }
+
                 to {
                     transform: rotate(360deg);
                 }
             }
+
             .expedition-loading-spinner {
                 animation: expeditionLoadingSpin 0.9s linear infinite;
                 transform-origin: center;
@@ -189,11 +219,13 @@
         <!-- Niveau 1 : Pastille compacte non bloquante en haut (onglets / synchros légères >= 350 ms) -->
         <div id="global-loading-pill" role="status" aria-live="polite" aria-hidden="true"
             style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); z-index: 9400; pointer-events: none; background: #FAF8F5; border: 2px solid #1A1A1A; border-radius: 9999px; padding: 6px 13px; box-shadow: 0 3px 0 #1A1A1A; font-family: var(--font-body); align-items: center; gap: 8px; max-width: calc(100vw - 24px); box-sizing: border-box;">
-            <svg class="expedition-loading-spinner" viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+            <svg class="expedition-loading-spinner" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                aria-hidden="true" style="flex-shrink: 0;">
                 <circle cx="12" cy="12" r="9" stroke="#E5E7EB" stroke-width="3" />
                 <path d="M12 3a9 9 0 0 1 9 9" stroke="#F4B316" stroke-width="3" stroke-linecap="round" />
             </svg>
-            <span id="global-loading-pill-text" style="font-size: 12px; font-weight: 800; color: #1A1A1A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <span id="global-loading-pill-text"
+                style="font-size: 12px; font-weight: 800; color: #1A1A1A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 Synchronisation...
             </span>
         </div>
@@ -203,8 +235,10 @@
             style="display: none; position: fixed; inset: 0; z-index: 9600; background: rgba(26, 26, 26, 0.36); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
             <div
                 style="background: #FAF8F5; border: 3px solid #1A1A1A; border-radius: 18px; box-shadow: 0 5px 0 #1A1A1A; padding: 18px 20px; width: 100%; max-width: 300px; text-align: center; font-family: var(--font-body); box-sizing: border-box;">
-                <div style="width: 48px; height: 48px; margin: 0 auto 10px auto; border-radius: 50%; background: #FFFFFF; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center;">
-                    <svg class="expedition-loading-spinner" viewBox="0 0 36 36" width="32" height="32" fill="none" aria-hidden="true">
+                <div
+                    style="width: 48px; height: 48px; margin: 0 auto 10px auto; border-radius: 50%; background: #FFFFFF; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center;">
+                    <svg class="expedition-loading-spinner" viewBox="0 0 36 36" width="32" height="32" fill="none"
+                        aria-hidden="true">
                         <circle cx="18" cy="18" r="13" stroke="#E5E7EB" stroke-width="4" />
                         <path d="M18 5a13 13 0 0 1 13 13" stroke="#F4B316" stroke-width="4" stroke-linecap="round" />
                     </svg>
@@ -547,7 +581,7 @@
                 if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
                     return navigator.vibrate(pattern);
                 }
-            } catch (e) {}
+            } catch (e) { }
             return false;
         };
     </script>
@@ -1019,7 +1053,7 @@
                                 refreshCsrfToken(data.csrf);
                             }
                         })
-                        .catch(() => {})
+                        .catch(() => { })
                         .finally(() => {
                             isKeepAliveInFlight = false;
                         });
@@ -1042,4 +1076,5 @@
 
     @livewireScripts
 </body>
+
 </html>
