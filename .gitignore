@@ -25,3 +25,12 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# AI & Agent configurations (conservés en local)
+AGENTS.md
+CLAUDE.md
+boost.json
+.ai/
+
+# Documents de travail locaux
+/docs/fiche_site_vitrine.md

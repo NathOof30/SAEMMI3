@@ -2,58 +2,68 @@
 
 ## 1. Vision Globale
 
-Nous développons une PWA (Progressive Web App) pour un jeu de piste hybride (physique + numérique) dans la ville de Lens. Le jeu mêle l'univers de la marque Asmodee (jeux de société) et le tourisme local (Destination Lens Tourisme).
-L'application sert de "Serrure Numérique" et de "Boussole", elle ne remplace pas le kit de jeu physique (carte papier, carnet) que les joueurs ont entre les mains.
+Nous développons une PWA (Progressive Web App) pour un jeu de piste hybride (physique + numérique) dans la ville de Lens. Le jeu est le fruit d'une collaboration entre l'éditeur de jeux **Asmodee** et **Destination Lens Tourisme**.
+L'application sert de **"Boussole d'orientation"** et de **"Serrure Numérique"** : elle fonctionne toujours en duo avec le kit physique (grande carte illustrée de Lens, loupe d'observation) que les familles ont entre les mains.
 
-## 2. Répartition des Rôles
+---
 
-* **L'Enfant (L'Explorateur) :** Ne regarde pas le téléphone. Il utilise la carte papier, un carnet et un filtre optique pour résoudre des énigmes visuelles dans la ville.
+## 2. Répartition des Rôles (Expérience Familiale Hybride)
 
-* **Le Parent (Le Maître du Jeu) :** Tient le téléphone (la PWA). Il valide les étapes, donne le cap géographique, et gère l'inventaire numérique.
+* **L'Enfant (L'Explorateur) :** Ne regarde pas en permanence le téléphone. Il utilise la **grande carte papier de Lens** et sa **loupe** pour résoudre les énigmes visuelles de Gali dans la ville et participer aux défis sur les stands.
+* **Le Parent (Le Guide) :** Tient le smartphone (la PWA). Il s'oriente avec la **boussole GPS**, confirme l'arrivée sur chaque spot, et utilise le **scanner** pour valider les repères carte et les badges des animateurs.
+
+---
 
 ## 3. La Boucle de Gameplay (Machine à États)
 
-Le jeu est composé de 6 étapes. Chaque étape (`current_step`) est divisée en 2 phases (`phase`) qui dictent le comportement de l'application :
+Le jeu se compose de **6 étapes patrimoniales**. Chaque étape (`current_step`) suit une boucle immersive :
 
-**Phase A : `GUESSING_LOCATION` (Recherche sur la carte)**
+### Phase A : `GUESSING_LOCATION` (Recherche sur la carte physique)
+1. L'application affiche uniquement l'énigme textuelle de Gali (anti-spoil strict : aucun nom de lieu n'est dévoilé).
+2. L'enfant cherche le symbole correspondant sur la carte papier avec sa loupe.
+3. Le parent scanne le QR code imprimé sur le repère de la carte (`MAP_LOC_{ID}`).
+4. *Succès :* La destination est révélée, passage immédiat à la Phase B.
 
-1. L'application affiche une énigme textuelle (ex: "Je suis une locomotive immobile...").
+### Phase B : `WALKING_TO_TARGET` (Déplacement physique & Épreuve sur place)
+1. La **Boussole interactive** s'active : sa pointe **JAUNE OR** désigne la direction exacte du monument, tandis que le cadran rotatif s'aligne avec le vrai Nord.
+2. La famille marche physiquement jusqu'au lieu en suivant la distance et le cap.
+3. **Sur place :** À l'approche du lieu (ou via le secours d'aide), le bouton **« Vous êtes arrivé ? »** apparaît.
+4. En validant l'arrivée, la boussole laisse place au **médaillon illustré du monument** : l'application invite l'équipe à poser le smartphone pour réaliser le mini-jeu en famille avec l'animateur du spot.
+5. Une fois le défi réussi, le bouton **« Épreuve terminée ? »** ouvre le scanner pour flasher le badge officiel de l'animateur (`MJ_STEP_{ID}`).
+6. *Succès :* Un nouveau **fragment de clé** est débloqué et vient s'emboîter sur la clé antique dans l'Inventaire. L'équipe passe à l'étape suivante (`current_step + 1`) en Phase A.
 
-2. L'enfant cherche sur sa carte papier physique quel est ce lieu.
+---
 
-3. Le parent utilise le **Scanner** de l'App pour scanner le QR Code imprimé sur le lieu trouvé sur la carte papier (Code attendu : `MAP_LOC_{ID}`).
+## 4. Climax : La Clé Complète & La Lampe Cœur
 
-4. *Succès :* Passage à la Phase B.
+L'histoire suit **Gali**, un jeune Lensois sur les traces de ses aïeux mineurs. Dès le départ, Gali possède la base de la clé retrouvée dans le grenier de son grand-père.
+À chaque étape franchie, l'un des **6 fragments cassés** vient s'emboîter sur la silhouette verticale de la clé :
+1. Gare de Lens : *Bord de l'anneau*
+2. Centre-Ville : *Base de l'anneau*
+3. Stade Bollaert-Delelis : *Col sculpté*
+4. Musée Louvre-Lens : *Fût gravé*
+5. Terrils de Loos-en-Gohelle : *Garde du fût*
+6. Office de Tourisme : *Dents de la clé*
 
-**Phase B : `WALKING_TO_TARGET` (Déplacement physique)**
+À l'issue de la 6ᵉ étape, la **clé complète** est forgée : elle permet de rallumer la légendaire **Lampe Cœur** et d'ouvrir le coffre secret.
+L'équipe débloque alors son **QR Code Retrait du Trésor** pour récupérer son **véritable trésor surprise** à l'Office de Tourisme et se retrouve **automatiquement inscrite au grand tirage au sort** de l'expédition.
 
-1. L'application active le **Hub/Boussole** : elle calcule la distance GPS entre le téléphone et les coordonnées du monument.
-
-2. La famille marche physiquement jusqu'au lieu réel.
-
-3. Sur place, ils jouent à un mini-jeu IRL avec un animateur (ou résolvent une énigme physique).
-
-4. Le parent utilise le **Scanner** pour lire le QR Code de victoire donné par l'animateur (Code attendu : `MJ_STEP_{ID}`).
-
-5. *Succès :* Un "Fragment" est ajouté à l'inventaire. Le joueur passe à l'étape suivante (`current_step + 1`) et repasse en Phase A.
-
-## 4. Climax (Fin du jeu)
-
-Quand l'équipe a collecté les 6 fragments, la boucle s'arrête. L'application affiche un écran de victoire contenant un code final à 4 chiffres (constitué des indices récoltés sur chaque fragment). Ce code permet d'ouvrir un véritable cadenas à l'Office de Tourisme pour gagner une récompense physique (édition spéciale Asmodee).
+---
 
 ## 5. Architecture & Direction Artistique
 
-L'application est une Single Page Application (SPA) codée en Laravel 11, Livewire 3 et Alpine.js. L'interface ne recharge jamais.
+L'application est une Single Page Application (SPA) codée en **Laravel + Livewire + Alpine.js**, sans rechargement de page.
 
 * **Direction Artistique Néo-brutaliste « Sang et Or » :**
-  - Palette officielle : Rouge Sang (`#841818`), Jaune Or (`#F4B316`), contours noirs francs (2.5px à 4px), ombres déportées 3D marquées (`0 4px 0 #1A1A1A`), effet tactile de rebond (`btn-bounce`).
+  - Palette officielle : Rouge Sang (`#841818`), Jaune Or (`#F4B316`), Vert Sauge (`#9FB8AD`), Parchemin (`#FAF8F5`, `#F4EBD9`), contours noirs francs (2.5px à 3.5px), ombres déportées 3D marquées (`0 4px 0 #1A1A1A`), effet tactile de rebond (`btn-bounce`).
   - Fond en pointillés réguliers (`radial-gradient`), interface 100% contenue dans l'écran (`100dvh`, aucun scroll sur la structure principale).
 * **Composants Principaux :**
-  1. **Hub / Boussole :** 
-     - Boussole vectorielle géante au centre : cadran rotatif avec les 4 points cardinaux (N, E, S, O) calé sur le vrai Nord, aiguille bicolore dont la pointe **JAUNE** pointe vers la cible et la queue **ROUGE** vers l'opposé. En Phase A, un `?` doré animé oscille au centre.
-     - Deck de cartes façon jeu Asmodee en bas d'écran avec cartes inclinées (-5° / +5°) et coupure nette par le bas de l'écran.
-     - Console de debug discrète `[•] debug` avec téléportation instantanée `TP sur le spot (0m)`.
-  2. **Scanner :** Caméra plein écran via `Html5-QRCode` headless avec filtre intelligent de caméra arrière. Overlay plein écran néo-brutaliste vert (succès) ou rouge (erreur) avec redirection vers le Hub.
-  3. **Inventaire / Sac à Dos :** Affiche les fragments collectés, le code à 4 chiffres du cadenas et le QR code de retrait du lot.
-  4. **Accueil & Authentification :** Création d'équipe ou connexion, slider tutoriel 3D épuré sans doublon de boutons.
-  5. **Mire de test `/test-qr` :** Tableau de bord affichant les 12 QR codes de test pour validation sur écran d'ordinateur.
+  1. **Hub / Boussole :**
+     - Cadran boussole vectoriel géant calé sur le vrai Nord, aiguille bicolore dynamique, point d'interrogation oscillant en Phase A.
+     - Tiroir coulissant *« Carnet de Gali & Histoire du lieu »* avec anecdotes patrimoniales.
+     - Console de démonstration `[•] debug` discrète avec sélecteur d'étapes (1 à 6, et Fin), reset progression, et téléportation GPS.
+  2. **Scanner :** Caméra plein écran via `Html5-QRCode` headless avec filtre intelligent de caméra arrière. Overlay plein écran néo-brutaliste vert (succès) ou rouge (erreur) avec redirection vers le Hub / l'Inventaire.
+  3. **Inventaire / Clé de Gali :** Visualisation de la clé antique verticale avec pièces emboîtées en or, consultation des fiches étapes et génération locale SVG du QR code de retrait final.
+  4. **Accueil & Authentification :** Création d'équipe ou connexion, slider tutoriel en 5 étapes avec logos officiels Lens Tourisme et Asmodee.
+  5. **Mire de test `/test-qr` :** Tableau de bord affichant les 12 QR codes officiels pour test complet sur écran PC.
+  6. **Résilience & Keep-Alive :** Endpoint `GET /keep-alive` pour maintenir Render et Neon actifs sans mise en veille, et écran de chargement à 2 niveaux lors des connexions lentes.
