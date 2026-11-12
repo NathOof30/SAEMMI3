@@ -191,7 +191,7 @@ class HubUxAndAuthRedesignTest extends TestCase
             ->assertSeeHtml('id="compass-needle-opposite"')
             ->assertSeeHtml('#B91C1C') // Red central pivot
             // Lower card with black outline
-            ->assertSeeHtml('Destination : <span style="color: #F4B316;">' . $cleanName . '</span>')
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">'.$cleanName.'</span>')
             ->assertSee('Suivez la boussole, observez autour de vous et trouvez le spot')
             // Dynamic action button: calibrated radius, no fake '300 m', contextual '?' safety net
             ->assertSeeHtml('targetRadius: 70')

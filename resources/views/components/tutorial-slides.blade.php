@@ -26,8 +26,8 @@
             Votre matériel : Appli + Kit
         </h3>
         <p style="margin: 0 0 10px 0; font-size: 13.5px; color: #374151; line-height: 1.45;">
-            L'application fonctionne obligatoirement avec votre <strong>kit papier</strong> : la grande <strong>carte de
-                Lens</strong> et la <strong>loupe</strong> de l'enfant.
+            L'application fonctionne obligatoirement avec votre <strong>kit papier</strong> : la grande
+            <strong>carte de Lens</strong> et la <strong>loupe</strong> de l'enfant.
         </p>
         <div
             style="background: #FDF8EC; border: 1.5px dashed #D97706; border-radius: 12px; padding: 8px 10px; font-size: 12px; font-weight: 700; color: #92400E; line-height: 1.35;">
@@ -159,8 +159,8 @@
             Un Véritable Trésor &amp; Tirage au Sort
         </h3>
         <p style="margin: 0 0 10px 0; font-size: 13.5px; color: #374151; line-height: 1.45;">
-            Rallumez la <strong>Lampe Cœur</strong>, ouvrez le coffre pour remporter un <strong>véritable trésor
-                surprise</strong> et soyez <strong>automatiquement inscrit au grand tirage au sort</strong> pour tenter
+            Rallumez la <strong>Lampe Cœur</strong>, ouvrez le coffre pour remporter un
+            <strong>véritable trésor surprise</strong> et soyez <strong>automatiquement inscrit au grand tirage au sort</strong> pour tenter
             de gagner encore plus de lots !
         </p>
         <div
