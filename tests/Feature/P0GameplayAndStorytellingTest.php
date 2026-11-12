@@ -256,7 +256,9 @@ class P0GameplayAndStorytellingTest extends TestCase
             }
 
             if ($stepNum === 6) {
-                $hub->assertSee("équipe d'accueil du point final", false);
+                $hub->assertSeeHtml('id="chest-shape-clip-step-6"')
+                    ->assertDontSeeHtml('points="52,78 100,52 148,78"')
+                    ->assertSee("équipe d'accueil du point final", false);
             } else {
                 $hub->assertSee("rejoignez l'animateur sur place", false);
             }
@@ -316,6 +318,78 @@ class P0GameplayAndStorytellingTest extends TestCase
             ->assertDontSee('filtre optique');
 
         $this->assertDoesNotMatch($inv->html(), '/[\x{1F300}-\x{1F9FF}]/u');
+    }
+
+    public function test_debug_demo_selector_jumps_between_steps_and_resets_progression(): void
+    {
+        $user = User::factory()->create([
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+        $this->actingAs($user);
+
+        // Active debug modal renders demo step selector, phase selector, reset button & quick GPS actions
+        $hub = Livewire::test(Hub::class);
+        $hub->assertSeeHtml('id="debug-demo-progression-section"')
+            ->assertSeeHtml('id="debug-step-select"')
+            ->assertSeeHtml('id="debug-phase-select"')
+            ->assertSeeHtml('id="debug-apply-step-btn"')
+            ->assertSeeHtml('id="debug-reset-progression-btn"')
+            ->assertSeeHtml('id="teleport-target-btn"')
+            ->assertSeeHtml('id="teleport-approach-btn"')
+            ->assertSeeHtml('id="reset-live-gps-btn"')
+            ->assertSee('Aller à cette étape')
+            ->assertSee('Reset progression');
+
+        $this->assertDoesNotMatch($hub->html(), '/[\x{1F300}-\x{1F9FF}]/u');
+        $this->assertStringNotContainsString('—', $hub->html());
+
+        // Jump directly to Step 4 Phase B (unlocks fragments 1..3)
+        $hub->call('debugSetProgress', '4', 'WALKING_TO_TARGET')
+            ->assertDispatched('step-updated')
+            ->assertDispatched('debug-progression-changed', userId: $user->id);
+
+        $user->refresh();
+        $this->assertSame(4, $user->current_step);
+        $this->assertSame('WALKING_TO_TARGET', $user->phase);
+        $this->assertSame([1, 2, 3], $user->fragments()->orderBy('step_id')->pluck('step_id')->all());
+
+        // Jump to finished state (6/6 fragments + reward token) and confirm debug button stays accessible
+        $hub->call('debugSetProgress', 'finished')
+            ->assertDispatched('step-updated');
+
+        $user->refresh();
+        $this->assertSame(7, $user->current_step);
+        $this->assertSame(6, $user->fragments()->count());
+        $this->assertNotEmpty($user->reward_token);
+        $this->assertFalse($user->reward_picked);
+
+        Livewire::test(Hub::class)
+            ->assertSee('Expédition Terminée !')
+            ->assertSeeHtml('[•] debug')
+            ->assertSeeHtml('id="debug-step-select"')
+            ->assertSeeHtml('id="debug-reset-progression-btn"')
+            // Jump back to Step 2 Phase A without needing a new account
+            ->call('debugSetProgress', '2', 'GUESSING_LOCATION')
+            ->assertDispatched('step-updated');
+
+        $user->refresh();
+        $this->assertSame(2, $user->current_step);
+        $this->assertSame('GUESSING_LOCATION', $user->phase);
+        $this->assertSame([1], $user->fragments()->orderBy('step_id')->pluck('step_id')->all());
+
+        // Reset progression returns cleanly to Step 1 (0/6)
+        Livewire::test(Hub::class)
+            ->call('debugResetProgression')
+            ->assertDispatched('step-updated')
+            ->assertDispatched('debug-progression-changed', userId: $user->id);
+
+        $user->refresh();
+        $this->assertSame(1, $user->current_step);
+        $this->assertSame('GUESSING_LOCATION', $user->phase);
+        $this->assertSame(0, $user->fragments()->count());
+        $this->assertNull($user->reward_token);
+        $this->assertFalse($user->reward_picked);
     }
 
     protected function assertDoesNotMatch(string $content, string $pattern): void

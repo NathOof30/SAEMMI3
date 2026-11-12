@@ -6,6 +6,7 @@ use App\Models\Fragment;
 use App\Models\Step;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Scanner extends Component
@@ -23,6 +24,12 @@ class Scanner extends Component
     public ?string $scanSubtitle = null;
 
     public ?string $scanTargetTab = null;
+
+    #[On('debug-progression-changed')]
+    public function onDebugProgressionChanged(): void
+    {
+        $this->resetScanState();
+    }
 
     public function resetScanState(): void
     {

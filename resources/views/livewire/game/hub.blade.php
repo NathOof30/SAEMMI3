@@ -1,18 +1,88 @@
 <div
     style="width: 100%; max-width: 480px; margin: 0 auto; padding: 4px 16px 0 16px; box-sizing: border-box; font-family: var(--font-body); position: relative; height: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
     @if($isFinished)
-        <div
-            style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #1a1a1a; text-align: center; margin: auto;">
-            <h2 class="font-display" style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
-            <p style="font-size: 15px; color: #374151; line-height: 1.5;">
-                Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour
-                assembler votre clé complète et découvrir votre trésor secret.
-            </p>
-            <button type="button" x-on:click="tab = 'inventory'" wire:click="$dispatch('set-tab', { tab: 'inventory' })"
-                class="btn-bounce font-display"
-                style="font-family: var(--font-display); margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 19px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
-                Découvrir mon trésor secret →
-            </button>
+        <div x-data="{
+                debugModalOpen: false,
+                manualScanEnabled: false,
+                demoStage: 'finished',
+                demoPhase: 'GUESSING_LOCATION',
+                init() {
+                    try {
+                        this.manualScanEnabled = localStorage.getItem('expedition_debug_manual_scan') === '1';
+                    } catch (e) {}
+                },
+                toggleManualScan() {
+                    try {
+                        localStorage.setItem('expedition_debug_manual_scan', this.manualScanEnabled ? '1' : '0');
+                    } catch (e) {}
+                    window.__expeditionManualScanEnabled = this.manualScanEnabled;
+                    window.dispatchEvent(new CustomEvent('debug-manual-scan-toggled', {
+                        detail: { enabled: this.manualScanEnabled }
+                    }));
+                },
+                clearSpotStages() {
+                    for (let i = 1; i <= 6; i++) {
+                        try {
+                            localStorage.removeItem('expedition_spot_state_{{ $user ? $user->id : 0 }}_' + i);
+                        } catch (e) {}
+                    }
+                },
+                applyDemoStep() {
+                    this.clearSpotStages();
+                    this.debugModalOpen = false;
+                    $wire.debugSetProgress(this.demoStage, this.demoPhase);
+                },
+                resetDemoProgression() {
+                    this.clearSpotStages();
+                    this.debugModalOpen = false;
+                    $wire.debugResetProgression();
+                }
+            }" x-init="init()"
+            @debug-progression-changed.window="clearSpotStages()"
+            @keydown.escape.window="debugModalOpen = false"
+            style="display: flex; flex-direction: column; width: 100%; height: 100%; flex: 1; min-height: 0; position: relative;">
+            <div style="position: absolute; top: 0; right: 4px; z-index: 30;">
+                <button type="button" x-on:click="debugModalOpen = !debugModalOpen" title="Console de debug GPS"
+                    style="background: rgba(0,0,0,0.05); border: 1.5px solid rgba(0,0,0,0.15); border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: #4B5563; opacity: 0.35; cursor: pointer; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='0.35'">
+                    [•] debug
+                </button>
+            </div>
+
+            <div x-show="debugModalOpen" x-cloak x-on:click.outside="debugModalOpen = false"
+                style="position: fixed; inset: 20px; max-width: 420px; max-height: 80vh; margin: auto; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 18px; z-index: 100; overflow-y: auto;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px;">
+                    <h4 class="font-display" style="font-family: var(--font-display); margin: 0; font-size: 18px; font-weight: 700; color: #841818;">Console Technique &amp; Debug Demo</h4>
+                    <button type="button" x-on:click="debugModalOpen = false"
+                        style="background: none; border: none; font-size: 18px; font-weight: 700; cursor: pointer; color: #1A1A1A;">✕</button>
+                </div>
+
+                @include('livewire.game.partials.debug-demo-controls')
+
+                <div style="background: #FFFBEB; border: 2px solid #1A1A1A; border-radius: 10px; padding: 10px 12px;">
+                    <label for="debug-manual-scan-toggle-finished"
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: #1A1A1A; margin: 0;">
+                        <input type="checkbox" id="debug-manual-scan-toggle-finished" x-model="manualScanEnabled" x-on:change="toggleManualScan()"
+                            style="width: 18px; height: 18px; accent-color: #841818; cursor: pointer; flex-shrink: 0;">
+                        <span>Activer la simulation de scan (PC)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div
+                style="background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; padding: 24px; box-shadow: 0 6px 0 #1a1a1a; text-align: center; margin: auto;">
+                <h2 class="font-display" style="font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #841818; margin-top: 0;">Expédition Terminée !</h2>
+                <p style="font-size: 15px; color: #374151; line-height: 1.5;">
+                    Toutes les étapes ont été complétées ! Rendez-vous dans l'onglet <strong>[Inventaire]</strong> pour
+                    assembler votre clé complète et découvrir votre trésor secret.
+                </p>
+                <button type="button" x-on:click="tab = 'inventory'" wire:click="$dispatch('set-tab', { tab: 'inventory' })"
+                    class="btn-bounce font-display"
+                    style="font-family: var(--font-display); margin-top: 14px; padding: 12px 20px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 19px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 12px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
+                    Découvrir mon trésor secret →
+                </button>
+            </div>
         </div>
     @elseif(!$step)
         <div
@@ -34,6 +104,8 @@
                 helpView: 'guide',
                 helpTutorialSlide: 0,
                 manualScanEnabled: false,
+                demoStage: '{{ $user ? (string) $user->current_step : '1' }}',
+                demoPhase: '{{ $user ? $user->phase : 'GUESSING_LOCATION' }}',
                 deckExpanded: false,
                 activeTab: 'hub',
                 sensorsPaused: false,
@@ -670,6 +742,27 @@
                         detail: { enabled: this.manualScanEnabled }
                     }));
                 },
+                clearSpotStages() {
+                    const root = document.getElementById('hub-compass-root');
+                    const uid = root && root.dataset.userId ? root.dataset.userId : '{{ $user ? $user->id : 0 }}';
+                    for (let i = 1; i <= 6; i++) {
+                        try {
+                            localStorage.removeItem('expedition_spot_state_' + uid + '_' + i);
+                        } catch (e) {}
+                    }
+                },
+                applyDemoStep() {
+                    this.clearSpotStages();
+                    this.debugModalOpen = false;
+                    this.cleanup();
+                    $wire.debugSetProgress(this.demoStage, this.demoPhase);
+                },
+                resetDemoProgression() {
+                    this.clearSpotStages();
+                    this.debugModalOpen = false;
+                    this.cleanup();
+                    $wire.debugResetProgression();
+                },
                 toggleDeck() {
                     this.deckExpanded = !this.deckExpanded;
                 },
@@ -704,6 +797,7 @@
                 }
             }" x-init="init()"
             @tab-switched.window="activeTab = ($event.detail && $event.detail.tab) ? $event.detail.tab : 'hub'; if (activeTab === 'hub') { resumeSensors(); } else { pauseSensors(); }"
+            @debug-progression-changed.window="clearSpotStages()"
             @keydown.escape.window="helpModalOpen = false; debugModalOpen = false;"
             style="display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; flex: 1; min-height: 0; position: relative; justify-content: space-between; overflow: hidden;">
 
@@ -883,6 +977,28 @@
                     </label>
                 </div>
 
+                @include('livewire.game.partials.debug-demo-controls')
+
+                <div wire:ignore style="margin-bottom: 12px; border-bottom: 1px dashed #D1D5DB; padding-bottom: 12px;">
+                    <!-- Actions de téléportation directe sans émojis -->
+                    <div style="display: flex; gap: 8px; flex-direction: column;">
+                        <button type="button" id="teleport-target-btn" x-on:click="teleportToTarget(0)" class="btn-bounce"
+                            style="width: 100%; padding: 10px; font-size: 13px; font-weight: 900; background: #F4B316; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; text-align: center;">
+                            TP sur le spot (0m)
+                        </button>
+                        <button type="button" id="teleport-approach-btn" x-on:click="teleportToTarget(100)"
+                            class="btn-bounce"
+                            style="width: 100%; padding: 8px; font-size: 12px; font-weight: 800; background: #F3F4F6; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; text-align: center;">
+                            TP approche (100m)
+                        </button>
+                        <button type="button" id="reset-live-gps-btn" x-show="isMocking" x-on:click="resetLiveSensors()"
+                            class="btn-bounce"
+                            style="width: 100%; padding: 8px; font-size: 12px; font-weight: 800; background: #ECFEFF; color: #0E7490; border: 2px solid #1A1A1A; border-radius: 8px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; text-align: center;">
+                            Revenir aux capteurs réels
+                        </button>
+                    </div>
+                </div>
+
                 <div style="font-size: 12px; color: #4B5563;">
                     <p id="distance-display" style="margin: 4px 0;">Distance : {{ $user && $user->phase === 'WALKING_TO_TARGET' ? 'Recherche de position GPS en cours...' : 'Non active en phase de recherche' }}</p>
                     <p id="bearing-display" style="margin: 4px 0;">Cap vers la cible : <strong
@@ -898,19 +1014,6 @@
                 </div>
 
                 <div wire:ignore style="margin-top: 14px; border-top: 1px dashed #D1D5DB; padding-top: 10px;">
-                    <!-- Actions de téléportation directe sans émojis -->
-                    <div style="display: flex; gap: 8px; flex-direction: column; margin-bottom: 12px;">
-                        <button type="button" id="teleport-target-btn" x-on:click="teleportToTarget(0)" class="btn-bounce"
-                            style="width: 100%; padding: 10px; font-size: 13px; font-weight: 900; background: #F4B316; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; text-align: center;">
-                            TP sur le spot (0m)
-                        </button>
-                        <button type="button" id="teleport-approach-btn" x-on:click="teleportToTarget(100)"
-                            class="btn-bounce"
-                            style="width: 100%; padding: 8px; font-size: 12px; font-weight: 800; background: #F3F4F6; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; box-shadow: 0 2px 0 #1A1A1A; cursor: pointer; text-align: center;">
-                            TP approche (100m)
-                        </button>
-                    </div>
-
                     <p style="margin: 4px 0; font-size: 12px;"><small>Cible active : <strong x-text="targetLabel">Monument
                                 de
                                 l’étape</strong> (Lat <span x-text="targetLat">{{ $step->lat }}</span>, Lng <span
@@ -926,9 +1029,6 @@
                         <button type="button" id="reset-step-target-btn" x-on:click="resetStepTarget()"
                             style="padding: 4px 8px; font-size: 11px; background: #F3F4F6; border: 1.5px solid #1A1A1A; border-radius: 6px; cursor: pointer;">Cible
                             étape</button>
-                        <button type="button" id="reset-live-gps-btn" x-show="isMocking" x-on:click="resetLiveSensors()"
-                            style="padding: 4px 8px; font-size: 11px; background: #F3F4F6; border: 1.5px solid #1A1A1A; border-radius: 6px; cursor: pointer;">Capteurs
-                            réels</button>
                     </div>
 
                     <div
@@ -1267,17 +1367,28 @@
                                 </g>
                                 @break
                             @default
-                                <!-- Étape 6 : Office de Tourisme (Pavillon d'accueil & coffre final) -->
+                                <!-- Étape 6 : Office de Tourisme (Coffre au trésor final, sans toit) -->
                                 <g id="landmark-icon-step-6" wire:key="landmark-icon-step-6">
-                                    <polygon points="52,78 100,52 148,78" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
-                                    <circle cx="100" cy="67" r="5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <path d="M 62 104 C 62 84, 138 84, 138 104 Z" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
-                                    <rect x="62" y="104" width="76" height="36" rx="4" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
-                                    <rect x="74" y="90" width="9" height="50" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <rect x="117" y="90" width="9" height="50" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <rect x="92" y="98" width="16" height="20" rx="3" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
-                                    <circle cx="100" cy="106" r="2.8" fill="#1A1A1A" />
-                                    <line x1="100" y1="108" x2="100" y2="113" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                    <defs>
+                                        <clipPath id="chest-shape-clip-step-6">
+                                            <path d="M 56 94 C 56 66, 144 66, 144 94 L 144 128 Q 144 132 140 132 L 60 132 Q 56 132 56 128 Z" />
+                                        </clipPath>
+                                    </defs>
+                                    <ellipse cx="100" cy="136" rx="40" ry="5" fill="#1A1A1A" opacity="0.16" />
+                                    <g clip-path="url(#chest-shape-clip-step-6)">
+                                        <rect x="56" y="94" width="88" height="38" fill="#841818" />
+                                        <line x1="56" y1="107" x2="144" y2="107" stroke="#1A1A1A" stroke-width="1.5" opacity="0.22" />
+                                        <line x1="56" y1="120" x2="144" y2="120" stroke="#1A1A1A" stroke-width="1.5" opacity="0.22" />
+                                        <path d="M 56 94 C 56 66, 144 66, 144 94 Z" fill="#F4B316" />
+                                        <path d="M 64 87 C 72 74, 128 74, 136 87" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.45" />
+                                        <rect x="69" y="68" width="10" height="64" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                        <rect x="121" y="68" width="10" height="64" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    </g>
+                                    <line x1="56" y1="94" x2="144" y2="94" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round" />
+                                    <path d="M 56 94 C 56 66, 144 66, 144 94 L 144 128 Q 144 132 140 132 L 60 132 Q 56 132 56 128 Z" fill="none" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <rect x="91" y="88" width="18" height="22" rx="3" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <circle cx="100" cy="97" r="3" fill="#1A1A1A" />
+                                    <line x1="100" y1="99" x2="100" y2="105" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
                                 </g>
                         @endswitch
                     </svg>
