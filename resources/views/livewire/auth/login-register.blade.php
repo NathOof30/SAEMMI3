@@ -27,7 +27,7 @@
     <header style="position: relative; z-index: 1; text-align: center; flex-shrink: 0; padding-top: 2px;">
         <h1 class="font-display"
             style="font-family: var(--font-display); font-size: clamp(27px, 6.8vw, 33px); font-weight: 700; color: #841818; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05;">
-            GALI
+            GALI L'Expédition Secrète
         </h1>
         <div id="partner-logos-header"
             style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 3px 12px; background: #FFFFFF; border: 1.5px solid #1A1A1A; border-radius: 9999px;">

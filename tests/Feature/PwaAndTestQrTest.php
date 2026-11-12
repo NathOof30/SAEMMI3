@@ -108,7 +108,7 @@ class PwaAndTestQrTest extends TestCase
 
         $json = json_decode($response->getContent(), true);
         $this->assertIsArray($json);
-        $this->assertEquals('GALI', $json['name']);
+        $this->assertEquals("GALI L'Expédition Secrète", $json['name']);
         $this->assertEquals('GALI', $json['short_name']);
         $this->assertEquals('standalone', $json['display']);
         $this->assertEquals('portrait', $json['orientation']);

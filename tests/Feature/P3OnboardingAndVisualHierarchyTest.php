@@ -41,7 +41,7 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
             ->assertSeeHtml('id="partner-logos-header"')
             ->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp')
             ->assertSeeHtml('asmodee_logo.webp')
-            ->assertSeeHtml('GALI')
+            ->assertSeeHtml("GALI L'Expédition Secrète")
             ->assertDontSee('Lens Tourisme & Asmodee', false)
             ->assertSee("la base brisée d'une clé antique", false)
             ->assertSee('6 fragments manquants', false)
