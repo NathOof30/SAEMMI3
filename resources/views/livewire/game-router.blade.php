@@ -17,29 +17,10 @@
                     style="background: transparent; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                     <div
                         style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1A1A1A; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;">
-                        <svg viewBox="0 0 40 40" width="38" height="38" style="display: block;">
-                            <!-- Visage -->
-                            <circle cx="20" cy="20" r="19" fill="#FDE68A" />
-                            <circle cx="14" cy="23" r="2.5" fill="#FCA5A5" opacity="0.6" />
-                            <circle cx="26" cy="23" r="2.5" fill="#FCA5A5" opacity="0.6" />
-                            <circle cx="16" cy="20" r="1.5" fill="#1A1A1A" />
-                            <circle cx="24" cy="20" r="1.5" fill="#1A1A1A" />
-                            <path d="M 17 24 Q 20 26.5 23 24" fill="none" stroke="#1A1A1A" stroke-width="1.8"
-                                stroke-linecap="round" />
-                            <!-- Casque de mineur -->
-                            <path d="M 7 17 C 7 8 33 8 33 17 Z" fill="#4B5563" stroke="#1A1A1A" stroke-width="1.8" />
-                            <rect x="5" y="15" width="30" height="3.5" rx="1.5" fill="#1F2937" stroke="#1A1A1A"
-                                stroke-width="1.2" />
-                            <!-- Lampe frontale -->
-                            <ellipse cx="20" cy="11.5" rx="3.5" ry="3.5" fill="#F4B316" stroke="#1A1A1A"
-                                stroke-width="1.5" />
-                            <circle cx="20" cy="11.5" r="1.5" fill="#FFFFFF" />
-                            <!-- Écharpe Sang et Or -->
-                            <path d="M 10 29 C 13 27 27 27 30 29 L 29 38 C 24 39 16 39 11 38 Z" fill="#841818"
-                                stroke="#1A1A1A" stroke-width="1.5" />
-                            <line x1="16" y1="28" x2="16" y2="38" stroke="#F4B316" stroke-width="2" />
-                            <line x1="24" y1="28" x2="24" y2="38" stroke="#F4B316" stroke-width="2" />
-                        </svg>
+                        <img src="{{ asset('photo_profil.png') }}"
+                            alt="Profil de Gali"
+                            width="38" height="38"
+                            style="width: 38px; height: 38px; object-fit: cover; display: block;">
                     </div>
                 </button>
 

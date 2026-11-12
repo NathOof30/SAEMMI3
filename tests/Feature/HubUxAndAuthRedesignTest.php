@@ -158,10 +158,8 @@ class HubUxAndAuthRedesignTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(GameRouter::class)
-            // Gali Miner Avatar elements (miner helmet and Sang et Or scarf)
-            ->assertSeeHtml('#4B5563') // Helmet dark color
-            ->assertSeeHtml('#F4B316') // Gold lamp / stripes
-            ->assertSeeHtml('#841818') // Sang scarf / bar color
+            ->assertSeeHtml('src="' . asset('photo_profil.png') . '"')
+            ->assertSeeHtml('alt="Profil de Gali"')
             // Progress pill displaying 1/6
             ->assertSeeHtml('1/6')
             // Backpack inventory button
