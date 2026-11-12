@@ -2,6 +2,7 @@
         scannerInstance: null,
         isInitialized: false,
         isStarting: false,
+        reactivateTimer: null,
         isLocked: false,
         lastScannedCode: null,
         lastScanTime: 0,
@@ -179,6 +180,11 @@
                             console.warn('getCameras non disponible ou refusé:', e);
                         }
 
+                        if (!window._expeditionScannerRunning || !this.isScannerTabVisible()) {
+                            await this.cleanup(false);
+                            return;
+                        }
+
                         const bestCamera = this.selectBestCamera(cameras);
                         const qrCode = new Html5Qrcode('qr-reader', false);
                         this.scannerInstance = qrCode;
@@ -302,6 +308,11 @@
                             throw lastStartError || new Error('Impossible de démarrer la caméra.');
                         }
 
+                        if (!window._expeditionScannerRunning || !this.isScannerTabVisible()) {
+                            await this.cleanup(false);
+                            return;
+                        }
+
                         setTimeout(() => this.detectTorchSupport(), 250);
                     } catch (err) {
                         console.error('Erreur initialisation scanner:', err);
@@ -375,6 +386,10 @@
         },
 
         async cleanup(fullReset = true) {
+            if (this.reactivateTimer) {
+                clearTimeout(this.reactivateTimer);
+                this.reactivateTimer = null;
+            }
             window._expeditionScannerRunning = false;
             this.isStarting = false;
             this.torchOn = false;
@@ -414,12 +429,12 @@
             }
         },
 
-        async reactivateScanner() {
+        async reactivateScanner(resetServerState = true) {
             this.isLocked = false;
             this.lastScanTime = Date.now();
             this.cameraErrorMessage = null;
 
-            if (typeof @this !== 'undefined' && @this.resetScanState) {
+            if (resetServerState && typeof @this !== 'undefined' && @this.resetScanState) {
                 @this.resetScanState();
             }
 
@@ -431,8 +446,21 @@
                 return;
             }
 
+            if (this.reactivateTimer) {
+                clearTimeout(this.reactivateTimer);
+                this.reactivateTimer = null;
+            }
+
             await this.cleanup(true);
-            setTimeout(() => {
+
+            if (!this.isScannerTabVisible()) {
+                return;
+            }
+
+            this.isStarting = true;
+            this.reactivateTimer = setTimeout(() => {
+                this.reactivateTimer = null;
+                this.isStarting = false;
                 this.initScanner();
             }, 100);
         },
@@ -474,9 +502,17 @@
             this.isLocked = false;
             this.reactivateScanner();
         }
-    }" x-init="initScanner()"
-    x-effect="if (typeof tab !== 'undefined' && tab === 'scanner') { syncManualScanPref(); }"
-    @debug-manual-scan-toggled.window="manualScanEnabled = Boolean($event.detail && $event.detail.enabled)"
+    }" x-init="initScanner()" x-effect="if (typeof tab !== 'undefined' && tab === 'scanner') {
+        syncManualScanPref();
+        $nextTick(() => {
+            const qrEl = document.getElementById('qr-reader');
+            const video = qrEl ? qrEl.querySelector('video') : null;
+            const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
+            if (!isVideoActive && !isStarting && !isInitialized && !reactivateTimer && !window._expeditionScannerRunning && !document.getElementById('fullscreen-scan-overlay')) {
+                reactivateScanner(false);
+            }
+        });
+    }" @debug-manual-scan-toggled.window="manualScanEnabled = Boolean($event.detail && $event.detail.enabled)"
     @scan-feedback.window="if ($event.detail && $event.detail.status === 'success') {
         networkErrorMessage = null;
         pendingRetryCode = null;
@@ -484,8 +520,7 @@
     } else if ($event.detail && $event.detail.status === 'error') {
         networkErrorMessage = null;
         if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]);
-    }"
-    @expedition-network-error.window="if (isScannerTabVisible()) {
+    }" @expedition-network-error.window="if (isScannerTabVisible()) {
         isLocked = false;
         networkErrorMessage = ($event.detail && $event.detail.message) ? $event.detail.message : 'Connexion interrompue : impossible de valider ce QR code.';
         if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]);
@@ -496,13 +531,12 @@
         const qrEl = document.getElementById('qr-reader');
         const video = qrEl ? qrEl.querySelector('video') : null;
         const isVideoActive = video && video.srcObject && video.srcObject.active && !video.paused && !video.ended;
-        if (!isVideoActive) {
-            reactivateScanner();
+        if (!isVideoActive && !isStarting && !isInitialized && !reactivateTimer && !window._expeditionScannerRunning && !document.getElementById('fullscreen-scan-overlay')) {
+            reactivateScanner(false);
         }
     } else if ($event.detail && $event.detail.tab !== 'scanner') {
         cleanup(false);
-    }"
-    style="height: 100%; display: flex; flex-direction: column; min-height: 0; font-family: var(--font-body);">
+    }" style="height: 100%; display: flex; flex-direction: column; min-height: 0; font-family: var(--font-body);">
     <style>
         #qr-reader video {
             width: 100% !important;
@@ -514,18 +548,18 @@
 
     @if($scanStatus)
         <div id="fullscreen-scan-overlay" x-data="{
-                    dismiss() {
-                        const status = '{{ $scanStatus }}';
-                        const target = '{{ $scanTargetTab }}';
-                        if (target && typeof tab !== 'undefined') {
-                            tab = target;
+                        dismiss() {
+                            const status = '{{ $scanStatus }}';
+                            const target = '{{ $scanTargetTab }}';
+                            if (target && typeof tab !== 'undefined') {
+                                tab = target;
+                            }
+                            $wire.dismissScanOverlay();
+                            if (status === 'error') {
+                                reactivateScanner();
+                            }
                         }
-                        $wire.dismissScanOverlay();
-                        if (status === 'error') {
-                            reactivateScanner();
-                        }
-                    }
-                }" x-on:click.self="dismiss()"
+                    }" x-on:click.self="dismiss()"
             style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; {{ $scanStatus === 'success' ? 'background: rgba(0, 0, 0, 0.88);' : 'background: rgba(28, 4, 4, 0.92);' }} backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 0.2s ease-out;">
 
             <style>
@@ -619,7 +653,8 @@
     <div style="width: 100%; max-width: 480px; margin: 0 auto; padding: 8px 14px 12px 14px; box-sizing: border-box; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;"
         :style="{ overflowY: manualScanEnabled ? 'auto' : 'hidden' }">
         <!-- Barre supérieure flottante : Retour + réactivation -->
-        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;">
+        <div
+            style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;">
             <button type="button" id="scanner-back-to-hub-btn" x-on:click="tab = 'hub'"
                 wire:click="$dispatch('set-tab', { tab: 'hub' })" class="btn-bounce"
                 style="background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 7px 11px; font-size: 12px; font-weight: 800; color: #1A1A1A; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; max-width: 100%;">
@@ -635,16 +670,18 @@
         <!-- Rappel minimaliste en 1 ligne -->
         <div id="scanner-phase-reminder"
             style="flex-shrink: 0; background: #FFFFFF; border: 2.5px solid #1A1A1A; border-radius: 12px; padding: 7px 12px; box-shadow: 0 3px 0 #1A1A1A; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <span class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; white-space: nowrap;">
+            <span class="font-display"
+                style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; white-space: nowrap;">
                 Scanner
             </span>
-            <span style="font-size: 12px; font-weight: 700; color: #1A1A1A; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <span
+                style="font-size: 12px; font-weight: 700; color: #1A1A1A; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 @if($user && ($user->fragments()->count() >= 6 || $user->current_step > 6))
                     Terminé (Toutes les étapes validées)
                 @elseif($user && $user->phase === 'GUESSING_LOCATION')
-                    Étape {{ $user->current_step }}/6  |  Scannez le QR de la carte
+                    Étape {{ $user->current_step }}/6 | Scannez le QR de la carte
                 @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                    Étape {{ $user->current_step }}/6  |  Scannez le badge de l'animateur sur place
+                    Étape {{ $user->current_step }}/6 | Scannez le badge de l'animateur sur place
                 @else
                     Terminé
                 @endif
@@ -660,16 +697,20 @@
         <!-- Erreur réseau sur scan (remplace toute modale technique Livewire) -->
         <div id="scanner-network-error-alert" x-show="networkErrorMessage" x-cloak role="alert"
             style="flex-shrink: 0; background: #FEF3C7; border: 2.5px solid #1A1A1A; border-radius: 14px; padding: 10px 12px; color: #1A1A1A; font-size: 12px; box-shadow: 0 4px 0 #1A1A1A;">
-            <p class="font-display" style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #841818;">
+            <p class="font-display"
+                style="font-family: var(--font-display); margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #841818;">
                 Validation impossible hors ligne
             </p>
-            <p style="margin: 0 0 8px 0; font-weight: 700; color: #374151; line-height: 1.35;" x-text="networkErrorMessage"></p>
+            <p style="margin: 0 0 8px 0; font-weight: 700; color: #374151; line-height: 1.35;"
+                x-text="networkErrorMessage"></p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" id="scanner-retry-network-btn" x-on:click="retryPendingScan()" class="btn-bounce font-display"
+                <button type="button" id="scanner-retry-network-btn" x-on:click="retryPendingScan()"
+                    class="btn-bounce font-display"
                     style="font-family: var(--font-display); flex: 1; padding: 7px 12px; background: #F4B316; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
                     Réessayer
                 </button>
-                <button type="button" id="scanner-dismiss-network-btn" x-on:click="dismissNetworkError()" class="btn-bounce"
+                <button type="button" id="scanner-dismiss-network-btn" x-on:click="dismissNetworkError()"
+                    class="btn-bounce"
                     style="padding: 7px 12px; background: #FFFFFF; color: #1A1A1A; border: 2px solid #1A1A1A; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A;">
                     Fermer
                 </button>
@@ -677,21 +718,20 @@
         </div>
 
         <!-- Zone vidéo maximisée avec viseur néo-brutaliste et bouton torche intégré -->
-        <div
-            style="flex: 1; min-height: 260px; position: relative; border-radius: 20px; overflow: hidden; border: 3.5px solid #1A1A1A; background: #000000; box-shadow: 0 6px 0 #1A1A1A;"
+        <div style="flex: 1; min-height: 260px; position: relative; border-radius: 20px; overflow: hidden; border: 3.5px solid #1A1A1A; background: #000000; box-shadow: 0 6px 0 #1A1A1A;"
             :style="{ minHeight: manualScanEnabled ? '230px' : '260px', maxHeight: manualScanEnabled ? '46vh' : 'none' }">
-            <div id="qr-reader" wire:ignore
-                style="width: 100%; height: 100%; min-height: 230px; background: #000000;">
+            <div id="qr-reader" wire:ignore style="width: 100%; height: 100%; min-height: 230px; background: #000000;">
             </div>
 
             <!-- Bouton torche discret dans le coin du viseur (si supporté par le matériel) -->
-            <button type="button" id="btn-toggle-torch" x-show="torchSupported" x-cloak
-                x-on:click="toggleTorch()" class="btn-bounce alpine-inline-flex"
+            <button type="button" id="btn-toggle-torch" x-show="torchSupported" x-cloak x-on:click="toggleTorch()"
+                class="btn-bounce alpine-inline-flex"
                 :style="{ background: torchOn ? '#F4B316' : 'rgba(255, 255, 255, 0.92)', color: '#1A1A1A' }"
                 style="position: absolute; top: 10px; right: 10px; z-index: 15; border: 2.5px solid #1A1A1A; border-radius: 9999px; padding: 6px 11px; font-size: 11px; font-weight: 800; box-shadow: 0 3px 0 #1A1A1A; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
                 title="Allumer ou éteindre la lampe torche">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
                 <span x-text="torchOn ? 'Torche ON' : 'Torche'">Torche</span>
             </button>
@@ -700,11 +740,20 @@
             <div aria-hidden="true"
                 style="pointer-events: none; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;">
                 <div style="width: min(64vw, 230px); height: min(64vw, 230px); position: relative;">
-                    <span style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 10px 0 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
-                    <span style="position: absolute; top: 0; right: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 10px 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
-                    <span style="position: absolute; bottom: 0; left: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 0 0 0 10px; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
-                    <span style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 0 10px 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span
+                        style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 10px 0 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span
+                        style="position: absolute; top: 0; right: 0; width: 32px; height: 32px; border-top: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 10px 0 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span
+                        style="position: absolute; bottom: 0; left: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-left: 5px solid #F4B316; border-radius: 0 0 0 10px; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
+                    <span
+                        style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-bottom: 5px solid #F4B316; border-right: 5px solid #F4B316; border-radius: 0 0 10px 0; filter: drop-shadow(0 2px 0 #1A1A1A);"></span>
                 </div>
+                <span id="scanner-camera-starting-badge"
+                    x-show="(!isInitialized || isStarting) && !cameraErrorMessage && !isLocked" x-cloak
+                    style="margin-top: 10px; background: rgba(26, 26, 26, 0.85); color: #FAF8F5; padding: 4px 11px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1.5px solid #F4B316;">
+                    Ouverture de la caméra...
+                </span>
                 <span x-show="isLocked" x-cloak
                     style="margin-top: 10px; background: rgba(26, 26, 26, 0.85); color: #F4B316; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1.5px solid #F4B316;">
                     Analyse en cours...
@@ -716,21 +765,23 @@
         <div id="scanner-manual-sim-panel" x-show="manualScanEnabled" x-cloak
             x-on:submit.capture="const inp = $el.querySelector('#manualCode'); pendingRetryCode = inp ? inp.value.trim() : ''; if (typeof navigator !== 'undefined' && navigator.onLine === false) { $event.preventDefault(); $event.stopPropagation(); $event.stopImmediatePropagation(); networkErrorMessage = 'Vous êtes hors ligne : impossible de valider ce QR code sans réseau. Rapprochez-vous d\'une zone couverte puis appuyez sur Réessayer.'; if (typeof window.expeditionVibrate === 'function') window.expeditionVibrate([90, 50, 90]); }"
             style="flex-shrink: 0; background: #FFFFFF; border: 3px solid #1A1A1A; border-radius: 16px; box-shadow: 0 4px 0 #1A1A1A; padding: 12px 14px;">
-            <h3 class="font-display" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; margin: 0 0 8px 0;">
+            <h3 class="font-display"
+                style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: #841818; margin: 0 0 8px 0;">
                 Simulation manuelle (Debug PC)
             </h3>
-            <form wire:submit="verifyManualCode"
-                style="display: flex; gap: 8px; align-items: flex-end;">
+            <form wire:submit="verifyManualCode" style="display: flex; gap: 8px; align-items: flex-end;">
                 <div style="flex: 1; min-width: 0;">
                     <label for="manualCode"
-                        style="display: block; font-size: 11px; font-weight: 700; color: #4B5563; margin-bottom: 3px;">Code QR :</label>
-                    <input type="text" id="manualCode" wire:model="manualCode"
-                        placeholder="MAP_LOC_1 / MJ_STEP_1"
+                        style="display: block; font-size: 11px; font-weight: 700; color: #4B5563; margin-bottom: 3px;">Code
+                        QR :</label>
+                    <input type="text" id="manualCode" wire:model="manualCode" placeholder="MAP_LOC_1 / MJ_STEP_1"
                         style="width: 100%; box-sizing: border-box; padding: 8px 9px; border: 2px solid #1A1A1A; border-radius: 8px; font-size: 13px;">
                 </div>
-                <button type="submit" class="btn-bounce font-display"
+                <button type="submit" wire:loading.attr="disabled" wire:target="verifyManualCode"
+                    class="btn-bounce font-display"
                     style="font-family: var(--font-display); padding: 8px 12px; background: #F4B316; color: #1A1A1A; border: 2.5px solid #1A1A1A; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 2px 0 #1A1A1A; white-space: nowrap;">
-                    Simuler le scan
+                    <span wire:loading.remove wire:target="verifyManualCode">Simuler le scan</span>
+                    <span wire:loading wire:target="verifyManualCode">Vérification...</span>
                 </button>
             </form>
         </div>

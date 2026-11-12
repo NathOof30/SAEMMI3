@@ -170,6 +170,55 @@
                 Connexion retrouvée !
             </p>
         </div>
+
+        <style>
+            @keyframes expeditionLoadingSpin {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            .expedition-loading-spinner {
+                animation: expeditionLoadingSpin 0.9s linear infinite;
+                transform-origin: center;
+            }
+        </style>
+
+        <!-- Niveau 1 : Pastille compacte non bloquante en haut (onglets / synchros légères >= 350 ms) -->
+        <div id="global-loading-pill" role="status" aria-live="polite" aria-hidden="true"
+            style="display: none; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); z-index: 9400; pointer-events: none; background: #FAF8F5; border: 2px solid #1A1A1A; border-radius: 9999px; padding: 6px 13px; box-shadow: 0 3px 0 #1A1A1A; font-family: var(--font-body); align-items: center; gap: 8px; max-width: calc(100vw - 24px); box-sizing: border-box;">
+            <svg class="expedition-loading-spinner" viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+                <circle cx="12" cy="12" r="9" stroke="#E5E7EB" stroke-width="3" />
+                <path d="M12 3a9 9 0 0 1 9 9" stroke="#F4B316" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            <span id="global-loading-pill-text" style="font-size: 12px; font-weight: 800; color: #1A1A1A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Synchronisation...
+            </span>
+        </div>
+
+        <!-- Niveau 2 : Voile discret centré pour actions critiques lentes (>= 350 ms) -->
+        <div id="global-loading-overlay" role="status" aria-live="polite" aria-busy="true" aria-hidden="true"
+            style="display: none; position: fixed; inset: 0; z-index: 9600; background: rgba(26, 26, 26, 0.36); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            <div
+                style="background: #FAF8F5; border: 3px solid #1A1A1A; border-radius: 18px; box-shadow: 0 5px 0 #1A1A1A; padding: 18px 20px; width: 100%; max-width: 300px; text-align: center; font-family: var(--font-body); box-sizing: border-box;">
+                <div style="width: 48px; height: 48px; margin: 0 auto 10px auto; border-radius: 50%; background: #FFFFFF; border: 2px solid #1A1A1A; display: flex; align-items: center; justify-content: center;">
+                    <svg class="expedition-loading-spinner" viewBox="0 0 36 36" width="32" height="32" fill="none" aria-hidden="true">
+                        <circle cx="18" cy="18" r="13" stroke="#E5E7EB" stroke-width="4" />
+                        <path d="M18 5a13 13 0 0 1 13 13" stroke="#F4B316" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <p id="global-loading-overlay-title" class="font-display"
+                    style="font-family: var(--font-display); margin: 0; font-size: 19px; font-weight: 700; color: #841818; letter-spacing: 0.02em; line-height: 1.15;">
+                    Connexion à l'expédition...
+                </p>
+                <p id="global-loading-overlay-subtitle"
+                    style="display: none; margin: 6px 0 0 0; font-size: 12px; font-weight: 700; color: #374151; line-height: 1.35;">
+                    (20 à 40 s après une pause)
+                </p>
+            </div>
+        </div>
     @endif
 
     {{ $slot }}
@@ -501,114 +550,495 @@
             } catch (e) {}
             return false;
         };
+    </script>
 
-        (function initConnectivityMonitor() {
-            const getEls = () => ({
-                offline: document.getElementById('offline-network-banner'),
-                title: document.getElementById('offline-network-banner-title'),
-                text: document.getElementById('offline-network-banner-text'),
-                reloadBtn: document.getElementById('offline-network-reload-btn'),
-                restored: document.getElementById('online-restored-banner'),
-            });
-
-            let restoredTimer = null;
-            let wasOfflineOrErrored = false;
-
-            const showNetworkBanner = (titleText, bodyText, showReload = false) => {
-                const els = getEls();
-                if (!els.offline) return;
-                if (els.title && titleText) els.title.textContent = titleText;
-                if (els.text && bodyText) els.text.textContent = bodyText;
-                if (els.reloadBtn) els.reloadBtn.style.display = showReload ? 'inline-block' : 'none';
-                if (els.restored) els.restored.style.display = 'none';
-                els.offline.style.display = 'block';
-                wasOfflineOrErrored = true;
-            };
-
-            const hideNetworkBanner = (flashRestored = false) => {
-                const els = getEls();
-                if (els.offline) els.offline.style.display = 'none';
-                if (flashRestored && wasOfflineOrErrored && els.restored) {
-                    els.restored.style.display = 'block';
-                    if (restoredTimer) clearTimeout(restoredTimer);
-                    restoredTimer = setTimeout(() => {
-                        if (els.restored) els.restored.style.display = 'none';
-                    }, 2600);
-                }
-                wasOfflineOrErrored = false;
-            };
-
-            window.__expeditionDismissNetworkBanner = () => hideNetworkBanner(false);
-            window.__expeditionShowNetworkBanner = showNetworkBanner;
-
-            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-                showNetworkBanner(
-                    'Connexion réseau perdue',
-                    'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
-                    false
-                );
-            }
-
-            window.addEventListener('offline', () => {
-                showNetworkBanner(
-                    'Connexion réseau perdue',
-                    'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
-                    false
-                );
-            });
-
-            window.addEventListener('online', () => {
-                hideNetworkBanner(true);
-                window.dispatchEvent(new CustomEvent('expedition-network-restored'));
-            });
-
-            document.addEventListener('livewire:init', () => {
-                if (!window.Livewire || typeof window.Livewire.interceptRequest !== 'function') {
+    @if(!request()->is('test-qr*'))
+        <script>
+            (function initExpeditionMonitors() {
+                if (window.__expeditionMonitorsInitialized) {
                     return;
                 }
+                window.__expeditionMonitorsInitialized = true;
 
-                window.Livewire.interceptRequest(({ onFailure, onError, onSuccess }) => {
-                    onFailure(({ error }) => {
-                        const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
-                        const msg = isOffline
-                            ? 'Vous êtes hors ligne : la boussole reste active, mais cette action nécessite Internet.'
-                            : 'Réseau instable ou serveur injoignable. Rapprochez-vous d\'une zone couverte et réessayez.';
-                        showNetworkBanner('Connexion interrompue', msg, false);
-                        window.dispatchEvent(new CustomEvent('expedition-network-error', {
-                            detail: { type: isOffline ? 'offline' : 'network', message: msg, error }
-                        }));
-                    });
+                const getBannerEls = () => ({
+                    offline: document.getElementById('offline-network-banner'),
+                    title: document.getElementById('offline-network-banner-title'),
+                    text: document.getElementById('offline-network-banner-text'),
+                    reloadBtn: document.getElementById('offline-network-reload-btn'),
+                    restored: document.getElementById('online-restored-banner'),
+                });
 
-                    onError(({ response, preventDefault }) => {
-                        const status = response && typeof response.status === 'number' ? response.status : 0;
-                        if (status === 419 || status >= 500 || status === 0 || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
-                            if (typeof preventDefault === 'function') {
-                                preventDefault();
-                            }
-                            const isExpired = status === 419;
-                            const msg = isExpired
-                                ? 'Votre session a expiré. Rechargez la page pour retrouver votre expédition en toute sécurité.'
-                                : 'Impossible de contacter le serveur pour le moment. Vérifiez votre réseau puis réessayez.';
-                            showNetworkBanner(
-                                isExpired ? 'Session à rafraîchir' : 'Problème de connexion',
-                                msg,
-                                isExpired
-                            );
-                            window.dispatchEvent(new CustomEvent('expedition-network-error', {
-                                detail: { type: isExpired ? 'expired' : 'server', status, message: msg }
-                            }));
+                let restoredTimer = null;
+                let wasOfflineOrErrored = false;
+
+                const showNetworkBanner = (titleText, bodyText, showReload = false) => {
+                    const els = getBannerEls();
+                    if (!els.offline) return;
+                    if (els.title && titleText) els.title.textContent = titleText;
+                    if (els.text && bodyText) els.text.textContent = bodyText;
+                    if (els.reloadBtn) els.reloadBtn.style.display = showReload ? 'inline-block' : 'none';
+                    if (els.restored) els.restored.style.display = 'none';
+                    els.offline.style.display = 'block';
+                    wasOfflineOrErrored = true;
+                };
+
+                const hideNetworkBanner = (flashRestored = false) => {
+                    const els = getBannerEls();
+                    if (els.offline) els.offline.style.display = 'none';
+                    if (flashRestored && wasOfflineOrErrored && els.restored) {
+                        els.restored.style.display = 'block';
+                        if (restoredTimer) clearTimeout(restoredTimer);
+                        restoredTimer = setTimeout(() => {
+                            if (els.restored) els.restored.style.display = 'none';
+                        }, 2600);
+                    }
+                    wasOfflineOrErrored = false;
+                };
+
+                window.__expeditionDismissNetworkBanner = () => hideNetworkBanner(false);
+                window.__expeditionShowNetworkBanner = showNetworkBanner;
+
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                    showNetworkBanner(
+                        'Connexion réseau perdue',
+                        'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
+                        false
+                    );
+                }
+
+                window.addEventListener('offline', () => {
+                    showNetworkBanner(
+                        'Connexion réseau perdue',
+                        'La boussole et le GPS continuent hors ligne. Le scan et la validation nécessitent Internet.',
+                        false
+                    );
+                });
+
+                window.addEventListener('online', () => {
+                    hideNetworkBanner(true);
+                    window.dispatchEvent(new CustomEvent('expedition-network-restored'));
+                    if (typeof window.__expeditionTriggerKeepAlive === 'function') {
+                        window.__expeditionTriggerKeepAlive();
+                    }
+                });
+
+                // --- Indicateur de chargement à 2 niveaux (seuil 350 ms, palier réveil 2.5 s) ---
+                const SHOW_THRESHOLD_MS = 350;
+                const SLOW_THRESHOLD_MS = 2500;
+                const SAFETY_TIMEOUT_MS = 45000;
+                const CRITICAL_ACTIONS = new Set([
+                    'login',
+                    'register',
+                    'logout',
+                    'verifyCode',
+                    'verifyManualCode',
+                    'debugSetProgress',
+                    'debugResetProgression',
+                ]);
+
+                let activeLightCount = 0;
+                let activeCriticalCount = 0;
+                let showTimer = null;
+                let slowTimer = null;
+                let thresholdReached = false;
+                let isSlowMessage = false;
+                let navSettle = null;
+
+                const getLoadingEls = () => ({
+                    pill: document.getElementById('global-loading-pill'),
+                    pillText: document.getElementById('global-loading-pill-text'),
+                    overlay: document.getElementById('global-loading-overlay'),
+                    overlayTitle: document.getElementById('global-loading-overlay-title'),
+                    overlaySubtitle: document.getElementById('global-loading-overlay-subtitle'),
+                });
+
+                const renderLoadingUi = () => {
+                    const els = getLoadingEls();
+                    const totalActive = activeLightCount + activeCriticalCount;
+
+                    if (totalActive <= 0 || !thresholdReached) {
+                        if (els.pill) {
+                            els.pill.style.display = 'none';
+                            els.pill.setAttribute('aria-hidden', 'true');
                         }
-                    });
+                        if (els.overlay) {
+                            els.overlay.style.display = 'none';
+                            els.overlay.setAttribute('aria-hidden', 'true');
+                        }
+                        return;
+                    }
 
-                    onSuccess(() => {
-                        if (typeof navigator === 'undefined' || navigator.onLine !== false) {
-                            hideNetworkBanner(false);
+                    if (activeCriticalCount > 0) {
+                        if (els.pill) {
+                            els.pill.style.display = 'none';
+                            els.pill.setAttribute('aria-hidden', 'true');
+                        }
+                        if (els.overlay) {
+                            if (els.overlayTitle) {
+                                els.overlayTitle.textContent = isSlowMessage
+                                    ? 'Réveil du serveur en cours...'
+                                    : "Connexion à l'expédition...";
+                            }
+                            if (els.overlaySubtitle) {
+                                els.overlaySubtitle.style.display = isSlowMessage ? 'block' : 'none';
+                            }
+                            els.overlay.style.display = 'flex';
+                            els.overlay.setAttribute('aria-hidden', 'false');
+                        }
+                    } else {
+                        if (els.overlay) {
+                            els.overlay.style.display = 'none';
+                            els.overlay.setAttribute('aria-hidden', 'true');
+                        }
+                        if (els.pill) {
+                            if (els.pillText) {
+                                els.pillText.textContent = isSlowMessage
+                                    ? 'Réveil du serveur en cours...'
+                                    : 'Synchronisation...';
+                            }
+                            els.pill.style.display = 'flex';
+                            els.pill.setAttribute('aria-hidden', 'false');
+                        }
+                    }
+                };
+
+                const resetLoadingTimers = () => {
+                    if (showTimer) {
+                        clearTimeout(showTimer);
+                        showTimer = null;
+                    }
+                    if (slowTimer) {
+                        clearTimeout(slowTimer);
+                        slowTimer = null;
+                    }
+                };
+
+                const beginLoading = (tier) => {
+                    const isCritical = tier === 'critical';
+                    const wasIdle = (activeLightCount + activeCriticalCount) === 0;
+
+                    if (isCritical) {
+                        activeCriticalCount++;
+                    } else {
+                        activeLightCount++;
+                    }
+
+                    if (wasIdle) {
+                        thresholdReached = false;
+                        isSlowMessage = false;
+                        resetLoadingTimers();
+
+                        showTimer = setTimeout(() => {
+                            showTimer = null;
+                            if ((activeLightCount + activeCriticalCount) > 0) {
+                                thresholdReached = true;
+                                renderLoadingUi();
+                            }
+                        }, SHOW_THRESHOLD_MS);
+
+                        slowTimer = setTimeout(() => {
+                            slowTimer = null;
+                            if ((activeLightCount + activeCriticalCount) > 0) {
+                                isSlowMessage = true;
+                                thresholdReached = true;
+                                renderLoadingUi();
+                            }
+                        }, SLOW_THRESHOLD_MS);
+                    } else if (thresholdReached) {
+                        renderLoadingUi();
+                    }
+
+                    let settled = false;
+                    let safetyTimer = setTimeout(() => {
+                        settle();
+                    }, SAFETY_TIMEOUT_MS);
+
+                    const settle = () => {
+                        if (settled) {
+                            return;
+                        }
+                        settled = true;
+
+                        if (safetyTimer) {
+                            clearTimeout(safetyTimer);
+                            safetyTimer = null;
+                        }
+
+                        if (isCritical) {
+                            activeCriticalCount = Math.max(0, activeCriticalCount - 1);
+                        } else {
+                            activeLightCount = Math.max(0, activeLightCount - 1);
+                        }
+
+                        if ((activeLightCount + activeCriticalCount) === 0) {
+                            resetLoadingTimers();
+                            thresholdReached = false;
+                            isSlowMessage = false;
+                        }
+
+                        renderLoadingUi();
+                    };
+
+                    return settle;
+                };
+
+                const isCriticalLivewireRequest = (request) => {
+                    if (!request || !request.messages) {
+                        return false;
+                    }
+
+                    for (const message of request.messages) {
+                        if (message && message.actions) {
+                            for (const action of message.actions) {
+                                if (action && CRITICAL_ACTIONS.has(action.name)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        if (message && Array.isArray(message.calls)) {
+                            for (const call of message.calls) {
+                                if (call && CRITICAL_ACTIONS.has(call.method)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+
+                    return false;
+                };
+
+                const startNavigationLoading = () => {
+                    if (!navSettle) {
+                        navSettle = beginLoading('critical');
+                    }
+                };
+
+                const stopNavigationLoading = () => {
+                    if (navSettle) {
+                        const settleFn = navSettle;
+                        navSettle = null;
+                        settleFn();
+                    }
+                };
+
+                document.addEventListener('livewire:navigate', (event) => {
+                    if (!event.defaultPrevented) {
+                        startNavigationLoading();
+                    }
+                    queueMicrotask(() => {
+                        if (event.defaultPrevented) {
+                            stopNavigationLoading();
                         }
                     });
                 });
-            });
-        })();
-    </script>
+
+                document.addEventListener('livewire:navigating', () => {
+                    startNavigationLoading();
+                });
+
+                document.addEventListener('livewire:navigated', () => {
+                    stopNavigationLoading();
+                    renderLoadingUi();
+                });
+
+                if (typeof window.fetch === 'function' && !window.__expeditionFetchWrapped) {
+                    window.__expeditionFetchWrapped = true;
+                    const originalFetch = window.fetch.bind(window);
+                    window.fetch = function (input, init) {
+                        const headers = init && init.headers;
+                        const isLivewireNavigate = Boolean(
+                            headers && (
+                                headers['X-Livewire-Navigate'] === '1' ||
+                                (typeof Headers !== 'undefined' && headers instanceof Headers && headers.get('X-Livewire-Navigate') === '1')
+                            )
+                        );
+                        const fetchPromise = originalFetch(input, init);
+                        if (isLivewireNavigate) {
+                            fetchPromise.catch((err) => {
+                                stopNavigationLoading();
+                                if ((!err || err.name !== 'AbortError') && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+                                    showNetworkBanner(
+                                        'Connexion interrompue',
+                                        'Impossible de charger la page. Vérifiez votre réseau puis réessayez.',
+                                        true
+                                    );
+                                }
+                            });
+                        }
+                        return fetchPromise;
+                    };
+                }
+
+                let interceptorRegistered = false;
+                const registerLivewireRequestInterceptor = () => {
+                    if (interceptorRegistered || !window.Livewire || typeof window.Livewire.interceptRequest !== 'function') {
+                        return;
+                    }
+                    interceptorRegistered = true;
+
+                    window.Livewire.interceptRequest(({ request, onSend, onCancel, onFailure, onError, onSuccess, onFinish, onRedirect }) => {
+                        let activeSettle = null;
+
+                        const ensureSettled = () => {
+                            if (activeSettle) {
+                                activeSettle();
+                            }
+                        };
+
+                        if (typeof onSend === 'function') {
+                            onSend(({ responsePromise } = {}) => {
+                                const tier = isCriticalLivewireRequest(request) ? 'critical' : 'light';
+                                activeSettle = beginLoading(tier);
+
+                                if (responsePromise && typeof responsePromise.finally === 'function') {
+                                    responsePromise.finally(ensureSettled);
+                                }
+                            });
+                        }
+
+                        if (typeof onCancel === 'function') {
+                            onCancel(() => {
+                                ensureSettled();
+                            });
+                        }
+
+                        onFailure(({ error }) => {
+                            ensureSettled();
+                            const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+                            const msg = isOffline
+                                ? 'Vous êtes hors ligne : la boussole reste active, mais cette action nécessite Internet.'
+                                : 'Réseau instable ou serveur injoignable. Rapprochez-vous d\'une zone couverte et réessayez.';
+                            showNetworkBanner('Connexion interrompue', msg, false);
+                            window.dispatchEvent(new CustomEvent('expedition-network-error', {
+                                detail: { type: isOffline ? 'offline' : 'network', message: msg, error }
+                            }));
+                        });
+
+                        onError(({ response, preventDefault }) => {
+                            ensureSettled();
+                            const status = response && typeof response.status === 'number' ? response.status : 0;
+                            if (status === 419 || status >= 500 || status === 0 || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+                                if (typeof preventDefault === 'function') {
+                                    preventDefault();
+                                }
+                                const isExpired = status === 419;
+                                const msg = isExpired
+                                    ? 'Votre session a expiré. Rechargez la page pour retrouver votre expédition en toute sécurité.'
+                                    : 'Impossible de contacter le serveur pour le moment. Vérifiez votre réseau puis réessayez.';
+                                showNetworkBanner(
+                                    isExpired ? 'Session à rafraîchir' : 'Problème de connexion',
+                                    msg,
+                                    isExpired
+                                );
+                                window.dispatchEvent(new CustomEvent('expedition-network-error', {
+                                    detail: { type: isExpired ? 'expired' : 'server', status, message: msg }
+                                }));
+                            }
+                        });
+
+                        onSuccess(() => {
+                            ensureSettled();
+                            if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+                                hideNetworkBanner(false);
+                            }
+                        });
+
+                        if (typeof onRedirect === 'function') {
+                            onRedirect(() => {
+                                ensureSettled();
+                            });
+                        }
+
+                        if (typeof onFinish === 'function') {
+                            onFinish(() => {
+                                ensureSettled();
+                            });
+                        }
+                    });
+                };
+
+                registerLivewireRequestInterceptor();
+                document.addEventListener('livewire:init', registerLivewireRequestInterceptor);
+
+                // --- Heartbeat Keep-Alive silencieux (Render + Neon + Session/CSRF) ---
+                const KEEP_ALIVE_INTERVAL_MS = 210000;
+                const KEEP_ALIVE_VISIBILITY_DEBOUNCE_MS = 60000;
+                let lastKeepAliveAt = Date.now();
+                let isKeepAliveInFlight = false;
+
+                const refreshCsrfToken = (nextToken) => {
+                    if (!nextToken || typeof nextToken !== 'string') {
+                        return;
+                    }
+
+                    document.querySelectorAll('[data-csrf]').forEach((el) => {
+                        el.setAttribute('data-csrf', nextToken);
+                    });
+
+                    if (window.livewireScriptConfig && typeof window.livewireScriptConfig === 'object') {
+                        window.livewireScriptConfig.csrf = nextToken;
+                    }
+
+                    const metaCsrf = document.querySelector('meta[name="csrf-token"]');
+                    if (metaCsrf) {
+                        metaCsrf.setAttribute('content', nextToken);
+                    }
+                };
+
+                const sendKeepAlive = () => {
+                    if (isKeepAliveInFlight) {
+                        return;
+                    }
+                    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+                        return;
+                    }
+                    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                        return;
+                    }
+
+                    isKeepAliveInFlight = true;
+
+                    fetch('/keep-alive', {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    })
+                        .then((response) => {
+                            if (response && response.ok) {
+                                lastKeepAliveAt = Date.now();
+                                return response.json();
+                            }
+                            return null;
+                        })
+                        .then((data) => {
+                            if (data && data.csrf) {
+                                refreshCsrfToken(data.csrf);
+                            }
+                        })
+                        .catch(() => {})
+                        .finally(() => {
+                            isKeepAliveInFlight = false;
+                        });
+                };
+
+                window.__expeditionTriggerKeepAlive = () => sendKeepAlive();
+
+                setInterval(() => {
+                    sendKeepAlive();
+                }, KEEP_ALIVE_INTERVAL_MS);
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible' && (Date.now() - lastKeepAliveAt >= KEEP_ALIVE_VISIBILITY_DEBOUNCE_MS)) {
+                        sendKeepAlive();
+                    }
+                });
+            })();
+        </script>
+    @endif
 
     @livewireScripts
 </body>

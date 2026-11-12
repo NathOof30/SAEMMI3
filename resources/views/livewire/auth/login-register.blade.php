@@ -253,9 +253,12 @@
                     </div>
 
                     <button type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="register"
                         class="btn-bounce font-display"
                         style="font-family: var(--font-display); margin-top: 6px; padding: 13px; background: #F4B316; color: #1a1a1a; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
-                        Créer mon équipe et commencer
+                        <span wire:loading.remove wire:target="register">Créer mon équipe et commencer</span>
+                        <span wire:loading wire:target="register">Création de l'équipe...</span>
                     </button>
                 </form>
 
@@ -305,9 +308,12 @@
                     </div>
 
                     <button type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="login"
                         class="btn-bounce font-display"
                         style="font-family: var(--font-display); margin-top: 6px; padding: 13px; background: #841818; color: #ffffff; font-weight: 700; font-size: 18px; letter-spacing: 0.03em; border: 2.5px solid #1a1a1a; border-radius: 10px; box-shadow: 0 4px 0 #1a1a1a; cursor: pointer;">
-                        Se connecter
+                        <span wire:loading.remove wire:target="login">Se connecter</span>
+                        <span wire:loading wire:target="login">Connexion...</span>
                     </button>
                 </form>
 
