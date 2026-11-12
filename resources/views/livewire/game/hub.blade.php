@@ -22,6 +22,8 @@
     @else
         <div id="hub-compass-root"
             data-phase="{{ $user ? $user->phase : '' }}"
+            data-user-id="{{ $user ? $user->id : 0 }}"
+            data-step-id="{{ $step->id }}"
             data-step-lat="{{ $step->lat }}"
             data-step-lng="{{ $step->lng }}"
             data-step-radius="{{ (int) ($step->target_radius ?? 30) }}"
@@ -36,10 +38,61 @@
                 activeTab: 'hub',
                 sensorsPaused: false,
                 wasWithinTarget: false,
+                withinTargetZone: false,
+                spotStage: 'walking',
                 visibilityHandler: null,
                 touchStartY: null,
                 touchStartScrollTop: 0,
                 touchStartedInScroll: false,
+                spotStorageKey() {
+                    const root = document.getElementById('hub-compass-root');
+                    const uid = root && root.dataset.userId ? root.dataset.userId : '{{ $user ? $user->id : 0 }}';
+                    const sid = root && root.dataset.stepId ? root.dataset.stepId : '{{ $step->id }}';
+                    return 'expedition_spot_state_' + uid + '_' + sid;
+                },
+                loadSpotStage() {
+                    if (!this.isWalkingPhase()) {
+                        this.spotStage = 'walking';
+                        this.withinTargetZone = false;
+                        try {
+                            localStorage.removeItem(this.spotStorageKey());
+                        } catch (e) {}
+                        return;
+                    }
+                    try {
+                        const saved = localStorage.getItem(this.spotStorageKey());
+                        if (saved === 'at_spot_challenge' || saved === 'ready_to_scan') {
+                            this.spotStage = saved;
+                            this.withinTargetZone = true;
+                            return;
+                        }
+                    } catch (e) {}
+                    this.spotStage = 'walking';
+                },
+                setSpotStage(stage) {
+                    this.spotStage = stage;
+                    try {
+                        if (stage === 'at_spot_challenge' || stage === 'ready_to_scan') {
+                            localStorage.setItem(this.spotStorageKey(), stage);
+                        } else {
+                            localStorage.removeItem(this.spotStorageKey());
+                        }
+                    } catch (e) {}
+                },
+                confirmArrival() {
+                    this.gpsHelpOpen = false;
+                    this.withinTargetZone = true;
+                    this.setSpotStage('at_spot_challenge');
+                },
+                completeChallengeAndOpenScanner() {
+                    this.setSpotStage('ready_to_scan');
+                },
+                returnToCompass() {
+                    this.gpsHelpOpen = false;
+                    this.setSpotStage('walking');
+                    this.withinTargetZone = this.distanceMeters !== null && this.distanceMeters <= this.targetRadius;
+                    this.wasWithinTarget = this.withinTargetZone;
+                },
                 openHelpModal(view = 'guide') {
                     this.helpView = view;
                     if (view === 'tutorial') {
@@ -105,6 +158,11 @@
                         this.userLng = this.targetLng;
                         this.mockLat = this.userLat.toFixed(7);
                         this.mockLng = this.userLng.toFixed(7);
+                    }
+                    if (offsetMeters > this.targetRadius) {
+                        this.withinTargetZone = false;
+                        this.wasWithinTarget = false;
+                        this.setSpotStage('walking');
                     }
                     this.isMocking = true;
                     this.gpsAccuracy = null;
@@ -212,9 +270,10 @@
                     const nowWithin = distance <= this.targetRadius;
                     if (nowWithin) {
                         this.gpsHelpOpen = false;
-                        if (!this.wasWithinTarget && !this.sensorsPaused && typeof window.expeditionVibrate === 'function') {
+                        if (!this.withinTargetZone && !this.sensorsPaused && typeof window.expeditionVibrate === 'function') {
                             window.expeditionVibrate([60, 40, 60]);
                         }
+                        this.withinTargetZone = true;
                     }
                     this.wasWithinTarget = nowWithin;
                     this.distanceText = distance + ' mètres';
@@ -224,7 +283,7 @@
                     }
                 },
                 isWithinTarget() {
-                    return this.distanceMeters !== null && this.distanceMeters <= this.targetRadius;
+                    return this.withinTargetZone || (this.distanceMeters !== null && this.distanceMeters <= this.targetRadius);
                 },
                 isInApproachZone() {
                     if (this.distanceMeters === null || this.distanceMeters <= this.targetRadius) {
@@ -388,8 +447,8 @@
                     );
                 },
                 getGuidanceText() {
-                    if (this.distanceMeters !== null && this.distanceMeters <= this.targetRadius) {
-                        return 'Vous êtes arrivé sur les lieux ! Cherchez l\'indice ou l\'animateur sur place.';
+                    if (this.spotStage !== 'walking' || this.isWithinTarget()) {
+                        return 'Vous êtes arrivé sur les lieux ! Rejoignez l\'animateur sur place.';
                     }
                     if (this.needleAngle === null || this.bearing === null) {
                         return 'Recherche de cap en cours...';
@@ -413,6 +472,8 @@
                     if (typeof this.$cleanup === 'function') {
                         this.$cleanup(() => this.cleanup());
                     }
+
+                    this.loadSpotStage();
 
                     const hubPane = document.getElementById('tab-pane-hub');
                     this.activeTab = (hubPane && hubPane.style.display === 'none') ? 'other' : 'hub';
@@ -519,6 +580,12 @@
                     this.gpsAccuracy = null;
 
                     if (!isNaN(lat) && !isNaN(lng)) {
+                        const mockDist = this.haversineDistance(lat, lng, this.targetLat, this.targetLng);
+                        if (mockDist > this.targetRadius) {
+                            this.withinTargetZone = false;
+                            this.wasWithinTarget = false;
+                            this.setSpotStage('walking');
+                        }
                         this.userLat = lat;
                         this.userLng = lng;
                         this.updateDistance(lat, lng);
@@ -568,6 +635,8 @@
                     this.gpsWaitTooLong = false;
                     this.gpsHelpOpen = false;
                     this.wasWithinTarget = false;
+                    this.withinTargetZone = false;
+                    this.setSpotStage('walking');
                     if (this.gpsTimeoutId) {
                         clearTimeout(this.gpsTimeoutId);
                         this.gpsTimeoutId = null;
@@ -883,7 +952,7 @@
             </div>
 
             <!-- Permission iOS Safari -->
-            <div id="compass-permission-section" x-show="needsPermission" x-cloak
+            <div id="compass-permission-section" x-show="needsPermission && (!isWalkingPhase() || spotStage === 'walking')" x-cloak
                 style="flex-shrink: 0; width: 100%; box-sizing: border-box; margin-top: 34px; margin-bottom: 4px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 8px 10px; text-align: center;">
                 <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #92400E;">Permission boussole requise
                     sur smartphone :</p>
@@ -978,8 +1047,8 @@
                     </div>
                 </div>
             @elseif($user && $user->phase === 'WALKING_TO_TARGET')
-                <!-- Phase B : Déplacement physique avec la Boussole Géante & Aiguille bicolore -->
-                <div
+                <!-- Phase B1 : Déplacement physique avec la Boussole Géante & Aiguille bicolore -->
+                <div x-show="spotStage === 'walking'" class="alpine-flex"
                     style="flex: 1 1 0%; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; padding: 4px 0; box-sizing: border-box; overflow: hidden;">
                     <svg viewBox="0 0 200 200" width="200" height="200" aria-label="Boussole d'orientation vers la cible"
                         style="width: auto; height: 100%; max-width: min(70vw, 260px); max-height: min(70vw, 260px); aspect-ratio: 1 / 1; display: block;">
@@ -1025,6 +1094,128 @@
                     </svg>
                 </div>
 
+                <!-- Phase B2 : Emblème du lieu sur place (même DA que le badge '?' de Phase A) -->
+                <div id="phase-b-landmark-emblem" x-show="spotStage !== 'walking'" x-cloak class="alpine-flex"
+                    style="flex: 1 1 0%; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; padding: 4px 0; box-sizing: border-box; overflow: hidden;">
+                    <svg id="phase-b-landmark-svg" data-step-icon="{{ $step->id }}" viewBox="0 0 200 200" width="200" height="200"
+                        aria-label="Emblème de l'étape : {{ $step->cleanName() }}"
+                        style="width: auto; height: 100%; max-width: min(70vw, 260px); max-height: min(70vw, 260px); aspect-ratio: 1 / 1; display: block;">
+                        <!-- Cadran extérieur vert sauge cerclé de noir (identique Phase A) -->
+                        <circle cx="100" cy="100" r="94" fill="#9FB8AD" stroke="#1A1A1A" stroke-width="4" />
+
+                        <!-- Cadran crème intermédiaire avec cercle concentrique noir -->
+                        <circle cx="100" cy="100" r="78" fill="#F4EBD9" stroke="#1A1A1A" stroke-width="3.5" />
+                        <circle cx="100" cy="100" r="64" fill="none" stroke="#1A1A1A" stroke-width="2"
+                            stroke-dasharray="2 4" opacity="0.3" />
+
+                        @switch($step->id)
+                            @case(1)
+                                <!-- Étape 1 : Gare de Lens (Locomotive) -->
+                                <g id="landmark-icon-step-1">
+                                    <line x1="48" y1="138" x2="152" y2="138" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
+                                    <circle cx="130" cy="60" r="6" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <circle cx="141" cy="54" r="8" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <polygon points="122,90 124,70 136,70 138,90" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" />
+                                    <rect x="56" y="74" width="32" height="48" rx="3" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <rect x="52" y="70" width="40" height="7" rx="3" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <rect x="63" y="82" width="18" height="15" rx="2.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <rect x="86" y="88" width="54" height="34" rx="4" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <path d="M 103 88 C 103 78, 117 78, 117 88 Z" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <line x1="98" y1="88" x2="98" y2="122" stroke="#F4B316" stroke-width="3" />
+                                    <line x1="120" y1="88" x2="120" y2="122" stroke="#F4B316" stroke-width="3" />
+                                    <rect x="138" y="92" width="7" height="26" rx="2" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <polygon points="138,122 150,134 138,134" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round" />
+                                    <rect x="54" y="118" width="88" height="8" rx="2" fill="#1A1A1A" />
+                                    <circle cx="72" cy="128" r="11" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <circle cx="72" cy="128" r="3.5" fill="#1A1A1A" />
+                                    <circle cx="100" cy="128" r="11" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <circle cx="100" cy="128" r="3.5" fill="#1A1A1A" />
+                                    <circle cx="127" cy="130" r="8" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <circle cx="127" cy="130" r="2.5" fill="#1A1A1A" />
+                                    <line x1="72" y1="128" x2="100" y2="128" stroke="#841818" stroke-width="3" stroke-linecap="round" />
+                                </g>
+                                @break
+                            @case(2)
+                                <!-- Étape 2 : Centre-Ville (Beffroi / Façade Art déco lensoise) -->
+                                <g id="landmark-icon-step-2">
+                                    <line x1="48" y1="142" x2="152" y2="142" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
+                                    <rect x="54" y="96" width="92" height="46" rx="2" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <rect x="61" y="106" width="12" height="18" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <rect x="127" y="106" width="12" height="18" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <rect x="80" y="64" width="40" height="78" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <polygon points="84,64 92,50 108,50 116,64" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <line x1="100" y1="40" x2="100" y2="50" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round" />
+                                    <circle cx="100" cy="82" r="11" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <polyline points="100,76 100,82 105,84" fill="none" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <line x1="80" y1="102" x2="120" y2="102" stroke="#F4B316" stroke-width="3" />
+                                    <path d="M 90 142 L 90 120 A 10 10 0 0 1 110 120 L 110 142 Z" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round" />
+                                </g>
+                                @break
+                            @case(3)
+                                <!-- Étape 3 : Stade Bollaert-Delelis (Stade & ballon de football) -->
+                                <g id="landmark-icon-step-3">
+                                    <line x1="58" y1="78" x2="54" y2="58" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" />
+                                    <rect x="48" y="54" width="12" height="6" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="142" y1="78" x2="146" y2="58" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" />
+                                    <rect x="140" y="54" width="12" height="6" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <path d="M 48 110 C 48 72, 152 72, 152 110 L 144 132 L 56 132 Z" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <path d="M 56 96 C 72 78, 128 78, 144 96" fill="none" stroke="#F4B316" stroke-width="5" stroke-linecap="round" />
+                                    <circle cx="100" cy="118" r="26" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <polygon points="100,106 111,114 107,127 93,127 89,114" fill="#1A1A1A" />
+                                    <line x1="100" y1="106" x2="100" y2="92" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="111" y1="114" x2="124" y2="109" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="107" y1="127" x2="116" y2="138" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="93" y1="127" x2="84" y2="138" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="89" y1="114" x2="76" y2="109" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <path d="M 90 94 L 100 92 L 110 94" fill="none" stroke="#F4B316" stroke-width="3" stroke-linecap="round" />
+                                </g>
+                                @break
+                            @case(4)
+                                <!-- Étape 4 : Musée Louvre-Lens (Galerie & musée de verre) -->
+                                <g id="landmark-icon-step-4">
+                                    <line x1="44" y1="136" x2="156" y2="136" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
+                                    <polygon points="82,88 100,60 118,88" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <line x1="100" y1="60" x2="91" y2="88" stroke="#1A1A1A" stroke-width="2" />
+                                    <line x1="100" y1="60" x2="109" y2="88" stroke="#1A1A1A" stroke-width="2" />
+                                    <rect x="48" y="96" width="104" height="40" rx="2" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <rect x="44" y="88" width="112" height="9" rx="2" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <rect x="55" y="102" width="22" height="28" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="59" y1="124" x2="73" y2="108" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" />
+                                    <rect x="123" y="102" width="22" height="28" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <line x1="127" y1="124" x2="141" y2="108" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" />
+                                    <rect x="85" y="102" width="30" height="34" fill="#841818" stroke="#1A1A1A" stroke-width="3" />
+                                    <rect x="93" y="110" width="14" height="26" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                </g>
+                                @break
+                            @case(5)
+                                <!-- Étape 5 : Terrils de Loos-en-Gohelle (Terrils jumeaux) -->
+                                <g id="landmark-icon-step-5">
+                                    <line x1="44" y1="138" x2="156" y2="138" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
+                                    <polygon points="46,138 82,66 116,138" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <polygon points="82,66 116,138 92,138" fill="#841818" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" />
+                                    <polygon points="84,138 118,62 154,138" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <polygon points="118,62 154,138 128,138" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" />
+                                    <line x1="118" y1="45" x2="118" y2="62" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" />
+                                    <polygon points="118,45 135,50 118,56" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" />
+                                </g>
+                                @break
+                            @default
+                                <!-- Étape 6 : Office de Tourisme (Pavillon d'accueil & coffre final) -->
+                                <g id="landmark-icon-step-6">
+                                    <polygon points="52,78 100,52 148,78" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <circle cx="100" cy="67" r="5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <path d="M 62 104 C 62 84, 138 84, 138 104 Z" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
+                                    <rect x="62" y="104" width="76" height="36" rx="4" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
+                                    <rect x="74" y="90" width="9" height="50" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <rect x="117" y="90" width="9" height="50" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
+                                    <rect x="92" y="98" width="16" height="20" rx="3" fill="#F4B316" stroke="#1A1A1A" stroke-width="3" />
+                                    <circle cx="100" cy="106" r="2.8" fill="#1A1A1A" />
+                                    <line x1="100" y1="108" x2="100" y2="113" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                </g>
+                        @endswitch
+                    </svg>
+                </div>
+
                 <!-- Deck de Cartes en éventail (-5deg / +5deg) compact par défaut, extensible vers le haut par tap ou swipe -->
                 <div id="phase-b-deck-wrapper"
                     x-on:touchstart.passive="onDeckTouchStart($event)"
@@ -1040,7 +1231,7 @@
                         style="position: absolute; top: 14px; bottom: -40px; left: 0; right: 0; background: #E5E7EB; border: 2px solid #1A1A1A; border-bottom: none; border-radius: 20px 20px 0 0; transform: rotate(5deg); transform-origin: bottom center; z-index: 2;">
                     </div>
 
-                    <!-- Carte principale au premier plan (compacte pour la marche) -->
+                    <!-- Carte principale au premier plan -->
                     <div id="phase-b-card"
                         style="position: relative; z-index: 3; background: #FFFFFF; border: 3.5px solid #1A1A1A; border-bottom: none; border-radius: 24px 24px 0 0; padding: 10px 18px 28px 18px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); margin-bottom: -16px;">
                         <!-- Poignée de tirage & bouton tap pour étendre -->
@@ -1053,85 +1244,139 @@
                             </span>
                         </button>
 
-                        <h3 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
-                            Destination : <span style="color: #F4B316;">{{ $step->cleanName() }}</span>
-                        </h3>
+                        <!-- Sous-écran 1 : Marche à la boussole -->
+                        <div id="phase-b-walking-panel" x-show="spotStage === 'walking'">
+                            <h3 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
+                                Destination : <span style="color: #F4B316;">{{ $step->cleanName() }}</span>
+                            </h3>
 
-                        <p style="font-size: 13px; color: #4B5563; line-height: 1.35; margin: 0 0 10px 0;">
-                            Suivez la boussole, observez autour de vous et trouvez le spot
-                        </p>
+                            <p style="font-size: 13px; color: #4B5563; line-height: 1.35; margin: 0 0 10px 0;">
+                                Suivez la boussole, observez autour de vous et trouvez le spot
+                            </p>
 
-                        <!-- Message d'erreur permission/signal GPS si le signal réel est dégradé ou indisponible -->
-                        <p x-show="!isMocking && gpsErrorMessage" x-cloak id="hub-gps-error-msg"
-                            style="font-size: 11px; font-weight: 700; color: #B91C1C; background: #FEE2E2; border: 1.5px solid #EF4444; border-radius: 8px; padding: 6px 8px; margin: 0 0 10px 0; line-height: 1.35;"
-                            x-text="gpsErrorMessage"></p>
+                            <!-- Message d'erreur permission/signal GPS si le signal réel est dégradé ou indisponible -->
+                            <p x-show="!isMocking && gpsErrorMessage" x-cloak id="hub-gps-error-msg"
+                                style="font-size: 11px; font-weight: 700; color: #B91C1C; background: #FEE2E2; border: 1.5px solid #EF4444; border-radius: 8px; padding: 6px 8px; margin: 0 0 10px 0; line-height: 1.35;"
+                                x-text="gpsErrorMessage"></p>
 
-                        <!-- Gros bouton d'action en bas de carte + encart d'aide contextuel -->
-                        <div style="position: relative; width: 100%;">
-                            <!-- Encart d'aide contextuel GPS imprécis (ouvert au clic sur ?) -->
-                            <div x-show="gpsHelpOpen && showGpsHelpButton()" x-cloak id="hub-gps-help-popover"
-                                x-on:click.outside="gpsHelpOpen = false"
-                                style="position: absolute; bottom: calc(100% + 10px); left: 0; right: 0; z-index: 25; background: #FFFBEB; border: 3px solid #1A1A1A; border-radius: 16px; padding: 14px; box-shadow: 0 6px 0 #1A1A1A;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
-                                    <p style="margin: 0; font-size: 13px; font-weight: 800; color: #841818; line-height: 1.35;">
-                                        Vous êtes arrivé mais le point GPS n'est pas précis ?
-                                    </p>
-                                    <button type="button" x-on:click="gpsHelpOpen = false" aria-label="Fermer l'aide GPS"
-                                        style="background: none; border: none; font-size: 16px; font-weight: 700; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1;">
-                                        ✕
+                            <!-- Gros bouton d'action en bas de carte + encart d'aide contextuel -->
+                            <div style="position: relative; width: 100%;">
+                                <!-- Encart d'aide contextuel GPS imprécis (ouvert au clic sur ?) -->
+                                <div x-show="gpsHelpOpen && showGpsHelpButton()" x-cloak id="hub-gps-help-popover"
+                                    x-on:click.outside="gpsHelpOpen = false"
+                                    style="position: absolute; bottom: calc(100% + 10px); left: 0; right: 0; z-index: 25; background: #FFFBEB; border: 3px solid #1A1A1A; border-radius: 16px; padding: 14px; box-shadow: 0 6px 0 #1A1A1A;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+                                        <p style="margin: 0; font-size: 13px; font-weight: 800; color: #841818; line-height: 1.35;">
+                                            Vous êtes arrivé mais le point GPS n'est pas précis ?
+                                        </p>
+                                        <button type="button" x-on:click="gpsHelpOpen = false" aria-label="Fermer l'aide GPS"
+                                            style="background: none; border: none; font-size: 16px; font-weight: 700; color: #1A1A1A; cursor: pointer; padding: 0 2px; line-height: 1;">
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <button type="button" id="hub-gps-fallback-scanner-btn"
+                                        x-on:click="confirmArrival()" class="btn-bounce font-display"
+                                        style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 16px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
+                                        Je suis devant le lieu
+                                    </button>
+                                    <button type="button" id="hub-gps-retry-btn"
+                                        x-on:click="gpsHelpOpen = false; resetLiveSensors()"
+                                        style="display: block; width: 100%; margin-top: 8px; padding: 7px 10px; background: #FFFFFF; color: #841818; font-size: 12px; font-weight: 800; border: 2px solid #1A1A1A; border-radius: 8px; cursor: pointer;">
+                                        Actualiser la position GPS
                                     </button>
                                 </div>
-                                <button type="button" id="hub-gps-fallback-scanner-btn"
-                                    x-on:click="gpsHelpOpen = false; tab = 'scanner'"
-                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
-                                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 14px; background: #F4B316; color: #1A1A1A; font-size: 16px; font-weight: 700; border: 2.5px solid #1A1A1A; border-radius: 10px; box-shadow: 0 3px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
-                                    Ouvrir le scanner
-                                </button>
-                                <button type="button" id="hub-gps-retry-btn"
-                                    x-on:click="gpsHelpOpen = false; resetLiveSensors()"
-                                    style="display: block; width: 100%; margin-top: 8px; padding: 7px 10px; background: #FFFFFF; color: #841818; font-size: 12px; font-weight: 800; border: 2px solid #1A1A1A; border-radius: 8px; cursor: pointer;">
-                                    Actualiser la position GPS
-                                </button>
-                            </div>
 
-                            <!-- Si distance > targetRadius (ou GPS en attente) : affiche la distance réelle ou 'Signal GPS...' + bouton ? contextuel -->
-                            <div x-show="!isWithinTarget()" style="width: 100%;">
-                                <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-                                    <div id="hub-distance-metric-btn" class="font-display"
-                                        style="font-family: var(--font-display); flex: 1; min-width: 0; box-sizing: border-box; padding: 12px 12px; background: #841818; color: #FFFFFF; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center;"
-                                        :style="{ fontSize: distanceMeters !== null ? '28px' : '22px' }">
-                                        <span id="metric-distance-text"
-                                            x-text="distanceMeters !== null ? distanceMeters + ' m' : (gpsStatus === 'denied' ? 'GPS refusé' : (gpsStatus === 'unavailable' || gpsStatus === 'unsupported' ? 'GPS indisponible' : 'Signal GPS...'))">Signal GPS...</span>
+                                <!-- Si distance > targetRadius (ou GPS en attente) : affiche la distance réelle ou 'Signal GPS...' + bouton ? contextuel -->
+                                <div x-show="!isWithinTarget()" style="width: 100%;">
+                                    <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
+                                        <div id="hub-distance-metric-btn" class="font-display"
+                                            style="font-family: var(--font-display); flex: 1; min-width: 0; box-sizing: border-box; padding: 12px 12px; background: #841818; color: #FFFFFF; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center;"
+                                            :style="{ fontSize: distanceMeters !== null ? '28px' : '22px' }">
+                                            <span id="metric-distance-text"
+                                                x-text="distanceMeters !== null ? distanceMeters + ' m' : (gpsStatus === 'denied' ? 'GPS refusé' : (gpsStatus === 'unavailable' || gpsStatus === 'unsupported' ? 'GPS indisponible' : 'Signal GPS...'))">Signal GPS...</span>
+                                        </div>
+
+                                        <div x-show="showGpsHelpButton()" x-cloak style="flex-shrink: 0;">
+                                            <button type="button"
+                                                id="hub-gps-help-btn"
+                                                x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
+                                                title="Vous êtes arrivé mais le point GPS n'est pas précis ?"
+                                                aria-label="Vous êtes arrivé mais le point GPS n'est pas précis ? Confirmer votre arrivée"
+                                                class="btn-bounce font-display"
+                                                style="font-family: var(--font-display); width: 54px; height: 100%; box-sizing: border-box; background: #FEF3C7; color: #841818; font-size: 26px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                                ?
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <div x-show="showGpsHelpButton()" x-cloak style="flex-shrink: 0;">
+                                    <div x-show="showGpsHelpButton()" x-cloak>
                                         <button type="button"
-                                            id="hub-gps-help-btn"
                                             x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
-                                            title="Vous êtes arrivé mais le point GPS n'est pas précis ?"
-                                            aria-label="Vous êtes arrivé mais le point GPS n'est pas précis ? Ouvrir le scanner"
-                                            class="btn-bounce font-display"
-                                            style="font-family: var(--font-display); width: 54px; height: 100%; box-sizing: border-box; background: #FEF3C7; color: #841818; font-size: 26px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                                            ?
+                                            style="display: block; width: 100%; background: none; border: none; padding: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #841818; text-align: center; cursor: pointer; text-decoration: underline;">
+                                            Arrivé mais GPS imprécis ? Touchez ?
                                         </button>
                                     </div>
                                 </div>
 
-                                <div x-show="showGpsHelpButton()" x-cloak>
-                                    <button type="button"
-                                        x-on:click.stop="gpsHelpOpen = !gpsHelpOpen"
-                                        style="display: block; width: 100%; background: none; border: none; padding: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #841818; text-align: center; cursor: pointer; text-decoration: underline;">
-                                        Arrivé mais GPS imprécis ? Touchez ?
-                                    </button>
-                                </div>
+                                <!-- Si distance <= targetRadius : demande confirmation explicite avant de masquer la boussole -->
+                                <button type="button" x-show="isWithinTarget()" x-cloak
+                                    id="hub-confirm-arrival-btn" x-on:click="confirmArrival()"
+                                    class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 23px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
+                                    Vous êtes arrivé ?
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sous-écran 2 : Pause sur place devant l'animateur avant ouverture du scanner -->
+                        <div id="phase-b-on-site-panel" x-show="spotStage !== 'walking'" x-cloak>
+                            <div style="margin-bottom: 6px;">
+                                <span
+                                    style="display: inline-block; padding: 3px 10px; background: #FEF3C7; border: 1.5px solid #1A1A1A; border-radius: 9999px; font-size: 10px; font-weight: 800; color: #841818; text-transform: uppercase; letter-spacing: 0.04em;">
+                                    Sur place  |  Étape {{ $step->id }}/6
+                                </span>
                             </div>
 
-                            <!-- Si distance <= targetRadius : se transforme en bouton interactif 'Scanner le spot' (fond or) -->
-                            <button type="button" x-show="isWithinTarget()" x-cloak
-                                id="hub-scanner-action-btn" x-on:click="tab = 'scanner'"
-                                wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
-                                style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 14px 16px; background: #F4B316; color: #1A1A1A; font-size: 24px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Scanner le spot
+                            <h3 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 8px 0; color: #1A1A1A; letter-spacing: 0.02em; line-height: 1.1;">
+                                {{ $step->cleanName() }}
+                            </h3>
+
+                            <div x-show="spotStage === 'at_spot_challenge'">
+                                <p style="font-size: 13px; color: #374151; line-height: 1.4; margin: 0 0 12px 0;">
+                                    @if($step->id === 6)
+                                        Halte, explorateurs ! Posez le téléphone un instant et rejoignez l'animateur ou l'équipe d'accueil du point final pour relever l'ultime épreuve en famille avant de scanner.
+                                    @else
+                                        Halte, explorateurs ! Posez le téléphone un instant et rejoignez l'animateur sur place pour relever l'épreuve en famille avant de scanner.
+                                    @endif
+                                </p>
+
+                                <button type="button" id="hub-challenge-done-btn"
+                                    x-on:click="completeChallengeAndOpenScanner(); tab = 'scanner'"
+                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })"
+                                    class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 13px 16px; background: #F4B316; color: #1A1A1A; font-size: 21px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
+                                    Épreuve terminée ?
+                                </button>
+                            </div>
+
+                            <div x-show="spotStage === 'ready_to_scan'" x-cloak>
+                                <p style="font-size: 13px; color: #374151; line-height: 1.4; margin: 0 0 12px 0;">
+                                    Épreuve terminée ! Présentez la caméra face au badge de l'animateur sur place pour récupérer votre fragment de clé.
+                                </p>
+
+                                <button type="button" id="hub-scanner-action-btn"
+                                    x-on:click="tab = 'scanner'"
+                                    wire:click="$dispatch('set-tab', { tab: 'scanner' })"
+                                    class="btn-bounce font-display"
+                                    style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 13px 16px; background: #F4B316; color: #1A1A1A; font-size: 19px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 5px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
+                                    Scanner le badge de l'animateur
+                                </button>
+                            </div>
+
+                            <button type="button" id="hub-back-to-compass-btn"
+                                x-on:click="returnToCompass()"
+                                style="display: block; width: 100%; background: none; border: none; padding: 10px 0 0 0; font-size: 12px; font-weight: 700; color: #6B7280; text-align: center; cursor: pointer; text-decoration: underline;">
+                                ← Revenir à la boussole
                             </button>
                         </div>
                     </div>
@@ -1155,7 +1400,8 @@
                         <button type="button" id="phase-b-deck-collapse-btn" x-on:click="deckExpanded = false"
                             style="width: 100%; background: transparent; border: none; padding: 2px 0 8px 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                             <span style="display: block; width: 42px; height: 4px; border-radius: 9999px; background: #D1D5DB;"></span>
-                            <span style="font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; letter-spacing: 0.04em;">
+                            <span style="font-size: 11px; font-weight: 800; color: #841818; text-transform: uppercase; letter-spacing: 0.04em;"
+                                x-text="spotStage === 'walking' ? 'Replier vers la boussole ↓' : 'Replier vers l\'étape ↓'">
                                 Replier vers la boussole ↓
                             </span>
                         </button>
@@ -1186,17 +1432,31 @@
                         </div>
                     </div>
 
-                    <div style="flex-shrink: 0;">
-                        <button type="button" x-show="isWithinTarget()" x-cloak
-                            x-on:click="deckExpanded = false; tab = 'scanner'"
-                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                    <div id="phase-b-drawer-cta" style="flex-shrink: 0;">
+                        <button type="button" x-show="spotStage === 'walking' && isWithinTarget()" x-cloak
+                            id="phase-b-drawer-confirm-arrival-btn"
+                            x-on:click="deckExpanded = false; confirmArrival()" class="btn-bounce font-display"
                             style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-size: 20px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
-                            Scanner le spot
+                            Vous êtes arrivé ?
                         </button>
-                        <button type="button" x-show="!isWithinTarget()"
+                        <button type="button" x-show="spotStage === 'walking' && !isWithinTarget()"
                             x-on:click="deckExpanded = false" class="btn-bounce font-display"
                             style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 11px 16px; background: #841818; color: #FFFFFF; font-size: 18px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; letter-spacing: 0.03em;">
                             Retour à la boussole ↓
+                        </button>
+                        <button type="button" x-show="spotStage === 'at_spot_challenge'" x-cloak
+                            id="phase-b-drawer-challenge-done-btn"
+                            x-on:click="deckExpanded = false; completeChallengeAndOpenScanner(); tab = 'scanner'"
+                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-size: 20px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
+                            Épreuve terminée ?
+                        </button>
+                        <button type="button" x-show="spotStage === 'ready_to_scan'" x-cloak
+                            id="phase-b-drawer-scanner-btn"
+                            x-on:click="deckExpanded = false; tab = 'scanner'"
+                            wire:click="$dispatch('set-tab', { tab: 'scanner' })" class="btn-bounce font-display"
+                            style="font-family: var(--font-display); width: 100%; box-sizing: border-box; padding: 12px 16px; background: #F4B316; color: #1A1A1A; font-size: 18px; font-weight: 700; border: 3px solid #1A1A1A; border-radius: 14px; box-shadow: 0 4px 0 #1A1A1A; text-align: center; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;">
+                            Scanner le badge de l'animateur
                         </button>
                     </div>
                 </div>

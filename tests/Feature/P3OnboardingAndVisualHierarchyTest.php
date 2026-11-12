@@ -97,6 +97,7 @@ class P3OnboardingAndVisualHierarchyTest extends TestCase
             'JAUNE OR',
             "l'animateur de l'étape",
             'petit jeu en famille',
+            'Épreuve terminée ?',
             'Étape 4 sur 5',
             'La Clé Complète',
             'fragment de clé',

@@ -76,8 +76,11 @@ class P2HelpResilienceAndPolishTest extends TestCase
         Livewire::test(Hub::class)
             ->assertSeeHtml('id="hub-gps-help-btn"')
             ->assertSeeHtml('id="hub-gps-fallback-scanner-btn"')
+            ->assertSee('Je suis devant le lieu')
+            ->assertSeeHtml('x-on:click="confirmArrival()"')
             ->assertSeeHtml('id="hub-gps-retry-btn"')
-            ->assertSee('Actualiser la position GPS');
+            ->assertSee('Actualiser la position GPS')
+            ->assertSeeHtml('id="hub-back-to-compass-btn"');
     }
 
     public function test_app_layout_provides_offline_detection_and_livewire_4_request_interception(): void

@@ -139,7 +139,11 @@ class P0GameplayAndStorytellingTest extends TestCase
             ->assertSeeHtml('id="hub-gps-help-popover"')
             ->assertSee('Vous êtes arrivé mais le point GPS n\'est pas précis ?', false)
             ->assertSeeHtml('id="hub-gps-fallback-scanner-btn"')
-            ->assertSee('Ouvrir le scanner')
+            ->assertSee('Je suis devant le lieu')
+            ->assertDontSee('Scanner le spot')
+            ->assertSeeHtml('expedition_spot_state_')
+            ->assertSeeHtml('withinTargetZone')
+            ->assertSeeHtml('confirmArrival()')
             ->assertSeeHtml('isWithinTarget()')
             ->assertSeeHtml('isInApproachZone()')
             ->assertSeeHtml('hasGpsIssue()')
@@ -201,6 +205,73 @@ class P0GameplayAndStorytellingTest extends TestCase
         Livewire::test(Hub::class)
             ->assertSeeHtml('targetRadius: 30')
             ->assertSeeHtml('approachRadius: 120');
+    }
+
+    public function test_phase_b_intermediate_animator_step_renders_landmark_emblems_and_gates_scanner_for_all_steps(): void
+    {
+        for ($stepNum = 1; $stepNum <= 6; $stepNum++) {
+            $user = User::factory()->create([
+                'current_step' => $stepNum,
+                'phase' => 'WALKING_TO_TARGET',
+            ]);
+            $this->actingAs($user);
+
+            $hub = Livewire::test(Hub::class);
+            $html = $hub->html();
+
+            $hub->assertSeeHtml('id="phase-b-landmark-emblem"')
+                ->assertSeeHtml('id="phase-b-landmark-svg"')
+                ->assertSeeHtml('data-step-icon="'.$stepNum.'"')
+                ->assertSeeHtml('id="landmark-icon-step-'.$stepNum.'"')
+                ->assertSeeHtml('#9FB8AD')
+                ->assertSeeHtml('#F4EBD9')
+                ->assertSeeHtml('id="hub-confirm-arrival-btn"')
+                ->assertSee('Vous êtes arrivé ?')
+                ->assertSeeHtml('id="phase-b-on-site-panel"')
+                ->assertSee("Sur place  |  Étape {$stepNum}/6", false)
+                ->assertSeeHtml('id="hub-challenge-done-btn"')
+                ->assertSeeHtml('x-on:click="completeChallengeAndOpenScanner(); tab = \'scanner\'"')
+                ->assertSeeHtml('wire:click="$dispatch(\'set-tab\', { tab: \'scanner\' })"')
+                ->assertSee('Épreuve terminée ?')
+                ->assertSeeHtml('id="hub-back-to-compass-btn"')
+                ->assertSee('Revenir à la boussole')
+                ->assertSeeHtml('id="hub-scanner-action-btn"')
+                ->assertSee('Scanner le badge de l\'animateur', false)
+                ->assertSeeHtml('id="phase-b-drawer-confirm-arrival-btn"')
+                ->assertSeeHtml('id="phase-b-drawer-challenge-done-btn"')
+                ->assertSeeHtml('id="phase-b-drawer-scanner-btn"')
+                ->assertDontSee('Scanner le spot');
+
+            if ($stepNum === 6) {
+                $hub->assertSee("équipe d'accueil du point final", false);
+            } else {
+                $hub->assertSee("rejoignez l'animateur sur place", false);
+            }
+
+            // GPS fallback routes to confirmArrival() rather than opening scanner directly
+            $this->assertMatchesRegularExpression(
+                '/id="hub-gps-fallback-scanner-btn"[^>]*x-on:click="confirmArrival\(\)"/s',
+                $html
+            );
+
+            // Enforce clean player wording: no MJ, no Maître du Jeu, no emojis, no em-dashes
+            $this->assertStringNotContainsString('Maître du Jeu', $html);
+            $this->assertDoesNotMatch($html, '/\bMJ\b/u');
+            $this->assertDoesNotMatch($html, '/[\x{1F300}-\x{1F9FF}]/u');
+            $this->assertStringNotContainsString('—', $html);
+            $this->assertStringNotContainsString('–', $html);
+        }
+
+        // Phase A (GUESSING_LOCATION) must clear any stale localStorage spot state for that step
+        $phaseAUser = User::factory()->create([
+            'current_step' => 1,
+            'phase' => 'GUESSING_LOCATION',
+        ]);
+        $this->actingAs($phaseAUser);
+
+        Livewire::test(Hub::class)
+            ->assertSeeHtml('localStorage.removeItem(this.spotStorageKey())')
+            ->assertSeeHtml('if (offsetMeters > this.targetRadius)');
     }
 
     public function test_game_router_tab_listener_does_not_recursively_redispatch_set_tab(): void

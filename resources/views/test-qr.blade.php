@@ -414,6 +414,10 @@
                 <strong>Expédition Lens</strong> sur votre smartphone (connecté au même réseau local ou via le tunnel HTTPS).
                 Depuis l'onglet <strong>[Scanner]</strong> du smartphone, pointez l'appareil photo vers les QR codes ci-dessous
                 pour tester et valider en conditions réelles chacune des 6 étapes sans impression papier !
+                <br>
+                <strong>Parcours rapide :</strong> scannez <code>MAP_LOC_X</code>, ouvrez <code>[•] debug</code> pour cliquer sur
+                <strong>TP sur le spot (0m)</strong>, confirmez <strong>Vous êtes arrivé ?</strong>, puis touchez
+                <strong>Épreuve terminée ?</strong> pour ouvrir le scanner et flasher <code>MJ_STEP_X</code>.
             </p>
 
             <nav class="top-nav" aria-label="Navigation mire de test">

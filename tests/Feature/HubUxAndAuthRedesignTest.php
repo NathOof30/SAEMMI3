@@ -191,7 +191,7 @@ class HubUxAndAuthRedesignTest extends TestCase
             ->assertSeeHtml('id="compass-needle-opposite"')
             ->assertSeeHtml('#B91C1C') // Red central pivot
             // Lower card with black outline
-            ->assertSeeHtml('Destination : <span style="color: #F4B316;">'.$cleanName.'</span>')
+            ->assertSeeHtml('Destination : <span style="color: #F4B316;">' . $cleanName . '</span>')
             ->assertSee('Suivez la boussole, observez autour de vous et trouvez le spot')
             // Dynamic action button: calibrated radius, no fake '300 m', contextual '?' safety net
             ->assertSeeHtml('targetRadius: 70')
@@ -202,10 +202,17 @@ class HubUxAndAuthRedesignTest extends TestCase
             ->assertSeeHtml('id="hub-gps-help-btn"')
             ->assertSeeHtml('id="hub-gps-help-popover"')
             ->assertSeeHtml('id="hub-gps-fallback-scanner-btn"')
+            ->assertSee('Je suis devant le lieu')
             ->assertSeeHtml('x-show="!isWithinTarget()"')
-            ->assertSeeHtml('id="hub-scanner-action-btn"')
+            ->assertSeeHtml('id="hub-confirm-arrival-btn"')
             ->assertSeeHtml('x-show="isWithinTarget()"')
-            ->assertSeeHtml('Scanner le spot');
+            ->assertSeeHtml('Vous êtes arrivé ?')
+            ->assertSeeHtml('id="phase-b-on-site-panel"')
+            ->assertSeeHtml('id="hub-challenge-done-btn"')
+            ->assertSeeHtml('Épreuve terminée ?')
+            ->assertSeeHtml('id="hub-scanner-action-btn"')
+            ->assertSee('Scanner le badge de l\'animateur', false)
+            ->assertDontSee('Scanner le spot');
     }
 
     public function test_hub_action_button_in_guessing_phase_leads_to_scanner(): void
