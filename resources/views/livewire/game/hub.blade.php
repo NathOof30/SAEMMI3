@@ -1111,7 +1111,7 @@
                         @switch($step->id)
                             @case(1)
                                 <!-- Étape 1 : Gare de Lens (Locomotive) -->
-                                <g id="landmark-icon-step-1">
+                                <g id="landmark-icon-step-1" wire:key="landmark-icon-step-1">
                                     <line x1="48" y1="138" x2="152" y2="138" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
                                     <circle cx="130" cy="60" r="6" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
                                     <circle cx="141" cy="54" r="8" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
@@ -1137,7 +1137,7 @@
                                 @break
                             @case(2)
                                 <!-- Étape 2 : Centre-Ville (Beffroi / Façade Art déco lensoise) -->
-                                <g id="landmark-icon-step-2">
+                                <g id="landmark-icon-step-2" wire:key="landmark-icon-step-2">
                                     <line x1="48" y1="142" x2="152" y2="142" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
                                     <rect x="54" y="96" width="92" height="46" rx="2" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
                                     <rect x="61" y="106" width="12" height="18" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
@@ -1152,44 +1152,111 @@
                                 </g>
                                 @break
                             @case(3)
-                                <!-- Étape 3 : Stade Bollaert-Delelis (Stade & ballon de football) -->
-                                <g id="landmark-icon-step-3">
-                                    <line x1="58" y1="78" x2="54" y2="58" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" />
-                                    <rect x="48" y="54" width="12" height="6" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="142" y1="78" x2="146" y2="58" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" />
-                                    <rect x="140" y="54" width="12" height="6" rx="1.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <path d="M 48 110 C 48 72, 152 72, 152 110 L 144 132 L 56 132 Z" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
-                                    <path d="M 56 96 C 72 78, 128 78, 144 96" fill="none" stroke="#F4B316" stroke-width="5" stroke-linecap="round" />
-                                    <circle cx="100" cy="118" r="26" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3.5" />
-                                    <polygon points="100,106 111,114 107,127 93,127 89,114" fill="#1A1A1A" />
-                                    <line x1="100" y1="106" x2="100" y2="92" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="111" y1="114" x2="124" y2="109" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="107" y1="127" x2="116" y2="138" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="93" y1="127" x2="84" y2="138" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="89" y1="114" x2="76" y2="109" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <path d="M 90 94 L 100 92 L 110 94" fill="none" stroke="#F4B316" stroke-width="3" stroke-linecap="round" />
+                                <!-- Étape 3 : Stade Bollaert-Delelis (Ballon de football) -->
+                                <g id="landmark-icon-step-3" wire:key="landmark-icon-step-3">
+                                    <defs>
+                                        <clipPath id="football-clip-step-3">
+                                            <circle cx="100" cy="100" r="40" />
+                                        </clipPath>
+                                    </defs>
+                                    <ellipse cx="100" cy="146" rx="26" ry="5" fill="#1A1A1A" opacity="0.16" />
+                                    <g clip-path="url(#football-clip-step-3)">
+                                        <circle cx="100" cy="100" r="40" fill="#E5E7EB" />
+                                        <circle cx="93" cy="93" r="39" fill="#FFFFFF" />
+                                        <!-- Coutures des hexagones -->
+                                        <line x1="100" y1="86" x2="100" y2="73" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="113.3" y1="95.7" x2="125.7" y2="91.7" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="108.2" y1="111.3" x2="115.9" y2="121.8" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="91.8" y1="111.3" x2="84.1" y2="121.8" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="86.7" y1="95.7" x2="74.3" y2="91.7" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="112.3" y1="66.2" x2="128.4" y2="77.8" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="136.0" y1="101.3" x2="129.8" y2="120.1" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="109.9" y1="134.6" x2="90.1" y2="134.6" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="70.2" y1="120.1" x2="64.0" y2="101.3" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <line x1="71.6" y1="77.8" x2="87.7" y2="66.2" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" />
+                                        <!-- Pentagone central -->
+                                        <polygon points="100,86 113.3,95.7 108.2,111.3 91.8,111.3 86.7,95.7" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round" />
+                                        <!-- 5 pentagones périphériques -->
+                                        <polygon points="100,73 87.7,66.2 88.9,55.4 111.1,55.4 112.3,66.2" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round" />
+                                        <polygon points="125.7,91.7 128.4,77.8 139.0,75.6 145.9,96.8 136.0,101.3" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round" />
+                                        <polygon points="115.9,121.8 129.8,120.1 135.2,129.6 117.2,142.6 109.9,134.6" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round" />
+                                        <polygon points="84.1,121.8 90.1,134.6 82.8,142.6 64.8,129.6 70.2,120.1" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round" />
+                                        <polygon points="74.3,91.7 64.0,101.3 54.1,96.8 61.0,75.6 71.6,77.8" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round" />
+                                    </g>
+                                    <circle cx="100" cy="100" r="40" fill="none" stroke="#1A1A1A" stroke-width="3.5" />
                                 </g>
                                 @break
                             @case(4)
-                                <!-- Étape 4 : Musée Louvre-Lens (Galerie & musée de verre) -->
-                                <g id="landmark-icon-step-4">
-                                    <line x1="44" y1="136" x2="156" y2="136" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
-                                    <polygon points="82,88 100,60 118,88" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
-                                    <line x1="100" y1="60" x2="91" y2="88" stroke="#1A1A1A" stroke-width="2" />
-                                    <line x1="100" y1="60" x2="109" y2="88" stroke="#1A1A1A" stroke-width="2" />
-                                    <rect x="48" y="96" width="104" height="40" rx="2" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" />
-                                    <rect x="44" y="88" width="112" height="9" rx="2" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" />
-                                    <rect x="55" y="102" width="22" height="28" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="59" y1="124" x2="73" y2="108" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" />
-                                    <rect x="123" y="102" width="22" height="28" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
-                                    <line x1="127" y1="124" x2="141" y2="108" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" />
-                                    <rect x="85" y="102" width="30" height="34" fill="#841818" stroke="#1A1A1A" stroke-width="3" />
-                                    <rect x="93" y="110" width="14" height="26" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5" />
+                                <!-- Étape 4 : Musée Louvre-Lens (Angle du pavillon de verre sur son parvis) -->
+                                <g id="landmark-icon-step-4" wire:key="landmark-icon-step-4">
+                                    <defs>
+                                        <clipPath id="louvre-left-clip-step-4">
+                                            <polygon points="42,90 118,80 118,122 42,117" />
+                                        </clipPath>
+                                        <clipPath id="louvre-right-clip-step-4">
+                                            <polygon points="118,80 158,87 158,117 118,122" />
+                                        </clipPath>
+                                    </defs>
+                                    <!-- Ombre portée du pavillon sur le parvis -->
+                                    <polygon points="42,117 118,122 158,117 161,121 118,127 40,121" fill="#1A1A1A" opacity="0.16" />
+
+                                    <!-- Façade vitrée principale (gauche, basse et horizontale) -->
+                                    <g clip-path="url(#louvre-left-clip-step-4)">
+                                        <polygon points="42,90 118,80 118,122 42,117" fill="#E8F1EE" />
+                                        <!-- Piliers intérieurs blancs visibles par transparence -->
+                                        <rect x="52.5" y="88" width="2.2" height="30" fill="#FFFFFF" opacity="0.7" />
+                                        <rect x="90.5" y="83" width="2.2" height="38" fill="#FFFFFF" opacity="0.7" />
+                                        <rect x="105.5" y="81" width="2.2" height="40" fill="#FFFFFF" opacity="0.7" />
+                                        <!-- Reflet sombre du ciel et des arbres du parc sur le haut des vitres -->
+                                        <path d="M 42 90 L 118 80 L 118 105 Q 100 101 84 105 Q 64 101 42 106 Z" fill="#84A396" opacity="0.88" />
+                                        <path d="M 42 102 Q 62 98 84 103 Q 102 99 118 103 L 118 107 Q 100 104 84 107 Q 62 104 42 108 Z" fill="#5D7D71" opacity="0.45" />
+                                        <!-- Reflets diagonaux lumineux sur la paroi vitrée -->
+                                        <polygon points="50,89 58,88 49,117.5 42,117" fill="#FFFFFF" opacity="0.55" />
+                                        <polygon points="88,84 99,82.5 88,120 78,119.5" fill="#FFFFFF" opacity="0.42" />
+                                        <!-- Fin liseré lumineux en arête de toiture -->
+                                        <line x1="42" y1="91.5" x2="118" y2="81.5" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8" />
+                                        <!-- Montants verticaux réguliers des panneaux de verre -->
+                                        <line x1="49.6" y1="89" x2="49.6" y2="117.5" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="57.2" y1="88" x2="57.2" y2="118" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="64.8" y1="87" x2="64.8" y2="118.5" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="72.4" y1="86" x2="72.4" y2="119" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="80" y1="85" x2="80" y2="119.5" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="87.6" y1="84" x2="87.6" y2="120" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="95.2" y1="83" x2="95.2" y2="120.5" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="102.8" y1="82" x2="102.8" y2="121" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="110.4" y1="81" x2="110.4" y2="121.5" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <!-- Portique d'entrée vitré (aligné aux montants et à la perspective) -->
+                                        <polygon points="64.8,103 80,102.5 80,119.5 64.8,118.5" fill="#F4B316" stroke="#1A1A1A" stroke-width="1.8" stroke-linejoin="round" />
+                                        <line x1="72.4" y1="102.7" x2="72.4" y2="119" stroke="#1A1A1A" stroke-width="1.5" />
+                                    </g>
+
+                                    <!-- Façade retour d'angle (droite, verre ombré) -->
+                                    <g clip-path="url(#louvre-right-clip-step-4)">
+                                        <polygon points="118,80 158,87 158,117 118,122" fill="#C7DAD3" />
+                                        <!-- Volume intérieur clair visible derrière la façade vitrée -->
+                                        <rect x="128" y="86" width="2" height="33" fill="#FFFFFF" opacity="0.5" />
+                                        <rect x="145" y="88" width="2" height="30" fill="#FFFFFF" opacity="0.5" />
+                                        <!-- Reflet ciel/arbres -->
+                                        <path d="M 118 80 L 158 87 L 158 105 Q 138 103 118 105 Z" fill="#769689" opacity="0.88" />
+                                        <!-- Reflet diagonal sur le verre -->
+                                        <polygon points="127,81.6 135,83 126,121 119,121.8" fill="#FFFFFF" opacity="0.38" />
+                                        <!-- Fin liseré lumineux en arête de toiture -->
+                                        <line x1="118" y1="81.5" x2="158" y2="88.5" stroke="#FFFFFF" stroke-width="1.5" opacity="0.7" />
+                                        <!-- Montants verticaux de la façade retour -->
+                                        <line x1="126" y1="81.4" x2="126" y2="121" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="134" y1="82.8" x2="134" y2="120" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="142" y1="84.2" x2="142" y2="119" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                        <line x1="150" y1="85.6" x2="150" y2="118" stroke="#1A1A1A" stroke-width="1.1" opacity="0.48" />
+                                    </g>
+
+                                    <!-- Contours architecturaux nets et arête d'angle -->
+                                    <polygon points="42,90 118,80 158,87 158,117 118,122 42,117" fill="none" stroke="#1A1A1A" stroke-width="3.2" stroke-linejoin="round" />
+                                    <line x1="118" y1="80" x2="118" y2="122" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round" />
                                 </g>
                                 @break
                             @case(5)
                                 <!-- Étape 5 : Terrils de Loos-en-Gohelle (Terrils jumeaux) -->
-                                <g id="landmark-icon-step-5">
+                                <g id="landmark-icon-step-5" wire:key="landmark-icon-step-5">
                                     <line x1="44" y1="138" x2="156" y2="138" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" />
                                     <polygon points="46,138 82,66 116,138" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
                                     <polygon points="82,66 116,138 92,138" fill="#841818" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" />
@@ -1201,7 +1268,7 @@
                                 @break
                             @default
                                 <!-- Étape 6 : Office de Tourisme (Pavillon d'accueil & coffre final) -->
-                                <g id="landmark-icon-step-6">
+                                <g id="landmark-icon-step-6" wire:key="landmark-icon-step-6">
                                     <polygon points="52,78 100,52 148,78" fill="#841818" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />
                                     <circle cx="100" cy="67" r="5" fill="#F4B316" stroke="#1A1A1A" stroke-width="2.5" />
                                     <path d="M 62 104 C 62 84, 138 84, 138 104 Z" fill="#F4B316" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round" />

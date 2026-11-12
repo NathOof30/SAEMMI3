@@ -223,6 +223,7 @@ class P0GameplayAndStorytellingTest extends TestCase
                 ->assertSeeHtml('id="phase-b-landmark-svg"')
                 ->assertSeeHtml('data-step-icon="'.$stepNum.'"')
                 ->assertSeeHtml('id="landmark-icon-step-'.$stepNum.'"')
+                ->assertSeeHtml('wire:key="landmark-icon-step-'.$stepNum.'"')
                 ->assertSeeHtml('#9FB8AD')
                 ->assertSeeHtml('#F4EBD9')
                 ->assertSeeHtml('id="hub-confirm-arrival-btn"')
@@ -241,6 +242,18 @@ class P0GameplayAndStorytellingTest extends TestCase
                 ->assertSeeHtml('id="phase-b-drawer-challenge-done-btn"')
                 ->assertSeeHtml('id="phase-b-drawer-scanner-btn"')
                 ->assertDontSee('Scanner le spot');
+
+            if ($stepNum === 3) {
+                $hub->assertSeeHtml('id="football-clip-step-3"')
+                    ->assertDontSeeHtml('C 48 72, 152 72, 152 110');
+            }
+
+            if ($stepNum === 4) {
+                $hub->assertSeeHtml('id="louvre-left-clip-step-4"')
+                    ->assertSeeHtml('id="louvre-right-clip-step-4"')
+                    ->assertSeeHtml('points="42,90 118,80 158,87 158,117 118,122 42,117"')
+                    ->assertDontSeeHtml('points="82,88 100,60 118,88"');
+            }
 
             if ($stepNum === 6) {
                 $hub->assertSee("équipe d'accueil du point final", false);
