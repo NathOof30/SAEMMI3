@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>{{ $title ?? 'Expédition Lens' }}</title>
+    <title>{{ $title ?? 'GALI' }}</title>
 
     <!-- PWA Web App Manifest -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -15,9 +15,10 @@
     <!-- iOS / Safari PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Expédition Lens">
+    <meta name="apple-mobile-web-app-title" content="GALI">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="/icon.svg">
+    <link rel="icon" href="/logo_collab_noir.png" type="image/png">
+    <link rel="apple-touch-icon" href="/logo_collab_noir.png">
 
     <link rel="preconnect" href="https://use.typekit.net" crossorigin>
     <link rel="preconnect" href="https://p.typekit.net" crossorigin>

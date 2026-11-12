@@ -1,4 +1,4 @@
-# Fiche de présentation — L'Expédition Secrète (Lens)
+# Fiche de présentation — GALI (Lens)
 
 **Projet :** Jeu de piste familial hybride (kit papier + application mobile)  
 **Cadre :** Collaboration temporaire — Destination Lens Tourisme & Asmodee  
@@ -8,7 +8,7 @@
 
 ## 1. L'idée du jeu
 
-**L'Expédition Secrète** transforme Lens en terrain d'aventure grandeur nature pour les familles. L'application mobile fonctionne toujours en duo avec un **kit physique** remis au départ : une grande carte illustrée de la ville et une loupe. L'enfant observe et cherche les indices sur le papier, tandis que le parent utilise le téléphone pour guider l'équipe et valider les étapes.
+**GALI** transforme Lens en terrain d'aventure grandeur nature pour les familles. L'application mobile fonctionne toujours en duo avec un **kit physique** remis au départ : une grande carte illustrée de la ville et une loupe. L'enfant observe et cherche les indices sur le papier, tandis que le parent utilise le téléphone pour guider l'équipe et valider les étapes.
 
 L'histoire suit **Gali**, un jeune Lensois curieux du passé minier de sa famille. Dans le grenier de son grand-père, il a retrouvé la **carte en papier jauni**, sa **loupe** et la **base brisée d'une clé antique** censée rallumer la légendaire **Lampe Cœur**, la gaillette de charbon magique de Lens. Comme il manque **6 fragments essentiels** pour la réparer, impossible d'ouvrir le coffre secret seul : la famille doit parcourir la ville pour retrouver les **6 fragments de clé** et reforger la clé complète.
 

@@ -1,4 +1,4 @@
-# L'Expédition Secrète — Lens Tourisme & Asmodee
+# GALI — Lens Tourisme & Asmodee
 
 > **Jeu de piste urbain familial hybride (physique + numérique) au cœur de la ville de Lens.**  
 > Application mobile PWA servant de boussole d'orientation GPS et de serrure numérique pour valider les étapes d'exploration.
@@ -22,7 +22,7 @@
 
 ## 1. Présentation du Projet
 
-Dans le cadre d'un partenariat entre **Destination Lens Tourisme** et l'éditeur de jeux de société **Asmodee**, *L'Expédition Secrète* propose une aventure interactive dans la ville de Lens pour les familles.
+Dans le cadre d'un partenariat entre **Destination Lens Tourisme** et l'éditeur de jeux de société **Asmodee**, *GALI* propose une aventure interactive dans la ville de Lens pour les familles.
 
 * **L'Enfant (L'Explorateur)** utilise une carte papier physique, un filtre optique et des indices imprimés pour résoudre les énigmes.
 * **Le Parent (Le Maître du Jeu)** tient le smartphone : la PWA fait office de **boussole GPS** pour guider la famille à travers la ville et de **scanner de validation** (carte papier et QR code animateur sur place) jusqu'au déblocage du jeu Dobble exclusif à l'Office de Tourisme.

@@ -54,7 +54,8 @@ class VisualReworkCompassAndDeckTest extends TestCase
         $test = Livewire::test(LoginRegister::class);
 
         // Minimalist landing
-        $test->assertSee('L\'Expédition Secrète', false)
+        $test->assertSee('GALI', false)
+            ->assertSeeHtml('logo_collab_noir.png')
             ->assertSeeHtml('id="partner-logos-header"')
             ->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp')
             ->assertSeeHtml('asmodee_logo.webp')

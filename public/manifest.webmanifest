@@ -1,6 +1,6 @@
 {
-  "name": "L'Expédition Secrète - Lens",
-  "short_name": "Expédition Lens",
+  "name": "GALI",
+  "short_name": "GALI",
   "description": "Escape game urbain familial au cœur de la ville de Lens avec boussole GPS et serrure numérique.",
   "id": "/",
   "start_url": "/",
@@ -11,9 +11,9 @@
   "background_color": "#000000",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "192x192 512x512 any",
-      "type": "image/svg+xml",
+      "src": "/logo_collab_noir.png",
+      "sizes": "any",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

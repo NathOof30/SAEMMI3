@@ -1,4 +1,4 @@
-# CONTEXTE DU PROJET : "L'Expédition Secrète"
+# CONTEXTE DU PROJET : "GALI"
 
 ## 1. Vision Globale
 

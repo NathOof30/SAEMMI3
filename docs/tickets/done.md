@@ -1,4 +1,4 @@
-# Archives des Tickets Terminés — L'Expédition Secrète (Lens)
+# Archives des Tickets Terminés — GALI (Lens)
 
 > Ce document archive l'ensemble des lots déjà implémentés, testés et validés (**P0, P1, P2 et P3** — vagues T1 à T3).
 

@@ -16,13 +16,18 @@
         this.activeSlide = index;
     }
 }"
-    style="width: 100%; max-width: 420px; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: clamp(18px, 4.2dvh, 42px) 18px clamp(16px, 3.2dvh, 32px) 18px; box-sizing: border-box; font-family: var(--font-body); color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(10px, 2dvh, 22px); overflow: hidden;">
+    style="position: relative; width: 100%; max-width: 420px; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: clamp(18px, 4.2dvh, 42px) 18px clamp(16px, 3.2dvh, 32px) 18px; box-sizing: border-box; font-family: var(--font-body); color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(10px, 2dvh, 22px); overflow: hidden;">
+
+    <img src="{{ asset('logo_collab_noir.png') }}"
+        alt=""
+        aria-hidden="true"
+        style="position: absolute; z-index: 0; top: 50%; left: 50%; width: min(94vw, 390px); height: auto; transform: translate(-50%, -50%); opacity: 0.08; mix-blend-mode: multiply; pointer-events: none;">
 
     <!-- 1. En-tête haut de page -->
-    <header style="text-align: center; flex-shrink: 0; padding-top: 2px;">
+    <header style="position: relative; z-index: 1; text-align: center; flex-shrink: 0; padding-top: 2px;">
         <h1 class="font-display"
             style="font-family: var(--font-display); font-size: clamp(27px, 6.8vw, 33px); font-weight: 700; color: #841818; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.05;">
-            L'Expédition Secrète
+            GALI
         </h1>
         <div id="partner-logos-header"
             style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 3px 12px; background: #FFFFFF; border: 1.5px solid #1A1A1A; border-radius: 9999px;">
@@ -38,6 +43,7 @@
         </div>
     </header>
 
+    <div style="position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;">
     @if($mode === 'landing' || $mode === 'tuto')
         <!-- MODE ACCUEIL (WELCOME) -->
         <div x-show="onboardingStep === 'welcome'" class="alpine-flex" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: clamp(10px, 2dvh, 22px); min-height: 0;">
@@ -119,7 +125,7 @@
                 <main
                     style="margin: auto 0; background: #ffffff; border: 3.5px solid #1a1a1a; border-radius: 20px; box-shadow: 0 6px 0 #1a1a1a; padding: clamp(20px, 3dvh, 26px) 18px; box-sizing: border-box; width: 100%;">
                     <h2 class="font-display" style="font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 14px 0; text-align: center; color: #1a1a1a; letter-spacing: 0.02em;">
-                        Règles de l'Expédition
+                        Règles de GALI
                     </h2>
 
                     <x-tutorial-slides slide-var="activeSlide" />
@@ -315,4 +321,5 @@
             </main>
         </div>
     @endif
+    </div>
 </div>

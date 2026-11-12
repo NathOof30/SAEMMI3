@@ -1,4 +1,4 @@
-<x-layouts.app :title="'Mire de Test QR Codes - Expédition Lens'">
+<x-layouts.app :title="'Mire de Test QR Codes - GALI'">
     <style>
         :root {
             --bg-page: #0b1120;
@@ -408,10 +408,10 @@
     <div class="container">
         <header class="test-header">
             <span class="badge-dev">Outil Développeur &amp; Banc de Test Mobile</span>
-            <h1>Mire de Test des QR Codes — Expédition Lens</h1>
+            <h1>Mire de Test des QR Codes — GALI</h1>
             <p class="instructions">
                 Affichez cette page en plein écran sur votre ordinateur. Ouvrez ensuite l'application
-                <strong>Expédition Lens</strong> sur votre smartphone (connecté au même réseau local ou via le tunnel HTTPS).
+                <strong>GALI</strong> sur votre smartphone (connecté au même réseau local ou via le tunnel HTTPS).
                 Depuis l'onglet <strong>[Scanner]</strong> du smartphone, pointez l'appareil photo vers les QR codes ci-dessous
                 pour tester et valider en conditions réelles chacune des 6 étapes sans impression papier !
                 <br>

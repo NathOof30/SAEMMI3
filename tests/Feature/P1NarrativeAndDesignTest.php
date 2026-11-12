@@ -70,7 +70,7 @@ class P1NarrativeAndDesignTest extends TestCase
     public function test_login_register_displays_gali_and_lampe_coeur_legend_without_emojis(): void
     {
         Livewire::test(LoginRegister::class)
-            ->assertSee("L'Expédition Secrète", false)
+            ->assertSee('GALI', false)
             ->assertSee('La légende de la Lampe Cœur')
             ->assertSee('grenier')
             ->assertSee('grand-père')

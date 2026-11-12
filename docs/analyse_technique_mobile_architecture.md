@@ -1,4 +1,4 @@
-# Expédition Lens — Analyse Technique & Architecturale Mobile
+# GALI — Analyse Technique & Architecturale Mobile
 
 > **Projet :** Chasse au trésor IRL familiale à Lens (Destination Lens Tourisme & Asmodee)  
 > **Contexte :** Web App PWA mobile utilisant Laravel 11, Livewire 3 et Alpine.js  
@@ -290,7 +290,7 @@ La question posée : **"Si je dois héberger, comment ? Où ? Ici il y a des cho
 
 ### Contraintes techniques indispensables
 
-Pour faire fonctionner Expédition Lens en conditions réelles, l'hébergement doit respecter :
+Pour faire fonctionner GALI en conditions réelles, l'hébergement doit respecter :
 1. **Certificat SSL / HTTPS obligatoire :** Sans certificat valide, aucun smartphone ne permettra d'activer la caméra ou la boussole.
 2. **PHP 8.3 & Extensions :** Support de PDO SQLite ou MySQL, Mbstring, OpenSSL.
 3. **Persistance des données :** Si SQLite est utilisé, le fichier `database/database.sqlite` ne doit pas être écrasé à chaque redéploiement (volume persistant).

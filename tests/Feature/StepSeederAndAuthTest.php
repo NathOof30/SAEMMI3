@@ -74,7 +74,8 @@ class StepSeederAndAuthTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('L\'Expédition Secrète', false);
+        $response->assertSee('GALI', false);
+        $response->assertSeeHtml('logo_collab_noir.png');
         $response->assertSeeHtml('id="partner-logos-header"');
         $response->assertSeeHtml('lens-tourisme-logo-e1673958887436.webp');
         $response->assertSeeHtml('asmodee_logo.webp');

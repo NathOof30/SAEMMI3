@@ -1,7 +1,7 @@
-# Cartographie UX, Écrans & Parcours Utilisateur — Expédition Lens
+# Cartographie UX, Écrans & Parcours Utilisateur — GALI
 
 > **Document de cadrage UX/UI pour le refactoring visuel & ergonomique**  
-> **Application :** Expédition Lens (Jeu de piste IRL hybride PWA — Destination Lens Tourisme & Asmodee)  
+> **Application :** GALI (Jeu de piste IRL hybride PWA — Destination Lens Tourisme & Asmodee)
 > **Stack technique :** Laravel, Livewire & Alpine.js (Architecture SPA "Islands of Reactivity")
 
 ---
@@ -66,7 +66,7 @@ L'application est conçue comme une **Single Page Application (SPA)** mobile : l
 
 #### Composants fixes de l'interface :
 1. **Header supérieur :**
-   * Nom du jeu : *"L'Expédition Secrète"*
+   * Nom du jeu : *"GALI"*
    * Sous-titre : *"Destination Lens Tourisme & Asmodee — Serrure Numérique & Boussole (Maître du Jeu)"*
    * Nom de l'équipe connectée (`Auth::user()->team_name`)
    * Badge de progression globale :
